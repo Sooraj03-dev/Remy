@@ -145,7 +145,12 @@ function TabGlyph({
 
   return (
     <Animated.View style={[styles.glyph, animatedStyle]}>
-      <Icon name={name} size="md" weight={focused ? 'fill' : 'regular'} color={focused ? 'primary' : 'text'} />
+      <Icon
+        name={name}
+        size="md"
+        weight={focused ? 'fill' : 'regular'}
+        color={focused ? 'primary' : 'rgba(52,41,73,0.6)'}
+      />
     </Animated.View>
   );
 }

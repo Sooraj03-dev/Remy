@@ -38,8 +38,6 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const [done, setDone] = useState(false);
   const exiting = useRef(false);
   const finished = useRef(false);
-  const readyRef = useRef(ready);
-  readyRef.current = ready;
 
   const opacity = useSharedValue(1);
   const scale = useSharedValue(reduced ? 1 : 0.72);
@@ -75,41 +73,26 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
       ),
     );
     glow.value = withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true);
-    return () => {
-      cancelAnimationSafe();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced]);
 
-  // Whenever readiness changes, try to leave after the minimum display time.
+  // Leave after the minimum display time once auth is ready…
   useEffect(() => {
     if (exiting.current) return;
     const elapsed = Date.now() - mountedAt;
-    if (ready) {
-      const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      const timer = setTimeout(exit, wait);
-      return () => clearTimeout(timer);
-    }
-    const hardCap = setTimeout(() => {
-      if (readyRef.current) exit();
-      else finished.current = false;
-    }, Math.max(0, MAX_VISIBLE_MS - elapsed));
-    return () => clearTimeout(hardCap);
+    if (!ready) return;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    const timer = setTimeout(exit, wait);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
-  // Never block the app for longer than the cap.
+  // …but never block the app for longer than the hard cap.
   useEffect(() => {
-    const cap = setTimeout(() => {
-      if (readyRef.current) exit();
-    }, MAX_VISIBLE_MS);
+    const cap = setTimeout(exit, MAX_VISIBLE_MS);
     return () => clearTimeout(cap);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function cancelAnimationSafe() {
-    // Values are reset by the next mount; nothing persistent to clean.
-  }
 
   const logoStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { rotate: `${wobble.value}deg` }],
