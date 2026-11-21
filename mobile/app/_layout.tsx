@@ -8,7 +8,9 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
 const CLERK_PUBLISHABLE_KEY =
-  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  'pk_test_ZGFzaGluZy1tb2xseS04OTk4LmNsZXJrLmFjY291bnRzLmRldiQ';
 
 // Token cache: persisted in Expo SecureStore for secure JWT storage
 const tokenCache = {
