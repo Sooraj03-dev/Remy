@@ -5,12 +5,12 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   TextInput,
-  Text,
   StyleSheet,
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-import { Colors, Radius, Spacing, FontSize, FontWeight } from '@constants/theme';
+import { ClayText } from '@components/ui/ClayText';
+import { Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
 
 interface ClayInputProps extends TextInputProps {
   label?: string;
@@ -47,7 +47,11 @@ export function ClayInput({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <ClayText variant="captionBold" color="text" style={styles.label}>
+          {label}
+        </ClayText>
+      ) : null}
       <TextInput
         style={[
           styles.input,
@@ -61,7 +65,11 @@ export function ClayInput({
         accessibilityLabel={label}
         {...rest}
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <ClayText variant="caption" color="error">
+          {error}
+        </ClayText>
+      ) : null}
     </View>
   );
 }
@@ -72,8 +80,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSize.caption,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.text,
   },
   input: {
     backgroundColor: Colors.white,
@@ -83,6 +89,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: Spacing.base,
     fontSize: FontSize.body,
+    fontFamily: FontFamily.body,
     color: Colors.text,
     shadowColor: Colors.text,
     shadowOffset: { width: 0, height: 2 },

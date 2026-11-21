@@ -40,6 +40,7 @@ export const Radius = {
 } as const;
 
 export const FontSize = {
+  wordmark: 34,
   h1: 28,
   h2: 22,
   h3: 18,
@@ -54,6 +55,22 @@ export const FontWeight = {
   bold: '700' as const,
 };
 
+/**
+ * One family per weight. Android does not select custom font files from
+ * `fontWeight`, so every weight is a distinct family name registered in
+ * the root layout. Never use fontWeight with these families.
+ */
+export const FontFamily = {
+  wordmark: 'Fredoka_700Bold',
+  display: 'Fredoka_600SemiBold',
+  displayBold: 'Fredoka_700Bold',
+  heading: 'Fredoka_600SemiBold',
+  button: 'Fredoka_600SemiBold',
+  body: 'Nunito_400Regular',
+  bodyMedium: 'Nunito_600SemiBold',
+  bodyBold: 'Nunito_700Bold',
+} as const;
+
 /** Reusable claymorphism outer elevation shadow */
 export const clayElevation = {
   shadowColor: Colors.shadowColor,
@@ -65,13 +82,16 @@ export const clayElevation = {
 
 /** Typography presets */
 export const Typography = StyleSheet.create({
-  h1: { fontSize: FontSize.h1, fontWeight: FontWeight.bold, color: Colors.text },
-  h2: { fontSize: FontSize.h2, fontWeight: FontWeight.bold, color: Colors.text },
-  h3: { fontSize: FontSize.h3, fontWeight: FontWeight.semiBold, color: Colors.text },
-  body: { fontSize: FontSize.body, fontWeight: FontWeight.regular, color: Colors.text },
-  bodyBold: { fontSize: FontSize.body, fontWeight: FontWeight.semiBold, color: Colors.text },
-  caption: { fontSize: FontSize.caption, fontWeight: FontWeight.regular, color: Colors.textSecondary },
-  captionBold: { fontSize: FontSize.caption, fontWeight: FontWeight.semiBold, color: Colors.textSecondary },
-  button: { fontSize: FontSize.button, fontWeight: FontWeight.bold, color: Colors.white },
+  wordmark: { fontSize: FontSize.wordmark, fontFamily: FontFamily.wordmark, color: Colors.text },
+  h1: { fontSize: FontSize.h1, fontFamily: FontFamily.displayBold, color: Colors.text },
+  h2: { fontSize: FontSize.h2, fontFamily: FontFamily.displayBold, color: Colors.text },
+  h3: { fontSize: FontSize.h3, fontFamily: FontFamily.heading, color: Colors.text },
+  body: { fontSize: FontSize.body, fontFamily: FontFamily.body, color: Colors.text },
+  bodyBold: { fontSize: FontSize.body, fontFamily: FontFamily.bodyBold, color: Colors.text },
+  caption: { fontSize: FontSize.caption, fontFamily: FontFamily.body, color: Colors.textSecondary },
+  captionBold: { fontSize: FontSize.caption, fontFamily: FontFamily.bodyMedium, color: Colors.textSecondary },
+  button: { fontSize: FontSize.button, fontFamily: FontFamily.button, color: Colors.white },
 });
+
+export type TypographyVariant = keyof typeof Typography;
 
