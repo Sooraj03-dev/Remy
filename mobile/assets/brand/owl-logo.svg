@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="400" viewBox="0 0 512 400" fill="none">
+  <!-- Thrifty Owl brand source. One group per animatable layer, no nested groups. -->
+  <g id="bubble">
+    <path d="M76 24H436C464.719 24 488 47.2812 488 76V268C488 296.719 464.719 320 436 320H232L178 368L170 320H76C47.2812 320 24 296.719 24 268V76C24 47.2812 47.2812 24 76 24Z" fill="#FFFFFF"/>
+  </g>
+  <g id="ears">
+    <path d="M196 110L178 68L226 92Z" fill="#342949"/>
+    <path d="M316 110L334 68L286 92Z" fill="#342949"/>
+  </g>
+  <g id="body">
+    <path d="M256 86C324 86 360 144 360 198C360 260 314 300 256 300C198 300 152 260 152 198C152 144 188 86 256 86Z" fill="#342949"/>
+  </g>
+  <g id="belly">
+    <ellipse cx="256" cy="238" rx="64" ry="48" fill="#FFFFFF"/>
+  </g>
+  <g id="eyes">
+    <circle cx="212" cy="186" r="34" fill="#FFFFFF"/>
+    <circle cx="300" cy="186" r="34" fill="#FFFFFF"/>
+  </g>
+  <g id="pupils">
+    <circle cx="220" cy="190" r="13" fill="#342949"/>
+    <circle cx="308" cy="190" r="13" fill="#342949"/>
+  </g>
+  <g id="beak">
+    <path d="M246 214H266L256 236Z" fill="#FFC6BA"/>
+  </g>
+</svg>

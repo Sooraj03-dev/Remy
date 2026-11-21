@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'Campus Marketplace'
+rootProject.name = 'Thrifty Owl'
 
 dependencyResolutionManagement {
   versionCatalogs {

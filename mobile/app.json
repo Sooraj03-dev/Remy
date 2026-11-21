@@ -1,26 +1,32 @@
 {
   "expo": {
-    "name": "Campus Marketplace",
-    "slug": "campus-marketplace",
+    "name": "Thrifty Owl",
+    "slug": "thrifty-owl",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
+    "scheme": "thriftyowl",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#F3EEFA"
+    },
+    "notification": {
+      "icon": "./assets/images/notification-icon.png",
+      "color": "#342949"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.unimart.campusmarketplace"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F3EEFA"
-      },
       "package": "com.unimart.campusmarketplace",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#B9A0EB",
+        "monochromeImage": "./assets/images/monochrome-icon.png"
+      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.CAMERA",
@@ -32,16 +38,15 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "scheme": "campusmarketplace"
+    }
   }
 }
-
