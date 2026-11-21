@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge } from '@components/index';
+import { ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge, OrderStepper } from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
 import { fetchOrderById, updateOrderStatus, submitReturnRequest } from '../../services/api';
 import type { Order, ReturnReason } from '../../../shared/types';
@@ -146,6 +146,7 @@ export default function OrderDetailsScreen() {
             <Text style={Typography.bodyBold}>Order Lifecycle Status</Text>
             <StatusBadge status={order.status} />
           </View>
+          <OrderStepper status={order.status} />
           <Text style={[Typography.caption, { marginTop: Spacing.xs, color: Colors.textSecondary }]}>
             {order.status === 'placed'
               ? 'Waiting for seller to confirm the order.'

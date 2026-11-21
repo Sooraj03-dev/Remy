@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useSignUp, useAuth } from '@clerk/clerk-expo';
-import { ClayCard, ClayInput, ClayButton } from '@components/index';
+import { ClayCard, ClayInput, ClayButton, AnimatedOwl, FloatingBlobs } from '@components/index';
 import { Colors, Spacing, FontSize, FontWeight, Typography } from '@constants/theme';
+import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
 
 export default function SignupScreen() {
@@ -71,7 +72,7 @@ export default function SignupScreen() {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: Array<{ message: string }> })?.errors?.[0]?.message ||
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ||
             'Sign up failed. Please try again.';
       setError(msg);
     } finally {
@@ -120,7 +121,7 @@ export default function SignupScreen() {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: Array<{ message: string }> })?.errors?.[0]?.message ||
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ||
             'Invalid verification code.';
       setError(msg);
     } finally {
@@ -133,19 +134,26 @@ export default function SignupScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <FloatingBlobs variant="auth" />
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.branding}>
-          <Text style={styles.emoji}>🎓</Text>
-          <Text style={Typography.h1}>
-            {pendingVerification ? 'Verify Email' : 'Create Account'}
+          {!pendingVerification ? (
+            <AnimatedOwl mood="curious" size={132} lookAt={{ x: -0.4, y: 0.2 }} />
+          ) : (
+            <AnimatedOwl mood="happy" size={120} />
+          )}
+          <Text style={Typography.wordmark}>{Copy.app.name}</Text>
+          <Text style={Typography.h2}>
+            {pendingVerification ? 'Verify Email' : Copy.auth.signupTitle}
           </Text>
           <Text style={[Typography.caption, styles.tagline]}>
             {pendingVerification
               ? `Enter the 6-digit code sent to ${email}`
-              : 'Join your campus marketplace'}
+              : Copy.auth.signupTagline}
           </Text>
         </View>
 
@@ -259,6 +267,7 @@ export default function SignupScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
+  scrollView: { flex: 1 },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',

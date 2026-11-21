@@ -22,7 +22,7 @@ import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@cons
 import { fetchProductById, updateProduct, uploadProductImages } from '../../../services/api';
 import type { Product, ProductCategory, ProductCondition } from '../../../../shared/types';
 
-const CATEGORIES: Array<{ label: string; value: ProductCategory }> = [
+const CATEGORIES: { label: string; value: ProductCategory }[] = [
   { label: '📚 Books', value: 'books' },
   { label: '📱 Electronics', value: 'electronics' },
   { label: '👕 Clothing', value: 'clothing' },
@@ -33,7 +33,7 @@ const CATEGORIES: Array<{ label: string; value: ProductCategory }> = [
   { label: '📦 Other', value: 'other' },
 ];
 
-const CONDITIONS: Array<{ label: string; value: ProductCondition }> = [
+const CONDITIONS: { label: string; value: ProductCondition }[] = [
   { label: '✨ Brand New', value: 'new' },
   { label: '👍 Like New', value: 'like_new' },
   { label: '👌 Good', value: 'good' },
@@ -43,7 +43,7 @@ const CONDITIONS: Array<{ label: string; value: ProductCondition }> = [
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getToken, userId } = useAuth();
+  const { getToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);

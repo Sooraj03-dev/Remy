@@ -1,5 +1,5 @@
 // mobile/app/orders/index.tsx
-// My Orders screen — Tabbed view of purchases and sales
+// My Orders — purchases/sales with animated lifecycle stepper and owl states.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -9,22 +9,33 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayButton, StatusBadge } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import {
+  ClayHeader,
+  ClayCard,
+  ClayButton,
+  StatusBadge,
+  ClayText,
+  AnimatedOwl,
+  OrderStepper,
+  SkeletonCard,
+} from '@components/index';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
+import { Copy } from '@constants/copy';
 import { fetchMyBuyerOrders, fetchMySellerOrders } from '../../services/api';
 import type { Order } from '../../../shared/types';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=🛍️';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=Owl';
 
 type OrdersTab = 'purchases' | 'sales';
 
 export default function MyOrdersScreen() {
   const router = useRouter();
+  const focused = useIsFocused();
   const { getToken } = useAuth();
 
   const [activeTab, setActiveTab] = useState<OrdersTab>('purchases');
@@ -70,23 +81,26 @@ export default function MyOrdersScreen() {
     <View style={styles.container}>
       <ClayHeader title="My Orders" subtitle="Track your campus purchases & sales" />
 
-      {/* Tabs */}
       <View style={styles.tabsContainer}>
         <Pressable
           style={[styles.tab, activeTab === 'purchases' && styles.tabActive]}
           onPress={() => setActiveTab('purchases')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'purchases' }}
         >
-          <Text style={[styles.tabText, activeTab === 'purchases' && styles.tabTextActive]}>
-            🛍️ Purchases ({purchases.length})
-          </Text>
+          <ClayText variant="captionBold" color={activeTab === 'purchases' ? 'white' : 'textSecondary'}>
+            Purchases ({purchases.length})
+          </ClayText>
         </Pressable>
         <Pressable
           style={[styles.tab, activeTab === 'sales' && styles.tabActive]}
           onPress={() => setActiveTab('sales')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'sales' }}
         >
-          <Text style={[styles.tabText, activeTab === 'sales' && styles.tabTextActive]}>
-            🏪 Sales ({sales.length})
-          </Text>
+          <ClayText variant="captionBold" color={activeTab === 'sales' ? 'white' : 'textSecondary'}>
+            Sales ({sales.length})
+          </ClayText>
         </Pressable>
       </View>
 
@@ -95,56 +109,66 @@ export default function MyOrdersScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
         {loading && !refreshing ? (
-          <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary} size="large" />
-            <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading orders...</Text>
+          <View style={styles.skeletonList}>
+            {[0, 1, 2].map((index) => (
+              <SkeletonCard key={index} height={104} paused={!focused} style={styles.skeletonItem} />
+            ))}
+            <ClayText variant="caption" align="center">
+              {Copy.loading.orders[0]}
+            </ClayText>
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>⚠️</Text>
-            <Text style={Typography.bodyBold}>Could not load orders</Text>
-            <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
-            <ClayButton label="Retry" variant="secondary" onPress={loadOrders} style={{ marginTop: Spacing.sm }} />
+            <AnimatedOwl mood="shocked" size={140} paused={!focused} />
+            <ClayText variant="bodyBold" align="center">
+              {Copy.error.title}
+            </ClayText>
+            <ClayText variant="caption" style={styles.errorText}>
+              {error}
+            </ClayText>
+            <ClayButton label={Copy.error.retry} variant="secondary" onPress={loadOrders} style={{ marginTop: Spacing.sm }} />
           </ClayCard>
         ) : currentList.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>{activeTab === 'purchases' ? '🛍️' : '🏪'}</Text>
-            <Text style={Typography.bodyBold}>No {activeTab} yet</Text>
-            <Text style={[Typography.caption, styles.emptyText]}>
-              {activeTab === 'purchases'
-                ? 'Browse the marketplace to find textbooks, electronics, and supplies!'
-                : 'Orders for your listings will appear here when students buy from you.'}
-            </Text>
-            {activeTab === 'purchases' && (
+            <AnimatedOwl mood="sleepy" size={150} paused={!focused} />
+            <ClayText variant="bodyBold" align="center">
+              {Copy.empty.ordersTitle}
+            </ClayText>
+            <ClayText variant="caption" align="center" style={styles.emptyText}>
+              {activeTab === 'purchases' ? Copy.empty.orders : 'Orders for your listings will appear here when students buy from you.'}
+            </ClayText>
+            {activeTab === 'purchases' ? (
               <ClayButton
                 label="Browse Marketplace"
                 onPress={() => router.push('/(tabs)/home')}
                 style={{ marginTop: Spacing.md }}
               />
-            )}
+            ) : null}
           </ClayCard>
         ) : (
           currentList.map((order) => (
-            <Pressable key={order.id} onPress={() => router.push(`/order/${order.id}`)}>
+            <Pressable key={order.id} onPress={() => router.push(`/order/${order.id}`)} accessibilityRole="button">
               <ClayCard style={styles.orderCard}>
-                <Image
-                  source={{ uri: order.productImage || PLACEHOLDER_IMAGE }}
-                  style={styles.thumbnail}
-                />
-                <View style={styles.orderInfo}>
-                  <View style={styles.orderHeader}>
-                    <Text style={[Typography.bodyBold, styles.orderTitle]} numberOfLines={1}>
-                      {order.productTitle}
+                <View style={styles.orderTop}>
+                  <Image source={{ uri: order.productImage || PLACEHOLDER_IMAGE }} style={styles.thumbnail} />
+                  <View style={styles.orderInfo}>
+                    <View style={styles.orderHeader}>
+                      <Text style={[Typography.bodyBold, styles.orderTitle]} numberOfLines={1}>
+                        {order.productTitle}
+                      </Text>
+                      <StatusBadge status={order.status} />
+                    </View>
+                    <Text style={styles.price}>₹{order.amount.toLocaleString('en-IN')}</Text>
+                    <Text style={Typography.caption} numberOfLines={1}>
+                      {activeTab === 'purchases' ? `Seller: ${order.sellerName}` : `Buyer: ${order.buyerName}`}
                     </Text>
-                    <StatusBadge status={order.status} />
+                    <Text style={[Typography.caption, styles.meta]}>
+                      {order.meetupLocation || 'Campus Center'} · {new Date(order.createdAt).toLocaleDateString()}
+                    </Text>
                   </View>
-                  <Text style={styles.price}>₹{order.amount.toLocaleString('en-IN')}</Text>
-                  <Text style={Typography.caption} numberOfLines={1}>
-                    {activeTab === 'purchases' ? `Seller: ${order.sellerName}` : `Buyer: ${order.buyerName}`}
-                  </Text>
-                  <Text style={[Typography.caption, { color: Colors.textSecondary, marginTop: 2 }]}>
-                    📍 {order.meetupLocation || 'Campus Center'} · {new Date(order.createdAt).toLocaleDateString()}
-                  </Text>
+                </View>
+                <View style={styles.stepperWrap}>
+                  <OrderStepper status={order.status} compact />
                 </View>
               </ClayCard>
             </Pressable>
@@ -172,23 +196,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  tabActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  tabText: { fontSize: FontSize.caption, color: Colors.textSecondary, fontWeight: FontWeight.bold },
-  tabTextActive: { color: Colors.white },
+  tabActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
-  centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
+  skeletonList: { gap: Spacing.sm },
+  skeletonItem: { width: '100%' },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
-  emptyEmoji: { fontSize: 44, marginBottom: Spacing.sm },
   emptyText: { textAlign: 'center', color: Colors.textSecondary, marginTop: Spacing.xs },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
-  orderCard: { flexDirection: 'row', padding: Spacing.sm, marginBottom: Spacing.sm, alignItems: 'center' },
+  orderCard: { padding: Spacing.sm, marginBottom: Spacing.sm },
+  orderTop: { flexDirection: 'row', alignItems: 'center' },
   thumbnail: { width: 70, height: 70, borderRadius: Radius.md, marginRight: Spacing.sm },
   orderInfo: { flex: 1 },
   orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   orderTitle: { flex: 1, marginRight: Spacing.xs },
-  price: { fontSize: FontSize.body, fontWeight: FontWeight.bold, color: Colors.text, marginVertical: 2 },
+  price: { fontSize: FontSize.body, fontFamily: FontFamily.display, color: Colors.text, marginVertical: 2 },
+  meta: { color: Colors.textSecondary, marginTop: 2 },
+  stepperWrap: { marginTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.xs },
 });
-

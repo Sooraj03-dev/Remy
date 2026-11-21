@@ -1,22 +1,18 @@
 // mobile/components/clay/ClayHeader.tsx
-// Screen header with large title, optional subtitle, and right-slot icon
+// Screen header with large title, optional subtitle and a 44px right action.
 
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  type ViewStyle,
-} from 'react-native';
+import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, FontSize, FontWeight } from '@constants/theme';
+import { ClayText } from '@components/ui/ClayText';
+import { Spacing } from '@constants/theme';
 
 interface ClayHeaderProps {
   title: string;
   subtitle?: string;
   rightIcon?: React.ReactNode;
   onRightPress?: () => void;
+  rightLabel?: string;
   style?: ViewStyle;
 }
 
@@ -25,6 +21,7 @@ export function ClayHeader({
   subtitle,
   rightIcon,
   onRightPress,
+  rightLabel = 'Header action',
   style,
 }: ClayHeaderProps) {
   const insets = useSafeAreaInsets();
@@ -32,13 +29,13 @@ export function ClayHeader({
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.sm }, style]}>
       <View style={styles.textBlock}>
-        <Text style={styles.title} numberOfLines={1}>
+        <ClayText variant="h1" numberOfLines={1}>
           {title}
-        </Text>
+        </ClayText>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <ClayText variant="caption" numberOfLines={1}>
             {subtitle}
-          </Text>
+          </ClayText>
         ) : null}
       </View>
       {rightIcon ? (
@@ -46,6 +43,7 @@ export function ClayHeader({
           onPress={onRightPress}
           style={styles.iconButton}
           accessibilityRole="button"
+          accessibilityLabel={rightLabel}
           hitSlop={12}
         >
           {rightIcon}
@@ -63,19 +61,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.sm,
   },
-  textBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  title: {
-    fontSize: FontSize.h1,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  subtitle: {
-    fontSize: FontSize.caption,
-    color: Colors.textSecondary,
-  },
+  textBlock: { flex: 1, gap: 2 },
   iconButton: {
     minWidth: 44,
     minHeight: 44,
@@ -83,4 +69,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-

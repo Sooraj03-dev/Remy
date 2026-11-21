@@ -16,7 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { ClayButton, ClayCard, StatusBadge, ClayInput } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography } from '@constants/theme';
 import {
   fetchPendingApprovals,
   approveProduct,

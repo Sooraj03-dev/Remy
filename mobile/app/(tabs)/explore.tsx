@@ -1,21 +1,33 @@
 // mobile/app/(tabs)/explore.tsx
-// Explore screen — Live search and 2-column marketplace grid
+// Explore — live search with skeleton grid and owl empty/error states.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { ClayHeader, ClayInput, ClayCard, ProductCard, ClayButton } from '@components/index';
-import { Colors, Spacing, Typography } from '@constants/theme';
+import { useIsFocused } from '@react-navigation/native';
+import {
+  ClayHeader,
+  ClayInput,
+  ClayCard,
+  ProductCard,
+  ClayButton,
+  ClayText,
+  AnimatedOwl,
+  SkeletonCard,
+  StaggeredItem,
+  Icon,
+} from '@components/index';
+import { Colors, Spacing } from '@constants/theme';
+import { Copy, isOfflineError } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product } from '../../../shared/types';
 
 export default function ExploreScreen() {
+  const focused = useIsFocused();
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,13 +37,10 @@ export default function ExploreScreen() {
   const performSearch = useCallback(async (query: string) => {
     setError(null);
     try {
-      const data = await fetchProducts({
-        search: query.trim() || undefined,
-      });
+      const data = await fetchProducts({ search: query.trim() || undefined });
       setProducts(data);
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to search products.';
+      const msg = err instanceof Error ? err.message : 'Failed to search products.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -42,14 +51,14 @@ export default function ExploreScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       performSearch(search);
-    }, 350); // Debounce search
+    }, 350);
     return () => clearTimeout(timer);
   }, [search, performSearch]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     performSearch(search);
-  }, [search, performSearch]);
+  }, [performSearch, search]);
 
   return (
     <View style={styles.container}>
@@ -66,19 +75,29 @@ export default function ExploreScreen() {
       </View>
 
       {loading && !refreshing ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={Colors.primary} size="large" />
-          <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>
-            Searching campus items...
-          </Text>
+        <View style={styles.skeletonGrid}>
+          {[0, 1, 2, 3].map((index) => (
+            <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+          ))}
+          <ClayText variant="caption" align="center" style={styles.loadingText}>
+            {Copy.loading.search[0]}
+          </ClayText>
         </View>
       ) : error ? (
         <ClayCard variant="peach" style={styles.emptyCard}>
-          <Text style={styles.emptyEmoji}>⚠️</Text>
-          <Text style={Typography.bodyBold}>Error Searching Listings</Text>
-          <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
+          {isOfflineError(error) ? (
+            <Icon name="WifiSlash" size="lg" weight="duotone" color="primary" />
+          ) : (
+            <AnimatedOwl mood="shocked" size={130} paused={!focused} />
+          )}
+          <ClayText variant="bodyBold" align="center">
+            {isOfflineError(error) ? Copy.error.offlineTitle : Copy.error.title}
+          </ClayText>
+          <ClayText variant="caption" style={styles.errorText}>
+            {isOfflineError(error) ? `${Copy.error.offline} (${error})` : error}
+          </ClayText>
           <ClayButton
-            label="Retry"
+            label={Copy.error.retry}
             variant="secondary"
             onPress={() => performSearch(search)}
             style={{ marginTop: Spacing.sm }}
@@ -86,13 +105,15 @@ export default function ExploreScreen() {
         </ClayCard>
       ) : products.length === 0 ? (
         <ClayCard style={styles.emptyCard}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={Typography.bodyBold}>No listings found</Text>
-          <Text style={[Typography.caption, styles.emptyText]}>
+          <AnimatedOwl mood="curious" size={140} paused={!focused} />
+          <ClayText variant="bodyBold" align="center">
+            {Copy.empty.searchTitle}
+          </ClayText>
+          <ClayText variant="caption" align="center" style={styles.emptyText}>
             {search.trim()
-              ? `No approved products found matching "${search}".`
+              ? `Nothing matches "${search}". ${Copy.empty.search}`
               : 'There are currently no approved products listed on campus.'}
-          </Text>
+          </ClayText>
         </ClayCard>
       ) : (
         <FlatList
@@ -101,16 +122,14 @@ export default function ExploreScreen() {
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <ProductCard product={item} style={styles.card} />
+          renderItem={({ item, index }) => (
+            <StaggeredItem index={index} style={styles.card}>
+              <ProductCard product={item} />
+            </StaggeredItem>
           )}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
           }
         />
       )}
@@ -124,18 +143,19 @@ const styles = StyleSheet.create({
   list: { padding: Spacing.base, gap: Spacing.sm, paddingBottom: Spacing.xxxl },
   row: { gap: Spacing.sm },
   card: { flex: 1 },
-  centerBox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    padding: Spacing.base,
   },
+  loadingText: { width: '100%', marginTop: Spacing.sm },
   emptyCard: {
     margin: Spacing.base,
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     gap: Spacing.xs,
   },
-  emptyEmoji: { fontSize: 40, marginBottom: 4 },
   errorText: { color: Colors.error, textAlign: 'center' },
   emptyText: { textAlign: 'center', color: Colors.textSecondary },
 });

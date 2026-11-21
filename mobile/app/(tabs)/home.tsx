@@ -1,41 +1,53 @@
 // mobile/app/(tabs)/home.tsx
-// Home screen — Live marketplace feed with categories, pull-to-refresh, and error states
+// Home — Thrifty Owl feed with blob header, staggered clay cards and owl states.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   FlatList,
   RefreshControl,
-  ActivityIndicator,
-  Pressable,
 } from 'react-native';
 import { useUser } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index';
-import { Colors, Spacing, Radius, Typography } from '@constants/theme';
+import { useIsFocused } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import {
+  ClayHeader,
+  ClayCard,
+  ProductCard,
+  ClayButton,
+  ClayText,
+  CategoryChip,
+  AnimatedOwl,
+  FloatingBlobs,
+  SkeletonCard,
+  StaggeredItem,
+  Icon,
+} from '@components/index';
+import { Colors, Spacing } from '@constants/theme';
+import { Copy, isOfflineError, pickVariant } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product, ProductCategory } from '../../../shared/types';
 
-const CATEGORIES: Array<{ label: string; key: ProductCategory | 'all' }> = [
-  { label: '✨ All', key: 'all' },
-  { label: '📚 Books', key: 'books' },
-  { label: '📱 Electronics', key: 'electronics' },
-  { label: '👕 Clothing', key: 'clothing' },
-  { label: '✏️ Stationery', key: 'stationery' },
-  { label: '⚽ Sports', key: 'sports' },
-  { label: '🪑 Furniture', key: 'furniture' },
+const CATEGORIES: { label: string; key: ProductCategory | 'all' }[] = [
+  { label: 'All', key: 'all' },
+  { label: 'Textbooks', key: 'books' },
+  { label: 'Electronics', key: 'electronics' },
+  { label: 'Clothing', key: 'clothing' },
+  { label: 'Stationery', key: 'stationery' },
+  { label: 'Sports', key: 'sports' },
+  { label: 'Furniture', key: 'furniture' },
 ];
 
 export default function HomeScreen() {
   const { user } = useUser();
+  const router = useRouter();
+  const focused = useIsFocused();
   const firstName = user?.firstName ?? 'there';
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<
-    ProductCategory | 'all'
-  >('all');
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +56,11 @@ export default function HomeScreen() {
     setError(null);
     try {
       const params =
-        selectedCategory === 'all'
-          ? {}
-          : { category: selectedCategory as ProductCategory };
+        selectedCategory === 'all' ? {} : { category: selectedCategory as ProductCategory };
       const data = await fetchProducts(params);
       setProducts(data);
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'Could not load products.';
+      const msg = err instanceof Error ? err.message : 'Could not load products.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -71,102 +80,91 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ClayHeader
-        title={`Hey, ${firstName} 👋`}
-        subtitle="What are you looking for today?"
-      />
+      <View style={styles.headerWrap}>
+        <FloatingBlobs variant="header" paused={!focused} />
+        <ClayText variant="captionBold" color="primary" style={styles.wordmark}>
+          THRIFTY OWL
+        </ClayText>
+        <ClayHeader title={`Hey, ${firstName}`} subtitle="What are you looking for today?" />
+      </View>
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
         }
       >
-        {/* Categories horizontal filter */}
         <View style={styles.section}>
-          <Text style={[Typography.h3, styles.sectionTitle]}>Categories</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.chips}>
-              {CATEGORIES.map((cat) => {
-                const isSelected = selectedCategory === cat.key;
-                return (
-                  <Pressable
-                    key={cat.key}
-                    onPress={() => setSelectedCategory(cat.key)}
-                  >
-                    <ClayCard
-                      variant={isSelected ? 'mint' : 'lavender'}
-                      style={[
-                        styles.chip,
-                        isSelected && {
-                          borderColor: Colors.primary,
-                          borderWidth: 1.5,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          Typography.captionBold,
-                          isSelected && { color: Colors.text },
-                        ]}
-                      >
-                        {cat.label}
-                      </Text>
-                    </ClayCard>
-                  </Pressable>
-                );
-              })}
-            </View>
+          <ClayText variant="h3" style={styles.sectionTitle}>
+            Categories
+          </ClayText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            {CATEGORIES.map((cat) => (
+              <CategoryChip
+                key={cat.key}
+                label={cat.label}
+                category={cat.key}
+                selected={selectedCategory === cat.key}
+                onPress={() => setSelectedCategory(cat.key)}
+              />
+            ))}
           </ScrollView>
         </View>
 
-        {/* Live Marketplace Products */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[Typography.h3, styles.sectionTitle]}>
-              Available on Campus
-            </Text>
-            {products.length > 0 && (
-              <Text style={Typography.caption}>
+            <ClayText variant="h3">Available on Campus</ClayText>
+            {products.length > 0 ? (
+              <ClayText variant="caption">
                 {products.length} item{products.length === 1 ? '' : 's'}
-              </Text>
-            )}
+              </ClayText>
+            ) : null}
           </View>
 
           {loading ? (
-            <View style={styles.centerBox}>
-              <ActivityIndicator color={Colors.primary} size="large" />
-              <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>
-                Loading live listings...
-              </Text>
+            <View>
+              <View style={styles.skeletonRow}>
+                {[0, 1, 2].map((index) => (
+                  <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+                ))}
+              </View>
+              <ClayText variant="caption" align="center" style={styles.loadingText}>
+                {pickVariant(Copy.loading.feed, 1)}
+              </ClayText>
             </View>
           ) : error ? (
             <ClayCard variant="peach" style={styles.statusCard}>
-              <Text style={styles.statusEmoji}>⚠️</Text>
-              <Text style={Typography.bodyBold}>Failed to load listings</Text>
-              <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
-              <ClayButton
-                label="Retry"
-                variant="secondary"
-                onPress={loadProducts}
-                style={styles.retryBtn}
-              />
+              {isOfflineError(error) ? (
+                <Icon name="WifiSlash" size="lg" weight="duotone" color="primary" />
+              ) : (
+                <AnimatedOwl mood="shocked" size={130} paused={!focused} />
+              )}
+              <ClayText variant="bodyBold" align="center">
+                {isOfflineError(error) ? Copy.error.offlineTitle : Copy.error.title}
+              </ClayText>
+              <ClayText variant="caption" style={styles.errorText}>
+                {isOfflineError(error) ? `${Copy.error.offline} (${error})` : error}
+              </ClayText>
+              <ClayButton label={Copy.error.retry} variant="secondary" onPress={loadProducts} style={styles.retryBtn} />
             </ClayCard>
           ) : products.length === 0 ? (
             <ClayCard style={styles.statusCard}>
-              <Text style={styles.statusEmoji}>📦</Text>
-              <Text style={Typography.bodyBold}>No products found</Text>
-              <Text style={[Typography.caption, styles.emptyText]}>
+              <AnimatedOwl mood="sleepy" size={140} paused={!focused} />
+              <ClayText variant="bodyBold" align="center">
+                {Copy.empty.listingsTitle}
+              </ClayText>
+              <ClayText variant="caption" align="center" style={styles.emptyText}>
                 {selectedCategory === 'all'
-                  ? 'No approved items are currently available in the marketplace.'
-                  : `No approved items found in '${selectedCategory}'.`}
-              </Text>
+                  ? Copy.empty.listings
+                  : `No approved items in ${selectedCategory} yet. Try another shelf.`}
+              </ClayText>
+              <ClayButton
+                label="List your first item"
+                onPress={() => router.push('/(tabs)/sell')}
+                style={styles.retryBtn}
+              />
             </ClayCard>
           ) : (
             <FlatList
@@ -174,23 +172,28 @@ export default function HomeScreen() {
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <ProductCard product={item} style={styles.productCard} />
+              renderItem={({ item, index }) => (
+                <StaggeredItem index={index} style={styles.productCard}>
+                  <ProductCard product={item} />
+                </StaggeredItem>
               )}
               contentContainerStyle={styles.productList}
             />
           )}
         </View>
 
-        {/* Safety & Meetup Guide Banner */}
         <View style={styles.section}>
           <ClayCard variant="mint" style={styles.guideCard}>
-            <Text style={Typography.bodyBold}>🤝 Safe Campus Meetups</Text>
-            <Text style={[Typography.caption, { marginTop: 4 }]}>
-              Meet in well-lit public campus spots like the Student Union,
-              Library foyer, or University Cafe. Inspect items before completing
-              trades.
-            </Text>
+            <View style={styles.guideHeader}>
+              <ClayText variant="bodyBold">Safe Campus Meetups</ClayText>
+              <ClayText variant="caption" color="textSecondary">
+                Owl approved
+              </ClayText>
+            </View>
+            <ClayText variant="caption" style={styles.guideText}>
+              Meet in well-lit public campus spots like the Student Union, Library foyer, or
+              University Cafe. Inspect items before completing trades.
+            </ClayText>
           </ClayCard>
         </View>
       </ScrollView>
@@ -200,6 +203,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  headerWrap: { paddingTop: Spacing.sm, overflow: 'hidden' },
+  wordmark: { paddingHorizontal: Spacing.base, letterSpacing: 1.5 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: Spacing.xxxl },
   section: { paddingHorizontal: Spacing.base, marginTop: Spacing.xl },
@@ -209,29 +214,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  sectionTitle: { marginBottom: 0 },
-  chips: { flexDirection: 'row', gap: Spacing.sm },
-  chip: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-  },
+  sectionTitle: { marginBottom: Spacing.sm },
+  chips: { flexDirection: 'row', gap: Spacing.sm, paddingVertical: 2 },
+  skeletonRow: { flexDirection: 'row', gap: Spacing.sm, overflow: 'hidden' },
+  loadingText: { marginTop: Spacing.sm },
   productList: { gap: Spacing.sm, paddingVertical: Spacing.xs },
   productCard: { width: 180 },
-  centerBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xxl,
-  },
   statusCard: {
     alignItems: 'center',
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     gap: Spacing.xs,
   },
-  statusEmoji: { fontSize: 36, marginBottom: 4 },
   errorText: { color: Colors.error, textAlign: 'center' },
   emptyText: { textAlign: 'center', color: Colors.textSecondary },
-  retryBtn: { marginTop: Spacing.sm, minHeight: 38 },
+  retryBtn: { marginTop: Spacing.sm, alignSelf: 'center' },
   guideCard: { padding: Spacing.base },
+  guideHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  guideText: { marginTop: 4 },
 });

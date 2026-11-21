@@ -16,8 +16,17 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
-import { ClayHeader, ClayCard, ClayInput, ClayButton } from '@components/index';
+import {
+  ClayHeader,
+  ClayCard,
+  ClayInput,
+  ClayButton,
+  CelebrationOverlay,
+  useToast,
+  Icon,
+} from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Copy } from '@constants/copy';
 import {
   createProduct,
   uploadProductImages,
@@ -26,7 +35,7 @@ import {
 } from '../../services/api';
 import type { ProductCategory, ProductCondition } from '../../../shared/types';
 
-const CATEGORIES: Array<{ label: string; value: ProductCategory }> = [
+const CATEGORIES: { label: string; value: ProductCategory }[] = [
   { label: '📚 Books', value: 'books' },
   { label: '📱 Electronics', value: 'electronics' },
   { label: '👕 Clothing', value: 'clothing' },
@@ -37,7 +46,7 @@ const CATEGORIES: Array<{ label: string; value: ProductCategory }> = [
   { label: '📦 Other', value: 'other' },
 ];
 
-const CONDITIONS: Array<{ label: string; value: ProductCondition }> = [
+const CONDITIONS: { label: string; value: ProductCondition }[] = [
   { label: '✨ Brand New', value: 'new' },
   { label: '👍 Like New', value: 'like_new' },
   { label: '👌 Good', value: 'good' },
@@ -64,6 +73,8 @@ export default function SellScreen() {
   const [aiQualityScore, setAiQualityScore] = useState<number | null>(null);
   const [aiFeedback, setAiFeedback] = useState<string[]>([]);
   const [aiTips, setAiTips] = useState<string[]>([]);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const { showToast } = useToast();
 
   // Pick images from the device gallery
   const handlePickImages = async () => {
@@ -195,24 +206,16 @@ export default function SellScreen() {
         images: uploadedImageUrls,
       });
 
-      Alert.alert(
-        'Listing Submitted 🎉',
-        'Your listing has been submitted and is currently pending review. It will appear on the marketplace once approved by our verification team.',
-        [
-          {
-            text: 'View in Dashboard',
-            onPress: () => {
-              // Reset form
-              setTitle('');
-              setPrice('');
-              setDescription('');
-              setCampusLocation('');
-              setImages([]);
-              router.push('/seller/dashboard');
-            },
-          },
-        ],
-      );
+      setTitle('');
+      setPrice('');
+      setDescription('');
+      setCampusLocation('');
+      setImages([]);
+      setAiQualityScore(null);
+      setAiFeedback([]);
+      setAiTips([]);
+      setShowCelebration(true);
+      showToast(Copy.success.submitted, 'success');
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Failed to create listing.';
@@ -408,7 +411,7 @@ export default function SellScreen() {
 
             {images.length === 0 ? (
               <Pressable onPress={handlePickImages} style={styles.uploadPrompt}>
-                <Text style={styles.uploadEmoji}>📸</Text>
+                <Icon name="Camera" size="lg" weight="duotone" color="primary" />
                 <Text style={Typography.bodyBold}>Upload Item Photos</Text>
                 <Text style={Typography.caption}>
                   Add up to 5 clear photos of your product.
@@ -448,12 +451,22 @@ export default function SellScreen() {
           ) : null}
 
           <ClayButton
-            label={submitting ? 'Submitting...' : 'Submit Listing'}
+            label={submitting ? Copy.sell.submitting : Copy.sell.submit}
             onPress={handleSubmit}
             loading={submitting}
             style={styles.submitBtn}
           />
         </ScrollView>
+
+        <CelebrationOverlay
+          visible={showCelebration}
+          title={Copy.success.submitted}
+          message="Your listing is pending review. We will hoot when it goes live."
+          onDismiss={() => {
+            setShowCelebration(false);
+            router.push('/seller/dashboard');
+          }}
+        />
       </View>
     </KeyboardAvoidingView>
   );

@@ -8,15 +8,26 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayButton, ClayCard, ClayInput, StatusBadge } from '@components/index';
+import {
+  ClayButton,
+  ClayCard,
+  ClayInput,
+  StatusBadge,
+  ClayText,
+  AnimatedOwl,
+  HeartBurst,
+  VerifiedBadge,
+  useToast,
+} from '@components/index';
 import { Colors, Spacing, Radius, Typography } from '@constants/theme';
+import { Copy } from '@constants/copy';
 import {
   fetchProductById,
   addToWishlist,
@@ -40,6 +51,8 @@ export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getToken, userId } = useAuth();
+  const focused = useIsFocused();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [inWishlist, setInWishlist] = useState(false);
@@ -116,8 +129,9 @@ export default function ProductDetailsScreen() {
       } else {
         await addToWishlist(token, id);
         setInWishlist(true);
+        showToast(Copy.success.wishlistSaved, 'success');
       }
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'Could not update wishlist.');
     } finally {
       setWishlistLoading(false);
@@ -131,10 +145,10 @@ export default function ProductDetailsScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-        <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>
-          Loading product...
-        </Text>
+        <AnimatedOwl mood="sleepy" size={150} paused={!focused} />
+        <ClayText variant="caption" align="center">
+          {Copy.loading.product[0]}
+        </ClayText>
       </View>
     );
   }
@@ -143,7 +157,7 @@ export default function ProductDetailsScreen() {
     return (
       <View style={[styles.container, styles.centerBox]}>
         <ClayCard variant="peach" style={styles.errorCard}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
+          <AnimatedOwl mood="shocked" size={130} paused={!focused} />
           <Text style={Typography.bodyBold}>Product Not Available</Text>
           <Text style={[Typography.caption, styles.errorText]}>
             {error || 'This listing may have been removed or is pending approval.'}
@@ -190,11 +204,8 @@ export default function ProductDetailsScreen() {
           {/* Status & verification badges */}
           <View style={styles.badgeRow}>
             <StatusBadge status={product.status} />
-            {product.aiVerified && (
-              <ClayCard variant="mint" style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✅ AI Verified</Text>
-              </ClayCard>
-            )}
+            {product.aiVerified ? <VerifiedBadge label="AI Verified" /> : null}
+            {product.status === 'verified' ? <VerifiedBadge label="Verified listing" /> : null}
             {product.status === 'pending_review' && (
               <ClayCard variant="lavender" style={styles.verifiedBadge}>
                 <Text style={styles.pendingText}>⏳ In Verification Queue</Text>
@@ -211,10 +222,16 @@ export default function ProductDetailsScreen() {
           )}
 
           {/* Title & Price */}
-          <Text style={Typography.h2}>{product.title}</Text>
-          <Text style={styles.price}>
-            ₹{product.price.toLocaleString('en-IN')}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text style={[Typography.h2, styles.titleText]}>{product.title}</Text>
+            <HeartBurst
+              active={inWishlist}
+              onPress={handleToggleWishlist}
+              size={26}
+              disabled={wishlistLoading}
+            />
+          </View>
+          <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
 
           {/* Metadata Card */}
           <ClayCard variant="lavender" style={styles.metaCard}>
@@ -300,13 +317,6 @@ export default function ProductDetailsScreen() {
                     style={styles.actionButton}
                   />
                 )}
-                <ClayButton
-                  label={inWishlist ? '♥ Saved in Wishlist' : '♡ Add to Wishlist'}
-                  variant={inWishlist ? 'primary' : 'secondary'}
-                  onPress={handleToggleWishlist}
-                  loading={wishlistLoading}
-                  style={styles.actionButton}
-                />
                 <ClayButton
                   label="🚩 Report Listing"
                   variant="ghost"
@@ -412,7 +422,9 @@ const styles = StyleSheet.create({
   verifiedText: { fontSize: 12, fontWeight: '600', color: '#1A7A52' },
   pendingText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
   rejectionCard: { padding: Spacing.sm, gap: 2 },
-  price: { fontSize: 28, fontWeight: '700', color: Colors.primary },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  titleText: { flex: 1 },
+  price: { fontSize: 28, fontFamily: 'Fredoka_700Bold', color: Colors.primary },
   metaCard: { gap: Spacing.sm },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
   descBlock: { gap: Spacing.xs },

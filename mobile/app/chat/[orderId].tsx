@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayInput, ClayButton } from '@components/index';
+import { ClayInput, ClayButton } from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
 import { fetchOrderMessages, sendMessage, fetchOrderById } from '../../services/api';
 import type { Message, Order } from '../../../shared/types';

@@ -1,16 +1,29 @@
 // mobile/app/_layout.tsx
-// Root layout — Clerk provider + Expo Router Stack
+// Root layout — fonts, native splash handoff, Clerk auth gate, animated splash.
+
+import 'react-native-gesture-handler';
 
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
+import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from '@expo-google-fonts/nunito';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AnimatedSplash, ToastProvider } from '@components/index';
+import { Colors } from '@constants/theme';
 
 const CLERK_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   'pk_test_ZGFzaGluZy1tb2xseS04OTk4LmNsZXJrLmFjY291bnRzLmRldiQ';
+
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 // Token cache: persisted in Expo SecureStore for secure JWT storage
 const tokenCache = {
@@ -46,18 +59,67 @@ function AuthGate() {
     }
   }, [isLoaded, isSignedIn, segments, router]);
 
-  return <Slot />;
-}
-
-export default function RootLayout() {
   return (
-    <ClerkProvider
-      publishableKey={CLERK_PUBLISHABLE_KEY}
-      tokenCache={tokenCache}
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: Colors.background },
+        animation: 'slide_from_right',
+      }}
     >
-      <StatusBar style="dark" backgroundColor="transparent" translucent />
-      <AuthGate />
-    </ClerkProvider>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="chat/[orderId]" options={{ presentation: 'modal', animation: 'fade_from_bottom' }} />
+      <Stack.Screen name="order/checkout/[id]" options={{ presentation: 'modal', animation: 'fade_from_bottom' }} />
+    </Stack>
   );
 }
 
+function SplashGate({ fontsReady }: { fontsReady: boolean }) {
+  const { isLoaded } = useAuth();
+  const [splashDone, setSplashDone] = useState(false);
+
+  useEffect(() => {
+    if (!fontsReady) return;
+    // Hand over from the native splash only once our custom fonts are usable.
+    SplashScreen.hideAsync().catch(() => undefined);
+  }, [fontsReady]);
+
+  return (
+    <>
+      <AuthGate />
+      {!splashDone && fontsReady ? (
+        <AnimatedSplash ready={fontsReady && isLoaded} onFinish={() => setSplashDone(true)} />
+      ) : null}
+    </>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  });
+
+  const fontsReady = fontsLoaded || Boolean(fontError);
+
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+          <StatusBar style="dark" backgroundColor="transparent" translucent />
+          <ToastProvider>
+            <SplashGate fontsReady={fontsReady} />
+          </ToastProvider>
+        </ClerkProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

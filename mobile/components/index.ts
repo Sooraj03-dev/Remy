@@ -1,5 +1,5 @@
 // mobile/components/index.ts
-// Barrel export — import all components from here
+// Barrel export — import shared components from here.
 
 // Clay components
 export { ClayButton } from './clay/ClayButton';
@@ -10,4 +10,11 @@ export { ClayHeader } from './clay/ClayHeader';
 // Product components
 export { ProductCard } from './product/ProductCard';
 export { StatusBadge } from './product/StatusBadge';
+export { CategoryChip } from './product/CategoryChip';
 
+// UI primitives
+export { ClayText } from './ui/ClayText';
+export { Icon } from './ui/Icon';
+
+// Motion system
+export * from './fx';

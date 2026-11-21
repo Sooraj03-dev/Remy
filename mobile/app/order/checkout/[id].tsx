@@ -11,12 +11,19 @@ import {
   Platform,
   Image,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayInput, ClayButton, StatusBadge } from '@components/index';
+import {
+  ClayHeader,
+  ClayCard,
+  ClayInput,
+  ClayButton,
+  StatusBadge,
+  CelebrationOverlay,
+} from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Copy } from '@constants/copy';
 import {
   fetchProductById,
   createOrder,
@@ -41,6 +48,8 @@ export default function CheckoutScreen() {
   const [certifiedLocations, setCertifiedLocations] = useState<CampusMeetupLocation[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi_demo');
   const [error, setError] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
 
   const loadProductAndLocations = useCallback(async () => {
     if (!id) return;
@@ -113,18 +122,8 @@ export default function CheckoutScreen() {
         });
       }
 
-      Alert.alert(
-        'Order Placed! 🎉',
-        paymentMethod === 'upi_demo'
-          ? 'Your order request was confirmed with verified digital UPI sandbox payment. Coordinate meetup in chat!'
-          : 'Your order request was sent to the seller. Pay cash upon physical meetup inspection.',
-        [
-          {
-            text: 'View Order',
-            onPress: () => router.replace(`/order/${order.id}`),
-          },
-        ],
-      );
+      setPlacedOrderId(order.id);
+      setCelebrating(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place order.');
     } finally {
@@ -182,7 +181,7 @@ export default function CheckoutScreen() {
         <ClayCard variant="lavender" style={styles.formCard}>
           <Text style={[Typography.h3, styles.sectionTitle]}>Campus Meetup Details</Text>
           <Text style={[Typography.caption, styles.infoNote]}>
-            🤝 Campus Marketplace transactions happen in person on campus. Coordinate where and when to meet the seller.
+            🤝 Thrifty Owl transactions happen in person on campus. Coordinate where and when to meet the seller.
           </Text>
 
           {error ? (
@@ -283,6 +282,16 @@ export default function CheckoutScreen() {
           </View>
         </ClayCard>
       </ScrollView>
+
+      <CelebrationOverlay
+        visible={celebrating}
+        title={Copy.success.orderPlaced}
+        message={Copy.success.orderPlacedBody}
+        onDismiss={() => {
+          setCelebrating(false);
+          if (placedOrderId) router.replace(`/order/${placedOrderId}`);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
