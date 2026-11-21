@@ -14,6 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
+import { CelebrationOverlay } from '@components/fx';
+import { Copy } from '@constants/copy';
 import { Colors, Spacing, Typography, FontSize, FontWeight } from '@constants/theme';
 import {
   fetchNotifications,
@@ -30,6 +32,8 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Seller-side "listing approved" celebration, shown once per approval tap.
+  const [approvedProductId, setApprovedProductId] = useState<string | null>(null);
 
   const loadNotifications = useCallback(async () => {
     setError(null);
@@ -69,12 +73,25 @@ export default function NotificationsScreen() {
       console.warn('[Mark read error]', err);
     }
 
+    // An approval gets the celebration first; navigation waits for the dismiss.
+    const approvedId = item.data?.productId;
+    if (item.type === 'product_approved' && typeof approvedId === 'string') {
+      setApprovedProductId(approvedId);
+      return;
+    }
+
     // Deep link based on notification data
     if (item.data?.orderId) {
       router.push(`/order/${item.data.orderId}`);
     } else if (item.data?.productId) {
       router.push(`/product/${item.data.productId}`);
     }
+  };
+
+  const handleDismissCelebration = () => {
+    const productId = approvedProductId;
+    setApprovedProductId(null);
+    if (productId) router.push(`/product/${productId}`);
   };
 
   const handleMarkAllRead = async () => {
@@ -168,6 +185,13 @@ export default function NotificationsScreen() {
           ))
         )}
       </ScrollView>
+
+      <CelebrationOverlay
+        visible={approvedProductId !== null}
+        title="You're live!"
+        message={Copy.success.approved}
+        onDismiss={handleDismissCelebration}
+      />
     </View>
   );
 }
