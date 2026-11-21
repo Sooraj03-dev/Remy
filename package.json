@@ -1,0 +1,13 @@
+{
+  "name": "unimart-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "test": "npm run test --prefix server"
+  },
+  "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9"
+  }
+}

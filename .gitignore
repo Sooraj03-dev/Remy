@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables — NEVER commit real secrets
+.env
+.env.local
+.env.development
+.env.production
+
+# Expo
+.expo/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+
+# EAS
+mobile/eas-build-*.log
+
+# TypeScript
+*.tsbuildinfo
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jest
+coverage/
+
+# Drizzle generated
+server/src/db/migrations/*.js
+
+.neon
