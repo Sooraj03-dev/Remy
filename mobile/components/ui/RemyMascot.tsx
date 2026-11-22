@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { Platform, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   cancelAnimation,
   Easing,
+  ReduceMotion,
+  runOnUI,
+  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -12,6 +16,7 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Defs, Ellipse, Path, RadialGradient, Stop } from 'react-native-svg';
 import { ClayCard } from '@components/clay/ClayCard';
@@ -19,12 +24,13 @@ import { Copy } from '@constants/copy';
 import { Durations, Springs } from '@constants/motion';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { ClayText } from './ClayText';
-import { RemyArt } from './RemyArt';
+import { REMY_FACE, REMY_PEEK_ASPECT_RATIO, RemyArt, RemyLayer } from './RemyArt';
+import { NibblingRemy } from './RemyReactions';
 
 interface TypingProps {
   state: 'typing';
   visible: boolean;
-  keystrokes: number;
+  keystrokes: SharedValue<number>;
 }
 
 interface LoadingProps {
@@ -33,14 +39,16 @@ interface LoadingProps {
   size?: number;
   paused?: boolean;
   busy?: boolean;
+  nibble?: boolean;
 }
 
 interface RoamingProps {
   state: 'roaming';
   paused?: boolean;
+  browsingTime?: SharedValue<number>;
 }
 
-export function RemyMascot(props: TypingProps | LoadingProps | RoamingProps) {
+export const RemyMascot = React.memo(function RemyMascot(props: TypingProps | LoadingProps | RoamingProps) {
   switch (props.state) {
     case 'typing':
       return <TypingRemy {...props} />;
@@ -49,17 +57,36 @@ export function RemyMascot(props: TypingProps | LoadingProps | RoamingProps) {
     case 'roaming':
       return <RoamingRemy {...props} />;
   }
-}
+});
 
 const PEEK_SIZE = 62;
 const ROAM_SIZE = 54;
 const REST_STOPS = [0.84, 0.12, 0.56, 0.06, 0.94, 0.38];
+const restingBody = ['body', ...REMY_FACE, 'paws'] as const;
+
+const groundShadow = (
+  <Svg width={48} height={12} viewBox="0 0 48 12">
+    <Defs>
+      <RadialGradient id="remy-ground">
+        <Stop offset="0" stopColor={Colors.shadowColor} stopOpacity={0.38} />
+        <Stop offset="1" stopColor={Colors.shadowColor} stopOpacity={0} />
+      </RadialGradient>
+    </Defs>
+    <Ellipse cx={24} cy={6} rx={24} ry={6} fill="url(#remy-ground)" />
+  </Svg>
+);
+const hopSparkles = (
+  <Svg width={38} height={24} viewBox="0 0 38 24">
+    <Path d="M19 3L21 8L26 10L21 12L19 17L17 12L12 10L17 8ZM7 11L8 14L11 15L8 16L7 19L6 16L3 15L6 14ZM31 12L32 15L35 16L32 17L31 20L30 17L27 16L30 15Z" fill={Colors.accent} />
+  </Svg>
+);
 
 function TypingRemy({ visible, keystrokes }: TypingProps) {
   const reducedMotion = useReducedMotion();
   const reveal = useSharedValue(0);
   const glance = useSharedValue(0);
   const pawTap = useSharedValue(0);
+  const twitch = useSharedValue(0);
 
   useEffect(() => {
     const target = visible ? 1 : 0;
@@ -68,21 +95,32 @@ function TypingRemy({ visible, keystrokes }: TypingProps) {
       : withTiming(target, { duration: visible ? Durations.slow : Durations.base });
   }, [reducedMotion, reveal, visible]);
 
-  useEffect(() => {
-    if (!visible || !keystrokes || reducedMotion) {
-      glance.value = 0;
-      pawTap.value = 0;
-      return;
-    }
-    glance.value = withSequence(
-      withTiming(keystrokes % 2 ? -1.8 : 1.8, { duration: Durations.fast }),
-      withDelay(320, withTiming(0, { duration: Durations.base })),
-    );
-    pawTap.value = withSequence(
-      withTiming(-2.5, { duration: 65 }),
-      withSpring(0, Springs.snappy),
-    );
-  }, [glance, keystrokes, pawTap, reducedMotion, visible]);
+  useAnimatedReaction(
+    () => visible && !reducedMotion ? keystrokes.value : 0,
+    (count, previous) => {
+      if (count === previous) return;
+      if (!count) {
+        glance.value = 0;
+        pawTap.value = 0;
+        twitch.value = 0;
+        return;
+      }
+      const direction = count % 2 ? -1 : 1;
+      glance.value = withSequence(
+        withTiming(1.8 * direction, { duration: Durations.fast }),
+        withDelay(320, withTiming(0, { duration: Durations.base })),
+      );
+      pawTap.value = withSequence(
+        withTiming(-2.5, { duration: 65 }),
+        withSpring(0, Springs.snappy),
+      );
+      twitch.value = withSequence(
+        withTiming(direction, { duration: 55 }),
+        withTiming(-0.55 * direction, { duration: 85 }),
+        withSpring(0, Springs.snappy),
+      );
+    },
+  );
 
   const peek = useAnimatedStyle(() => ({
     opacity: reveal.value,
@@ -90,28 +128,35 @@ function TypingRemy({ visible, keystrokes }: TypingProps) {
   }));
   const eyes = useAnimatedStyle(() => ({ transform: [{ translateX: glance.value }] }));
   const paws = useAnimatedStyle(() => ({ transform: [{ translateY: pawTap.value }] }));
+  const leftEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${14 * reveal.value}deg` }, { translateY: -1.6 * reveal.value }] }));
+  const rightEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${-14 * reveal.value}deg` }, { translateY: -1.6 * reveal.value }] }));
+  const whiskers = useAnimatedStyle(() => ({
+    transform: [{ translateY: 1.6 * twitch.value }, { scaleX: 1 + 0.045 * Math.abs(twitch.value) }, { rotate: `${twitch.value * 4}deg` }],
+  }));
 
   return (
     <View style={styles.peek} pointerEvents="none" importantForAccessibility="no-hide-descendants">
       <Animated.View style={peek}>
-        <RemyArt size={PEEK_SIZE} peek parts={['leftEar', 'rightEar', 'body', 'face']} />
-        <Animated.View style={[StyleSheet.absoluteFillObject, eyes]}>
-          <RemyArt size={PEEK_SIZE} peek parts={['eyes']} />
-        </Animated.View>
-        <Animated.View style={[StyleSheet.absoluteFillObject, paws]}>
-          <RemyArt size={PEEK_SIZE} peek parts={['peekPaws']} />
-        </Animated.View>
+        <View style={styles.peekBody} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['leftEar']} style={[{ transformOrigin: '36% 46%' }, leftEar]} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['rightEar']} style={[{ transformOrigin: '66% 46%' }, rightEar]} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['body', 'cheeks', 'nose', 'mouth']} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['whiskers']} style={[{ transformOrigin: '50% 81%' }, whiskers]} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['eyes']} style={eyes} />
+        <RemyLayer size={PEEK_SIZE} peek parts={['peekPaws']} style={paws} />
       </Animated.View>
     </View>
   );
 }
 
-function LoadingRemy({ status, size = 60, paused, busy = true }: LoadingProps) {
+function LoadingRemy({ status, size = 60, paused, busy = true, nibble = false }: LoadingProps) {
   const reducedMotion = useReducedMotion();
+  const focused = useIsFocused();
+  const isPaused = paused || !focused;
   const pulse = useSharedValue(0);
 
   useEffect(() => {
-    if (reducedMotion || paused) return;
+    if (reducedMotion || isPaused || (nibble && !busy)) return;
     pulse.value = withRepeat(
       withTiming(1, { duration: 1050, easing: Easing.inOut(Easing.sin) }),
       -1,
@@ -121,7 +166,7 @@ function LoadingRemy({ status, size = 60, paused, busy = true }: LoadingProps) {
       cancelAnimation(pulse);
       pulse.value = 0;
     };
-  }, [paused, pulse, reducedMotion]);
+  }, [busy, isPaused, nibble, pulse, reducedMotion]);
 
   const bob = useAnimatedStyle(() => ({ transform: [{ translateY: -5 * pulse.value }] }));
   const ring = useAnimatedStyle(() => ({ transform: [{ scale: 0.88 + pulse.value * 0.12 }] }));
@@ -137,82 +182,140 @@ function LoadingRemy({ status, size = 60, paused, busy = true }: LoadingProps) {
       accessibilityState={{ busy }}
     >
       <View style={[styles.loadingStage, { width: size + 12, height: size + 12 }]}>
-        <Animated.View style={[styles.ring, ring]}>
-          <Animated.View style={[styles.ring, styles.accentRing, accentRing]} />
-        </Animated.View>
-        <Animated.View style={bob}>
-          <RemyArt size={size} pose="bouncing" />
-        </Animated.View>
+        {busy || !nibble ? (
+          <Animated.View style={[styles.ring, ring]}>
+            <Animated.View style={[styles.ring, styles.accentRing, accentRing]} />
+          </Animated.View>
+        ) : null}
+        {nibble ? (
+          <NibblingRemy size={size} paused={isPaused} />
+        ) : (
+          <Animated.View style={bob}>
+            <RemyArt size={size} pose="bouncing" />
+          </Animated.View>
+        )}
       </View>
       {status ? <ClayText variant="caption" align="center">{status}</ClayText> : null}
     </ClayCard>
   );
 }
 
-function RoamingRemy({ paused }: RoamingProps) {
+function RoamingRemy({ paused, browsingTime }: RoamingProps) {
   const reducedMotion = useReducedMotion();
-  const [width, setWidth] = useState(0);
+  const focused = useIsFocused();
+  const isPaused = paused || !focused;
+  const width = useSharedValue(0);
+  const scurryClock = useSharedValue(0);
   const position = useSharedValue(REST_STOPS[0]);
+  const restingPlace = useSharedValue(REST_STOPS[0]);
+  const edgeSide = useSharedValue<-1 | 0 | 1>(0);
+  const edge = useSharedValue(0);
   const breath = useSharedValue(0);
   const blink = useSharedValue(1);
+  const wag = useSharedValue(0);
   const walk = useSharedValue(0);
   const facing = useSharedValue(1);
   const hop = useSharedValue(0);
+  const squash = useSharedValue(0);
   const wiggle = useSharedValue(0);
   const idleWiggle = useSharedValue(0);
   const pop = useSharedValue(0);
   const popLift = useSharedValue(0);
 
   useEffect(() => {
-    if (paused || reducedMotion) return;
-    breath.value = withRepeat(withTiming(1, { duration: 1350, easing: Easing.inOut(Easing.sin) }), -1, true);
-    blink.value = withRepeat(withSequence(
-      withDelay(3600, withTiming(0.12, { duration: 80 })),
-      withTiming(1, { duration: 110 }),
-    ), -1);
-    idleWiggle.value = withRepeat(withSequence(
-      withDelay(4700, withTiming(-3.5, { duration: 100 })),
-      withTiming(2.5, { duration: 130 }),
-      withSpring(0, Springs.gentle),
-    ), -1);
+    if (isPaused || reducedMotion) return;
+    runOnUI(() => {
+      'worklet';
+      breath.value = withRepeat(withTiming(1, { duration: 1350, easing: Easing.inOut(Easing.sin) }), -1, true);
+      wag.value = withRepeat(withSequence(
+        withTiming(9, { duration: 780, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-7, { duration: 780, easing: Easing.inOut(Easing.sin) }),
+      ), -1);
+      blink.value = withRepeat(withSequence(
+        withDelay(3200, withTiming(0.12, { duration: 80 })),
+        withTiming(1, { duration: 110 }),
+        withDelay(4350, withTiming(0.12, { duration: 75 })),
+        withTiming(1, { duration: 110 }),
+      ), -1);
+      idleWiggle.value = withRepeat(withSequence(
+        withDelay(4700, withTiming(-3.5, { duration: 100 })),
+        withTiming(2.5, { duration: 130 }),
+        withSpring(0, Springs.gentle),
+      ), -1);
 
-    let stop = REST_STOPS[0];
-    let timer: ReturnType<typeof setTimeout>;
-    const scheduleScurry = () => {
-      timer = setTimeout(() => {
-        const choices = REST_STOPS.filter((next) => Math.abs(next - stop) > 0.2);
-        const next = choices[Math.floor(Math.random() * choices.length)];
-        facing.value = next > stop ? -1 : 1;
-        position.value = withTiming(next, { duration: 760, easing: Easing.inOut(Easing.quad) });
-        walk.value = withSequence(
-          withTiming(1, { duration: 650, easing: Easing.linear }),
-          withTiming(0, { duration: 110 }),
+      // Each completed delay schedules the next randomized scurry on the UI runtime.
+      function scheduleScurry() {
+        scurryClock.value = withDelay(
+          8000 + Math.random() * 4000,
+          withTiming(1 - scurryClock.value, { duration: 0 }, (finished) => {
+            if (!finished) return;
+            const browsing = browsingTime !== undefined && Date.now() - browsingTime.value < 3000;
+            const stop = restingPlace.value;
+            const side = edgeSide.value === 0 && Math.random() < (browsing ? 0.55 : 0.18)
+              ? (stop >= 0.5 ? -1 : 1)
+              : 0;
+            const choices = REST_STOPS.filter((next) => Math.abs(next - stop) > 0.2);
+            const next = side ? (side < 0 ? 0 : 1) : choices[Math.floor(Math.random() * choices.length)];
+            edgeSide.value = side;
+            edge.value = withDelay(side ? 490 : 0, withTiming(side, { duration: 270 }));
+            facing.value = next > stop ? -1 : 1;
+            position.value = withTiming(next, { duration: 760, easing: Easing.inOut(Easing.quad) });
+            walk.value = withSequence(
+              withTiming(1, { duration: 650, easing: Easing.linear }),
+              withTiming(0, { duration: 110 }),
+            );
+            restingPlace.value = next;
+            scheduleScurry();
+          }),
+          ReduceMotion.Never,
         );
-        stop = next;
-        scheduleScurry();
-      }, 8000 + Math.random() * 4000);
-    };
-    position.value = stop;
-    scheduleScurry();
+      }
+
+      scheduleScurry();
+    })();
 
     return () => {
-      clearTimeout(timer);
-      cancelAnimation(position);
-      breath.value = 0;
-      blink.value = 1;
-      walk.value = 0;
-      hop.value = 0;
-      wiggle.value = 0;
-      idleWiggle.value = 0;
-      pop.value = 0;
+      runOnUI(() => {
+        'worklet';
+        cancelAnimation(scurryClock);
+        restingPlace.value = REST_STOPS[0];
+        position.value = REST_STOPS[0];
+        edge.value = 0;
+        edgeSide.value = 0;
+        breath.value = 0;
+        blink.value = 1;
+        wag.value = 0;
+        walk.value = 0;
+        hop.value = 0;
+        squash.value = 0;
+        wiggle.value = 0;
+        idleWiggle.value = 0;
+        pop.value = 0;
+        popLift.value = 0;
+      })();
     };
-  }, [blink, breath, facing, hop, idleWiggle, paused, pop, position, reducedMotion, walk, wiggle]);
+  }, [blink, breath, browsingTime, edge, edgeSide, facing, hop, idleWiggle, isPaused, pop, popLift, position, reducedMotion, restingPlace, scurryClock, squash, wag, walk, wiggle]);
 
-  const travel = useAnimatedStyle(() => ({
-    transform: [{ translateX: Spacing.base + position.value * Math.max(0, width - ROAM_SIZE - Spacing.xxl) }],
-  }));
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    width.value = event.nativeEvent.layout.width;
+  }, [width]);
+
+  const travel = useAnimatedStyle(() => {
+    const span = Math.max(0, width.value - ROAM_SIZE);
+    const inset = Spacing.base * (1 - Math.min(1, Math.abs(edge.value)));
+    return {
+      opacity: width.value > 0 ? 1 : 0,
+      transform: [{ translateX: inset + position.value * Math.max(0, span - inset * 2) }],
+    };
+  });
   const bodyMotion = useAnimatedStyle(() => ({
-    transform: [{ translateY: hop.value }, { scaleY: 1 + breath.value * 0.045 }],
+    transform: [
+      { translateX: edge.value * 23 },
+      { translateY: hop.value + squash.value * 3 },
+      { rotate: `${Math.max(-1, Math.min(1, edge.value)) * -11}deg` },
+      { scaleX: 1 + squash.value * 0.11 },
+      { scaleY: 1 + breath.value * 0.045 - squash.value * 0.17 },
+    ],
   }));
   const resting = useAnimatedStyle(() => ({
     opacity: 1 - Math.min(1, walk.value * 8),
@@ -223,7 +326,8 @@ function RoamingRemy({ paused }: RoamingProps) {
   }));
   const leftEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${wiggle.value + idleWiggle.value}deg` }] }));
   const rightEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${-wiggle.value - idleWiggle.value}deg` }] }));
-  const eyes = useAnimatedStyle(() => ({ opacity: blink.value }));
+  const eyes = useAnimatedStyle(() => ({ transform: [{ scaleY: blink.value }] }));
+  const tail = useAnimatedStyle(() => ({ transform: [{ rotate: `${wag.value}deg` }, { scaleX: 1 - wag.value * 0.01 }] }));
   const sparkles = useAnimatedStyle(() => ({
     opacity: pop.value,
     transform: [{ translateY: popLift.value }],
@@ -233,77 +337,84 @@ function RoamingRemy({ paused }: RoamingProps) {
     transform: [{ scaleX: 1 + Math.min(0, hop.value) * 0.022 }],
   }));
 
-  const celebrate = () => {
+  const celebrate = useCallback(() => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     }
-    walk.value = 0;
-    pop.value = withSequence(withTiming(1, { duration: 0 }), withDelay(200, withTiming(0, { duration: 440 })));
-    if (reducedMotion) return;
-    popLift.value = withSequence(withTiming(0, { duration: 0 }), withTiming(-24, { duration: 640 }));
-    hop.value = withSequence(withSpring(-10, Springs.snappy), withSpring(0, Springs.bouncy));
-    wiggle.value = withSequence(
-      withTiming(-6, { duration: 95 }),
-      withTiming(5, { duration: 100 }),
-      withSpring(0, Springs.snappy),
-    );
-  };
+    runOnUI(() => {
+      'worklet';
+      const side = edgeSide.value;
+      if (side && !reducedMotion && Math.abs(edge.value) >= 0.45) {
+        const next = side < 0 ? 0.29 : 0.71;
+        edgeSide.value = 0;
+        restingPlace.value = next;
+        edge.value = withSequence(
+          withTiming(side * 2.7, { duration: 125, easing: Easing.in(Easing.quad) }),
+          withDelay(240, withTiming(0, { duration: 290 })),
+        );
+        position.value = withDelay(365, withTiming(next, { duration: 425, easing: Easing.out(Easing.quad) }));
+        walk.value = withDelay(365, withSequence(withTiming(1, { duration: 330 }), withTiming(0, { duration: 95 })));
+        facing.value = side;
+        return;
+      }
+      if (!reducedMotion) {
+        cancelAnimation(position);
+        restingPlace.value = position.value;
+        edgeSide.value = 0;
+        edge.value = withTiming(0, { duration: Durations.fast });
+      }
+      walk.value = 0;
+      const popDelay = reducedMotion ? 0 : 75;
+      pop.value = withDelay(popDelay, withSequence(withTiming(1, { duration: 0 }), withDelay(190, withTiming(0, { duration: 440 }))));
+      if (reducedMotion) return;
+      squash.value = withSequence(withTiming(1, { duration: 70 }), withSpring(0, Springs.snappy));
+      popLift.value = withDelay(popDelay, withSequence(withTiming(0, { duration: 0 }), withTiming(-24, { duration: 640 })));
+      hop.value = withDelay(popDelay, withSequence(withTiming(-15, { duration: 145 }), withSpring(0, Springs.bouncy)));
+      wiggle.value = withDelay(popDelay, withSequence(
+        withTiming(-14, { duration: 80 }),
+        withTiming(11, { duration: 100 }),
+        withTiming(-5, { duration: 75 }),
+        withSpring(0, Springs.snappy),
+      ));
+    })();
+  }, [edge, edgeSide, facing, hop, pop, popLift, position, reducedMotion, restingPlace, squash, walk, wiggle]);
 
   return (
     <View
       pointerEvents="box-none"
       style={styles.roamSpace}
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      onLayout={onLayout}
     >
-      {width > 0 && !paused ? (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-          <Animated.View style={[styles.traveler, travel]} pointerEvents="box-none">
-            <Animated.View style={[styles.ground, ground]} pointerEvents="none">
-              <Svg width={48} height={12} viewBox="0 0 48 12">
-                <Defs>
-                  <RadialGradient id="remy-ground">
-                    <Stop offset="0" stopColor={Colors.shadowColor} stopOpacity={0.38} />
-                    <Stop offset="1" stopColor={Colors.shadowColor} stopOpacity={0} />
-                  </RadialGradient>
-                </Defs>
-                <Ellipse cx={24} cy={6} rx={24} ry={6} fill="url(#remy-ground)" />
-              </Svg>
-            </Animated.View>
-            <Animated.View style={[styles.sparkles, sparkles]} pointerEvents="none">
-              <Svg width={38} height={24} viewBox="0 0 38 24">
-                <Path d="M19 3L21 8L26 10L21 12L19 17L17 12L12 10L17 8ZM7 11L8 14L11 15L8 16L7 19L6 16L3 15L6 14ZM31 12L32 15L35 16L32 17L31 20L30 17L27 16L30 15Z" fill={Colors.accent} />
-              </Svg>
-            </Animated.View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={Copy.app.name}
-              accessibilityHint={reducedMotion ? 'Shows sparkles' : 'Makes Remy hop'}
-              onPress={celebrate}
-              style={styles.roamButton}
-            >
-              <Animated.View style={bodyMotion} pointerEvents="none">
-                <Animated.View style={resting}>
-                  <RemyArt size={ROAM_SIZE} parts={['tail', 'feet']} />
-                  <Animated.View style={[StyleSheet.absoluteFillObject, leftEar]}>
-                    <RemyArt size={ROAM_SIZE} parts={['leftEar']} />
-                  </Animated.View>
-                  <Animated.View style={[StyleSheet.absoluteFillObject, rightEar]}>
-                    <RemyArt size={ROAM_SIZE} parts={['rightEar']} />
-                  </Animated.View>
-                  <View style={StyleSheet.absoluteFillObject}>
-                    <RemyArt size={ROAM_SIZE} parts={['body', 'face', 'paws']} />
-                  </View>
-                  <Animated.View style={[StyleSheet.absoluteFillObject, eyes]}>
-                    <RemyArt size={ROAM_SIZE} parts={['eyes']} />
-                  </Animated.View>
-                </Animated.View>
-                <Animated.View style={[StyleSheet.absoluteFillObject, walking]}>
-                  <RemyArt size={ROAM_SIZE} pose="walking" />
-                </Animated.View>
-              </Animated.View>
-            </Pressable>
+      {!isPaused ? (
+        <Animated.View style={[styles.traveler, travel]} pointerEvents="box-none">
+          <Animated.View style={[styles.ground, ground]} pointerEvents="none">
+            {groundShadow}
           </Animated.View>
-        </View>
+          <Animated.View style={[styles.sparkles, sparkles]} pointerEvents="none">
+            {hopSparkles}
+          </Animated.View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={Copy.app.name}
+            accessibilityHint={reducedMotion ? 'Shows sparkles' : 'Makes Remy hop or retreat from the edge'}
+            onPress={celebrate}
+            style={styles.roamButton}
+          >
+            <Animated.View style={bodyMotion} pointerEvents="none">
+              <Animated.View style={resting}>
+                <RemyArt size={ROAM_SIZE} parts={['feet']} />
+                <RemyLayer size={ROAM_SIZE} parts={['tail']} style={[{ transformOrigin: '72% 80%' }, tail]} />
+                <RemyLayer size={ROAM_SIZE} parts={['leftEar']} style={[{ transformOrigin: '36% 34%' }, leftEar]} />
+                <RemyLayer size={ROAM_SIZE} parts={['rightEar']} style={[{ transformOrigin: '66% 34%' }, rightEar]} />
+                <RemyLayer size={ROAM_SIZE} parts={restingBody} />
+                <RemyLayer size={ROAM_SIZE} parts={['eyes']} style={[{ transformOrigin: '49% 47%' }, eyes]} />
+              </Animated.View>
+              <Animated.View style={[StyleSheet.absoluteFillObject, walking]}>
+                <RemyArt size={ROAM_SIZE} pose="walking" />
+              </Animated.View>
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -311,6 +422,7 @@ function RoamingRemy({ paused }: RoamingProps) {
 
 const styles = StyleSheet.create({
   peek: { position: 'absolute', bottom: '100%', right: Spacing.md, overflow: 'hidden' },
+  peekBody: { width: PEEK_SIZE, aspectRatio: REMY_PEEK_ASPECT_RATIO },
   loadingCard: {
     alignSelf: 'center',
     alignItems: 'center',

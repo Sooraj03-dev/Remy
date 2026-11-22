@@ -5,10 +5,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
-  FlatList,
   RefreshControl,
+  type ListRenderItem,
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import {
   ClayHeader,
   ClayInput,
@@ -22,10 +24,15 @@ import {
 import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { RefreshingRemy } from '@components/ui/RemyReactions';
+import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Spacing } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product } from '../../../shared/types';
+
+const EMPTY_PRODUCTS: Product[] = [];
+const productKey = (product: Product) => product.id;
 
 export default function ExploreScreen() {
   const focused = useIsFocused();
@@ -34,6 +41,7 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { gesture, onFeedScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
 
   const performSearch = useCallback(async (query: string) => {
     try {
@@ -61,6 +69,14 @@ export default function ExploreScreen() {
     performSearch(search);
   }, [performSearch, search]);
 
+  const showLoading = loading && !refreshing;
+  const visibleProducts = showLoading || error ? EMPTY_PRODUCTS : products;
+  const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
+    <View style={styles.card}>
+      <ProductCard product={item} />
+    </View>
+  ), []);
+
   return (
     <View style={styles.container}>
       <StaggeredItem index={0}>
@@ -83,49 +99,54 @@ export default function ExploreScreen() {
       </View>
 
       <View style={styles.results}>
-        {loading && !refreshing ? (
-          <View style={styles.skeletonGrid}>
-            {[0, 1, 2, 3].map((index) => (
-              <SkeletonCard key={index} width={160} height={196} paused={!focused} />
-            ))}
-            <View style={styles.loadingOverlay} pointerEvents="none">
-              <RemyMascot state="loading" status={Copy.loading.search[0]} paused={!focused} />
-            </View>
-          </View>
-        ) : error ? (
-          <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
-        ) : products.length === 0 ? (
-          <ClayCard outlined style={styles.emptyCard}>
-            <RemyArt size={82} />
-            <ClayText variant="bodyBold" align="center">
-              {Copy.empty.searchTitle}
-            </ClayText>
-            <ClayText variant="caption" align="center" style={styles.emptyText}>
-              {search.trim()
-                ? `Nothing matches "${search}". ${Copy.empty.search}`
-                : 'There are currently no approved products listed on campus.'}
-            </ClayText>
-          </ClayCard>
-        ) : (
-          <FlatList
-            data={products}
-            keyExtractor={(item) => item.id}
+        <GestureDetector gesture={gesture}>
+          <Animated.FlatList
+            data={visibleProducts}
+            keyExtractor={productKey}
+            removeClippedSubviews={true}
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
+            windowSize={5}
             numColumns={2}
             columnWrapperStyle={styles.row}
-            contentContainerStyle={styles.list}
-            renderItem={({ item, index }) => (
-              <StaggeredItem index={index} style={styles.card}>
-                <ProductCard product={item} />
-              </StaggeredItem>
-            )}
+            contentContainerStyle={visibleProducts.length > 0 ? styles.list : styles.emptyList}
+            onScroll={onFeedScroll}
+            scrollEventThrottle={16}
+            alwaysBounceVertical
+            renderItem={renderProduct}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
             }
+            ListEmptyComponent={showLoading ? (
+              <View style={styles.skeletonGrid}>
+                {[0, 1, 2, 3].map((index) => (
+                  <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+                ))}
+                <View style={styles.loadingOverlay} pointerEvents="none">
+                  <RemyMascot state="loading" nibble status={Copy.loading.search[0]} paused={!focused} />
+                </View>
+              </View>
+            ) : error ? (
+              <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
+            ) : (
+              <ClayCard outlined style={styles.emptyCard}>
+                <RemyArt size={82} />
+                <ClayText variant="bodyBold" align="center">
+                  {Copy.empty.searchTitle}
+                </ClayText>
+                <ClayText variant="caption" align="center" style={styles.emptyText}>
+                  {search.trim()
+                    ? `Nothing matches "${search}". ${Copy.empty.search}`
+                    : 'There are currently no approved products listed on campus.'}
+                </ClayText>
+              </ClayCard>
+            )}
           />
-        )}
+        </GestureDetector>
+        <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
       </View>
-      {!loading ? <RemyMascot state="roaming" paused={!focused} /> : null}
+      {!loading ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
     </View>
   );
 }
@@ -137,6 +158,7 @@ const styles = StyleSheet.create({
   searchIcon: { position: 'absolute', left: Spacing.base + Spacing.md, top: 0, bottom: 0, justifyContent: 'center' },
   results: { flex: 1 },
   list: { padding: Spacing.base, gap: Spacing.sm },
+  emptyList: { flexGrow: 1 },
   row: { gap: Spacing.sm },
   card: { flex: 1 },
   skeletonGrid: {

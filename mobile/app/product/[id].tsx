@@ -7,11 +7,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   Alert,
   Modal,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
@@ -193,7 +193,8 @@ export default function ProductDetailsScreen() {
         <Image
           source={imageSource}
           style={styles.image}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
           accessibilityIgnoresInvertColors
         />
 

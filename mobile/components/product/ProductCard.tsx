@@ -1,8 +1,9 @@
 // mobile/components/product/ProductCard.tsx
 // Product listing card with clay squish, typed icons and a heart-burst wishlist.
 
-import React from 'react';
-import { View, Image, StyleSheet, type ViewStyle } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { HeartBurst } from '@components/fx/HeartBurst';
@@ -19,27 +20,32 @@ interface ProductCardProps {
   onWishlistToggle?: () => void;
 }
 
-export function ProductCard({
+export const ProductCard = React.memo(function ProductCard({
   product,
   style,
   isWishlisted = false,
   onWishlistToggle,
 }: ProductCardProps) {
   const router = useRouter();
+  const { id } = product;
+  const image = product.images[0];
+  const openProduct = useCallback(() => router.push(`/product/${id}`), [id, router]);
 
   return (
     <ClayPressable
-      onPress={() => router.push(`/product/${product.id}`)}
+      onPress={openProduct}
       accessibilityLabel={`${product.title}, ₹${product.price}`}
       style={[styles.card, style]}
       tone="oat"
     >
       <View style={styles.imageWrapper}>
-        {product.images[0] ? (
+        {image ? (
           <Image
-            source={{ uri: product.images[0] }}
+            source={image}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={image}
             accessibilityIgnoresInvertColors
           />
         ) : (
@@ -75,7 +81,7 @@ export function ProductCard({
       </View>
     </ClayPressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

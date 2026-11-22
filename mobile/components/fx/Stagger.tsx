@@ -1,5 +1,5 @@
 // mobile/components/fx/Stagger.tsx
-// First-ten-items entrance stagger and shimmer skeletons.
+// Static header entrances and shimmer skeletons.
 
 import React, { useEffect } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -9,17 +9,14 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  cancelAnimation,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { Stagger } from '@constants/motion';
 
-/**
- * Entrance animation for a list item. Items past the first ten render instantly
- * so long lists stay cheap on mid-range Android.
- */
+/** Entrance animation for static content. */
 export function useStaggeredEntrance(index: number): FadeInDown | undefined {
   const reduced = useReducedMotion();
   if (reduced || index >= Stagger.maxAnimatedItems) return undefined;
@@ -30,7 +27,6 @@ export function useStaggeredEntrance(index: number): FadeInDown | undefined {
     .stiffness(180);
 }
 
-/** Wrap a list item to get the capped entrance stagger. */
 export function StaggeredItem({
   index,
   children,
@@ -82,24 +78,17 @@ export function ShimmerSweep({ width = 160, paused = false }: { width?: number; 
       -1,
       false,
     );
+    return () => cancelAnimation(progress);
   }, [paused, progress, reduced]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.55,
     transform: [{ translateX: (progress.value * 2 - 1) * width }],
   }));
 
   if (reduced) return null;
 
   return (
-    <Animated.View style={[styles.shimmer, animatedStyle]} pointerEvents="none">
-      <LinearGradient
-        colors={['transparent', 'rgba(255,255,255,0.85)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradient}
-      />
-    </Animated.View>
+    <Animated.View style={[styles.shimmer, animatedStyle]} pointerEvents="none" />
   );
 }
 
@@ -119,6 +108,5 @@ const styles = StyleSheet.create({
   lines: { padding: Spacing.md, gap: Spacing.sm },
   lineWide: { height: 12, borderRadius: 6, width: '82%' },
   lineShort: { height: 10, borderRadius: 5, width: '48%' },
-  shimmer: { ...StyleSheet.absoluteFillObject },
-  gradient: { flex: 1, width: '60%' },
+  shimmer: { ...StyleSheet.absoluteFillObject, width: '36%', backgroundColor: Colors.white, opacity: 0.24 },
 });

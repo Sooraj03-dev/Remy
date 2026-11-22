@@ -32,6 +32,7 @@ export interface ClayPressableProps extends Omit<PressableProps, 'style' | 'chil
   haptic?: boolean;
   loadingColor?: string;
   tone?: ClayTone;
+  gradient?: boolean;
   pressScale?: number;
 }
 
@@ -42,6 +43,7 @@ export function ClayPressable({
   haptic = true,
   loadingColor = Colors.primary,
   tone,
+  gradient = false,
   pressScale = 0.96,
   disabled,
   onPress,
@@ -59,7 +61,7 @@ export function ClayPressable({
     const depth = pressure.value;
     return {
       transform: [{ translateY: 2 * depth }, { scale: 1 + (pressScale - 1) * depth }],
-      ...(tone && (usesElevation
+      ...(gradient && tone && (usesElevation
         ? { elevation: clayElevation.elevation - depth * 4 }
         : {
             shadowOpacity: clayElevation.shadowOpacity - depth * 0.06,
@@ -107,14 +109,14 @@ export function ClayPressable({
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ ...rest.accessibilityState, disabled: isDisabled, busy: loading }}
       style={[
-        tone && [clayElevation, { backgroundColor: ClayGradients[tone][0] }],
+        tone && [clayElevation, { backgroundColor: ClayGradients[tone][gradient ? 0 : 1], elevation: gradient ? clayElevation.elevation : 3 }],
         style,
         tone && { borderRadius: radius },
         disabled && !loading && styles.disabled,
         reduced ? undefined : animatedStyle,
       ]}
     >
-      {tone ? <ClayFinish tone={tone} radius={radius} /> : null}
+      {tone ? <ClayFinish tone={tone} radius={radius} gradient={gradient} /> : null}
       {loading ? <ActivityIndicator color={loadingColor} accessibilityLabel="Loading" /> : children}
     </AnimatedPressable>
   );

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -227,6 +228,8 @@ export default function SellScreen() {
     }
   };
 
+  const feedback = useRemyFormFeedback(error, handleSubmit);
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -240,12 +243,6 @@ export default function SellScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          {error && (
-            <ClayCard variant="peach" style={styles.errorCard}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </ClayCard>
-          )}
-
           {/* Item details */}
           <ClayCard>
             <Text style={[Typography.h3, styles.sectionTitle]}>Item Details</Text>
@@ -263,6 +260,7 @@ export default function SellScreen() {
             />
 
             <ClayInput
+              showMascotOnFocus
               label="Price (₹) *"
               value={price}
               onChangeText={(p) => {
@@ -353,6 +351,7 @@ export default function SellScreen() {
             </ScrollView>
 
             <ClayInput
+              showMascotOnFocus
               label="Preferred Meetup Location"
               value={campusLocation}
               onChangeText={setCampusLocation}
@@ -448,12 +447,13 @@ export default function SellScreen() {
           </ClayCard>
 
           {statusMessage ? (
-            <RemyMascot state="loading" size={50} status={statusMessage} />
+            <RemyMascot state="loading" nibble size={50} status={statusMessage} />
           ) : null}
 
+          <RemyFormError message={feedback.message} attempt={feedback.attempt} />
           <ClayButton
-            label={submitting ? Copy.sell.submitting : Copy.sell.submit}
-            onPress={handleSubmit}
+            label={submitting ? Copy.sell.submitting : feedback.message ? Copy.error.retry : Copy.sell.submit}
+            onPress={feedback.onSubmit}
             loading={submitting}
             style={styles.submitBtn}
           />
@@ -461,6 +461,7 @@ export default function SellScreen() {
 
         <CelebrationOverlay
           visible={showCelebration}
+          pendingApproval
           title={Copy.success.submitted}
           message="Your listing will appear on the campus feed once it’s approved."
           onDismiss={() => {
@@ -537,7 +538,5 @@ const styles = StyleSheet.create({
   },
   deletePhotoText: { color: Colors.white, fontSize: 12, fontWeight: '700' },
   noticeCard: { padding: Spacing.base },
-  errorCard: { padding: Spacing.md },
-  errorText: { color: Colors.error, fontWeight: '600' },
   submitBtn: { marginTop: Spacing.xs },
 });

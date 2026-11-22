@@ -14,6 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
@@ -171,6 +172,8 @@ export default function EditProductScreen() {
     }
   };
 
+  const feedback = useRemyFormFeedback(error, handleSave);
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
@@ -221,14 +224,9 @@ export default function EditProductScreen() {
 
         {/* Form fields */}
         <ClayCard style={styles.card}>
-          {error ? (
-            <View style={styles.inlineError}>
-              <Text style={styles.inlineErrorText}>⚠️ {error}</Text>
-            </View>
-          ) : null}
-
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Item Title *</Text>
           <ClayInput
+            showMascotOnFocus
             value={title}
             onChangeText={setTitle}
             placeholder="e.g. Engineering Mathematics II"
@@ -237,6 +235,7 @@ export default function EditProductScreen() {
 
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Price (₹) *</Text>
           <ClayInput
+            showMascotOnFocus
             value={price}
             onChangeText={setPrice}
             placeholder="e.g. 450"
@@ -277,6 +276,7 @@ export default function EditProductScreen() {
 
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Campus Meetup Location</Text>
           <ClayInput
+            showMascotOnFocus
             value={campusLocation}
             onChangeText={setCampusLocation}
             placeholder="e.g. Library 2nd Floor, Central Cafeteria"
@@ -284,6 +284,7 @@ export default function EditProductScreen() {
 
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Description</Text>
           <ClayInput
+            showMascotOnFocus
             value={description}
             onChangeText={setDescription}
             placeholder="Describe condition, edition, accessories..."
@@ -316,10 +317,11 @@ export default function EditProductScreen() {
             )}
           </ScrollView>
 
+          <RemyFormError message={feedback.message} attempt={feedback.attempt} />
           <View style={styles.actionRow}>
             <ClayButton
-              label={saving ? 'Saving...' : 'Save Changes'}
-              onPress={handleSave}
+              label={saving ? 'Saving...' : feedback.message ? 'Try again' : 'Save Changes'}
+              onPress={feedback.onSubmit}
               loading={saving}
               style={styles.saveBtn}
             />
@@ -397,11 +399,4 @@ const styles = StyleSheet.create({
   actionRow: { marginTop: Spacing.md, gap: Spacing.sm },
   saveBtn: { width: '100%' },
   cancelBtn: { width: '100%' },
-  inlineError: {
-    backgroundColor: Colors.errorBg,
-    padding: Spacing.sm,
-    borderRadius: Radius.sm,
-    marginBottom: Spacing.sm,
-  },
-  inlineErrorText: { color: Colors.error, fontSize: FontSize.caption },
 });

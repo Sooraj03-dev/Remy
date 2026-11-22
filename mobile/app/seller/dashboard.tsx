@@ -1,18 +1,20 @@
 // mobile/app/seller/dashboard.tsx
 // Seller Dashboard — Manage personal listings with live status updates, sold toggle, and deletion
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
+  type ListRenderItem,
   Pressable,
   RefreshControl,
   Alert,
 } from 'react-native';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayButton, ClayCard, StatusBadge } from '@components/index';
 import { Colors, Spacing, Typography } from '@constants/theme';
@@ -32,9 +34,13 @@ const statusForTab: Record<Tab, Product['status'][]> = {
   rejected: ['rejected'],
 };
 
+const EMPTY_LISTINGS: Product[] = [];
+const productKey = (product: Product) => product.id;
+
 export default function SellerDashboard() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const focused = useIsFocused();
 
   const [activeTab, setActiveTab] = useState<Tab>('active');
   const [listings, setListings] = useState<Product[]>([]);
@@ -73,7 +79,7 @@ export default function SellerDashboard() {
   }, [loadListings]);
 
   // Mark product as sold or available
-  const handleToggleSold = async (product: Product) => {
+  const handleToggleSold = useCallback(async (product: Product) => {
     const newStatus = product.status === 'sold' ? 'available' : 'sold';
     const actionLabel = newStatus === 'sold' ? 'Mark as Sold' : 'Reactivate';
 
@@ -102,10 +108,10 @@ export default function SellerDashboard() {
         },
       ],
     );
-  };
+  }, [getToken, loadListings]);
 
   // Delete product
-  const handleDelete = async (productId: string) => {
+  const handleDelete = useCallback(async (productId: string) => {
     Alert.alert(
       'Delete Listing',
       'Are you sure you want to permanently delete this listing? This action cannot be undone.',
@@ -132,11 +138,82 @@ export default function SellerDashboard() {
         },
       ],
     );
-  };
+  }, [getToken, loadListings]);
 
-  const currentTabListings = listings.filter((p) =>
-    statusForTab[activeTab].includes(p.status),
-  );
+  const currentTabListings = useMemo(() => listings.filter((product) =>
+    statusForTab[activeTab].includes(product.status),
+  ), [activeTab, listings]);
+  const showLoading = loading && !refreshing;
+  const visibleListings = showLoading || error ? EMPTY_LISTINGS : currentTabListings;
+
+  const renderListing = useCallback<ListRenderItem<Product>>(({ item: listing }) => (
+    <ClayCard style={styles.listingCard}>
+      <View style={styles.listingHeader}>
+        <View style={styles.listingInfo}>
+          <Text style={Typography.bodyBold} numberOfLines={1}>
+            {listing.title}
+          </Text>
+          <Text style={styles.price}>
+            ₹{listing.price.toLocaleString('en-IN')}
+          </Text>
+          <Text style={Typography.caption}>
+            Category: {listing.category} · Condition: {listing.condition}
+          </Text>
+        </View>
+        <StatusBadge status={listing.status} />
+      </View>
+
+      {/* If rejected, show the reviewer's reason */}
+      {listing.status === 'rejected' && listing.rejectionReason ? (
+        <ClayCard variant="peach" style={styles.rejectionNotice}>
+          <Text style={Typography.captionBold}>Rejection Reason:</Text>
+          <Text style={Typography.caption}>{listing.rejectionReason}</Text>
+        </ClayCard>
+      ) : null}
+
+      <View style={styles.listingActions}>
+        {/* Sold Toggle */}
+        {['available', 'verified', 'sold'].includes(listing.status) && (
+          <ClayButton
+            label={
+              listing.status === 'sold'
+                ? 'Reactivate'
+                : 'Mark Sold'
+            }
+            variant={listing.status === 'sold' ? 'primary' : 'secondary'}
+            onPress={() => handleToggleSold(listing)}
+            loading={actionInProgress === listing.id}
+            style={styles.smallButton}
+          />
+        )}
+
+        {/* View Details */}
+        <ClayButton
+          label="View"
+          variant="ghost"
+          onPress={() => router.push(`/product/${listing.id}`)}
+          style={styles.smallButton}
+        />
+
+        {/* Edit */}
+        <ClayButton
+          label="Edit"
+          variant="secondary"
+          onPress={() => router.push(`/seller/edit/${listing.id}`)}
+          style={styles.smallButton}
+        />
+
+        {/* Delete */}
+        <ClayButton
+          label="Delete"
+          variant="danger"
+          onPress={() => handleDelete(listing.id)}
+          loading={actionInProgress === listing.id}
+          style={styles.smallButton}
+        />
+      </View>
+    </ClayCard>
+  ), [actionInProgress, handleDelete, handleToggleSold, router]);
 
   return (
     <View style={styles.container}>
@@ -177,7 +254,14 @@ export default function SellerDashboard() {
         })}
       </View>
 
-      <ScrollView
+      <FlatList
+        data={visibleListings}
+        keyExtractor={productKey}
+        removeClippedSubviews={true}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        renderItem={renderListing}
         contentContainerStyle={styles.scroll}
         refreshControl={
           <RefreshControl
@@ -186,10 +270,12 @@ export default function SellerDashboard() {
             tintColor={Colors.primary}
           />
         }
-      >
-        {loading && !refreshing ? (
+        ListHeaderComponent={!loading && !error && activeTab === 'pending' && currentTabListings.length > 0 ? (
+          <RemyMascot state="loading" nibble busy={false} status="Waiting for verification" paused={!focused} />
+        ) : null}
+        ListEmptyComponent={showLoading ? (
           <View style={styles.centerBox}>
-            <RemyMascot state="loading" status="Loading your listings..." />
+            <RemyMascot state="loading" nibble status="Loading your listings..." paused={!focused} />
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
@@ -223,83 +309,15 @@ export default function SellerDashboard() {
                 : `You currently have no ${activeTab} items listed.`}
             </Text>
           </ClayCard>
-        ) : (
-          currentTabListings.map((listing) => (
-            <ClayCard key={listing.id} style={styles.listingCard}>
-              <View style={styles.listingHeader}>
-                <View style={styles.listingInfo}>
-                  <Text style={Typography.bodyBold} numberOfLines={1}>
-                    {listing.title}
-                  </Text>
-                  <Text style={styles.price}>
-                    ₹{listing.price.toLocaleString('en-IN')}
-                  </Text>
-                  <Text style={Typography.caption}>
-                    Category: {listing.category} · Condition: {listing.condition}
-                  </Text>
-                </View>
-                <StatusBadge status={listing.status} />
-              </View>
-
-              {/* If rejected, show the reviewer's reason */}
-              {listing.status === 'rejected' && listing.rejectionReason ? (
-                <ClayCard variant="peach" style={styles.rejectionNotice}>
-                  <Text style={Typography.captionBold}>Rejection Reason:</Text>
-                  <Text style={Typography.caption}>{listing.rejectionReason}</Text>
-                </ClayCard>
-              ) : null}
-
-              <View style={styles.listingActions}>
-                {/* Sold Toggle */}
-                {['available', 'verified', 'sold'].includes(listing.status) && (
-                  <ClayButton
-                    label={
-                      listing.status === 'sold'
-                        ? 'Reactivate'
-                        : 'Mark Sold'
-                    }
-                    variant={listing.status === 'sold' ? 'primary' : 'secondary'}
-                    onPress={() => handleToggleSold(listing)}
-                    loading={actionInProgress === listing.id}
-                    style={styles.smallButton}
-                  />
-                )}
-
-                {/* View Details */}
-                <ClayButton
-                  label="View"
-                  variant="ghost"
-                  onPress={() => router.push(`/product/${listing.id}`)}
-                  style={styles.smallButton}
-                />
-
-                {/* Edit */}
-                <ClayButton
-                  label="Edit"
-                  variant="secondary"
-                  onPress={() => router.push(`/seller/edit/${listing.id}`)}
-                  style={styles.smallButton}
-                />
-
-                {/* Delete */}
-                <ClayButton
-                  label="Delete"
-                  variant="danger"
-                  onPress={() => handleDelete(listing.id)}
-                  loading={actionInProgress === listing.id}
-                  style={styles.smallButton}
-                />
-              </View>
-            </ClayCard>
-          ))
-        )}
-
-        <ClayButton
-          label="+ Create New Listing"
-          onPress={() => router.push('/(tabs)/sell')}
-          style={styles.newButton}
-        />
-      </ScrollView>
+        ) : null}
+        ListFooterComponent={
+          <ClayButton
+            label="+ Create New Listing"
+            onPress={() => router.push('/(tabs)/sell')}
+            style={styles.newButton}
+          />
+        }
+      />
     </View>
   );
 }

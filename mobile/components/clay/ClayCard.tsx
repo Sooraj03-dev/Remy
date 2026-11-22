@@ -21,6 +21,7 @@ const variantTone: Record<ClayCardVariant, ClayTone> = {
 interface ClayCardProps extends ViewProps {
   variant?: ClayCardVariant;
   outlined?: boolean;
+  gradient?: boolean;
   style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
 }
@@ -28,6 +29,7 @@ interface ClayCardProps extends ViewProps {
 export function ClayCard({
   variant = 'default',
   outlined = false,
+  gradient = false,
   style,
   children,
   ...rest
@@ -39,14 +41,14 @@ export function ClayCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: ClayGradients[tone][0] },
+        { backgroundColor: ClayGradients[tone][gradient ? 0 : 1], elevation: gradient ? clayElevation.elevation : 3 },
         style,
         { borderRadius: radius },
         outlined && styles.outlined,
       ]}
       {...rest}
     >
-      <ClayFinish tone={tone} radius={radius} />
+      <ClayFinish tone={tone} radius={radius} gradient={gradient} />
       {children}
     </View>
   );

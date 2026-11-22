@@ -57,6 +57,7 @@ export function ClayButton({
       disabled={disabled}
       accessibilityLabel={rest.accessibilityLabel ?? label}
       tone={vs.tone}
+      gradient={variant === 'primary'}
       pressScale={0.95}
       style={[styles.base, style]}
     >

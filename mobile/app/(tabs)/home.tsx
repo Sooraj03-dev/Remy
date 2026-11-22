@@ -1,16 +1,18 @@
 // mobile/app/(tabs)/home.tsx
-// Home feed with staggered clay cards.
+// Home feed with a virtualized product carousel.
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
-  FlatList,
   RefreshControl,
+  type ListRenderItem,
 } from 'react-native';
 import { useUser } from '@clerk/clerk-expo';
 import { useIsFocused } from '@react-navigation/native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import {
   ClayHeader,
@@ -27,6 +29,8 @@ import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { RefreshingRemy } from '@components/ui/RemyReactions';
+import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { Copy, pickVariant } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
@@ -42,6 +46,8 @@ const CATEGORIES: { label: string; key: ProductCategory | 'all' }[] = [
   { label: 'Furniture', key: 'furniture' },
 ];
 
+const productKey = (product: Product) => product.id;
+
 export default function HomeScreen() {
   const { user } = useUser();
   const router = useRouter();
@@ -53,6 +59,13 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { gesture, onFeedScroll, onProductScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
+  const categoryActions = useMemo(() => CATEGORIES.map(({ key }) => () => setSelectedCategory(key)), []);
+  const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
+    <View style={styles.productCard}>
+      <ProductCard product={item} />
+    </View>
+  ), []);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -90,103 +103,111 @@ export default function HomeScreen() {
         />
       </StaggeredItem>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
-        }
-      >
-        <View style={styles.section}>
-          <ClayText variant="h3" style={styles.sectionTitle}>
-            Categories
-          </ClayText>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {CATEGORIES.map((cat, index) => (
-              <StaggeredItem key={cat.key} index={index + 1}>
-                <CategoryChip
-                  label={cat.label}
-                  category={cat.key}
-                  selected={selectedCategory === cat.key}
-                  onPress={() => setSelectedCategory(cat.key)}
-                />
-              </StaggeredItem>
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <ClayText variant="h3">Available on Campus</ClayText>
-            {products.length > 0 ? (
-              <ClayText variant="caption">
-                {products.length} item{products.length === 1 ? '' : 's'}
+      <View style={styles.scroll}>
+        <GestureDetector gesture={gesture}>
+          <Animated.ScrollView
+            style={styles.scroll}
+            onScroll={onFeedScroll}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+            }
+          >
+            <View style={styles.section}>
+              <ClayText variant="h3" style={styles.sectionTitle}>
+                Categories
               </ClayText>
-            ) : null}
-          </View>
-
-          {loading ? (
-            <View>
-              <View style={styles.skeletonRow}>
-                {[0, 1, 2].map((index) => (
-                  <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                {CATEGORIES.map((cat, index) => (
+                  <CategoryChip
+                    key={cat.key}
+                    label={cat.label}
+                    category={cat.key}
+                    selected={selectedCategory === cat.key}
+                    onPress={categoryActions[index]}
+                  />
                 ))}
-              </View>
-              <View style={styles.loadingOverlay} pointerEvents="none">
-                <RemyMascot state="loading" status={pickVariant(Copy.loading.feed, 1)} paused={!focused} />
-              </View>
+              </ScrollView>
             </View>
-          ) : error ? (
-            <MarketplaceError error={error} onRetry={loadProducts} />
-          ) : products.length === 0 ? (
-            <ClayCard outlined style={styles.statusCard}>
-              <RemyArt size={82} />
-              <ClayText variant="bodyBold" align="center">
-                {Copy.empty.listingsTitle}
-              </ClayText>
-              <ClayText variant="caption" align="center" style={styles.emptyText}>
-                {selectedCategory === 'all'
-                  ? Copy.empty.listings
-                  : `No approved items in ${selectedCategory} yet. Try another shelf.`}
-              </ClayText>
-              <ClayButton
-                label="List your first item"
-                onPress={() => router.push('/(tabs)/sell')}
-                style={styles.retryBtn}
-              />
-            </ClayCard>
-          ) : (
-            <FlatList
-              data={products}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item, index }) => (
-                <StaggeredItem index={index} style={styles.productCard}>
-                  <ProductCard product={item} />
-                </StaggeredItem>
-              )}
-              contentContainerStyle={styles.productList}
-            />
-          )}
-        </View>
 
-        <StaggeredItem index={3} style={styles.section}>
-          <ClayCard variant="success" style={styles.guideCard}>
-            <View style={styles.guideIcon}>
-              <Icon name="ShieldCheck" size={22} color="successText" />
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <ClayText variant="h3">Available on Campus</ClayText>
+                {products.length > 0 ? (
+                  <ClayText variant="caption">
+                    {products.length} item{products.length === 1 ? '' : 's'}
+                  </ClayText>
+                ) : null}
+              </View>
+
+              {loading ? (
+                <View>
+                  <View style={styles.skeletonRow}>
+                    {[0, 1, 2].map((index) => (
+                      <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+                    ))}
+                  </View>
+                  <View style={styles.loadingOverlay} pointerEvents="none">
+                    <RemyMascot state="loading" nibble status={pickVariant(Copy.loading.feed, 1)} paused={!focused} />
+                  </View>
+                </View>
+              ) : error ? (
+                <MarketplaceError error={error} onRetry={loadProducts} />
+              ) : products.length === 0 ? (
+                <ClayCard outlined style={styles.statusCard}>
+                  <RemyArt size={82} />
+                  <ClayText variant="bodyBold" align="center">
+                    {Copy.empty.listingsTitle}
+                  </ClayText>
+                  <ClayText variant="caption" align="center" style={styles.emptyText}>
+                    {selectedCategory === 'all'
+                      ? Copy.empty.listings
+                      : `No approved items in ${selectedCategory} yet. Try another shelf.`}
+                  </ClayText>
+                  <ClayButton
+                    label="List your first item"
+                    onPress={() => router.push('/(tabs)/sell')}
+                    style={styles.retryBtn}
+                  />
+                </ClayCard>
+              ) : (
+                <Animated.FlatList
+                  data={products}
+                  keyExtractor={productKey}
+                  removeClippedSubviews={true}
+                  initialNumToRender={6}
+                  maxToRenderPerBatch={6}
+                  windowSize={5}
+                  horizontal
+                  onScroll={onProductScroll}
+                  scrollEventThrottle={16}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={renderProduct}
+                  contentContainerStyle={styles.productList}
+                />
+              )}
             </View>
-            <View style={styles.guideText}>
-              <ClayText variant="bodyBold" color="successText">Safe Campus Meetups</ClayText>
-              <ClayText variant="caption" color="successText">
-                Meet in a well-lit public spot on campus and inspect the item before trading.
-              </ClayText>
+
+            <View style={styles.section}>
+              <ClayCard variant="success" gradient style={styles.guideCard}>
+                <View style={styles.guideIcon}>
+                  <Icon name="ShieldCheck" size={22} color="successText" />
+                </View>
+                <View style={styles.guideText}>
+                  <ClayText variant="bodyBold" color="successText">Safe Campus Meetups</ClayText>
+                  <ClayText variant="caption" color="successText">
+                    Meet in a well-lit public spot on campus and inspect the item before trading.
+                  </ClayText>
+                </View>
+              </ClayCard>
             </View>
-          </ClayCard>
-        </StaggeredItem>
-      </ScrollView>
-      {!loading ? <RemyMascot state="roaming" paused={!focused} /> : null}
+          </Animated.ScrollView>
+        </GestureDetector>
+        <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
+      </View>
+      {!loading ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
     </View>
   );
 }

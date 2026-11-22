@@ -9,6 +9,7 @@ import {
   FlatList,
   RefreshControl,
   Pressable,
+  type ListRenderItem,
 } from 'react-native';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
@@ -17,6 +18,8 @@ import { ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index
 import { Colors, Spacing, Typography, FontSize, FontWeight } from '@constants/theme';
 import { fetchWishlist, removeFromWishlist } from '../../services/api';
 import type { Product } from '../../../shared/types';
+
+const productKey = (product: Product) => product.id;
 
 export default function WishlistScreen() {
   const router = useRouter();
@@ -52,7 +55,7 @@ export default function WishlistScreen() {
     loadWishlist();
   }, [loadWishlist]);
 
-  const handleRemove = async (productId: string) => {
+  const handleRemove = useCallback(async (productId: string) => {
     try {
       const token = await getToken();
       if (!token) return;
@@ -61,7 +64,16 @@ export default function WishlistScreen() {
     } catch (err) {
       console.warn('[Wishlist remove error]', err);
     }
-  };
+  }, [getToken]);
+
+  const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
+    <View style={styles.cardContainer}>
+      <ProductCard product={item} />
+      <Pressable style={styles.removeBtn} onPress={() => handleRemove(item.id)}>
+        <Text style={styles.removeBtnText}>✕ Remove</Text>
+      </Pressable>
+    </View>
+  ), [handleRemove]);
 
   return (
     <View style={styles.container}>
@@ -98,19 +110,16 @@ export default function WishlistScreen() {
       ) : (
         <FlatList
           data={products}
-          keyExtractor={(item) => item.id}
+          keyExtractor={productKey}
+          removeClippedSubviews={true}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={5}
           numColumns={2}
           contentContainerStyle={styles.listContent}
           columnWrapperStyle={styles.columnWrapper}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
-          renderItem={({ item }) => (
-            <View style={styles.cardContainer}>
-              <ProductCard product={item} />
-              <Pressable style={styles.removeBtn} onPress={() => handleRemove(item.id)}>
-                <Text style={styles.removeBtnText}>✕ Remove</Text>
-              </Pressable>
-            </View>
-          )}
+          renderItem={renderProduct}
         />
       )}
     </View>

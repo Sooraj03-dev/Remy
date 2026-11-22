@@ -6,6 +6,7 @@ import { ClayEdges, ClayGradients, Radius, type ClayTone } from '@constants/them
 interface ClayFinishProps {
   tone?: ClayTone;
   radius?: number;
+  gradient?: boolean;
 }
 
 export function resolveClayRadius(radius: ViewStyle['borderRadius']) {
@@ -13,23 +14,30 @@ export function resolveClayRadius(radius: ViewStyle['borderRadius']) {
 }
 
 /** Decorative face and bevel. The parent supplies the shape and casts its shadow. */
-export function ClayFinish({ tone = 'oat', radius = Radius.card }: ClayFinishProps) {
+export const ClayFinish = React.memo(function ClayFinish({ tone = 'oat', radius = Radius.card, gradient = false }: ClayFinishProps) {
   const shape = { borderRadius: radius };
   const edges = tone === 'espresso' || tone === 'terracotta' ? ClayEdges.dark : ClayEdges.light;
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none" importantForAccessibility="no-hide-descendants">
-      <LinearGradient
-        colors={ClayGradients[tone]}
-        locations={[0, 0.38, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, shape]}
+    <>
+      {gradient ? (
+        <LinearGradient
+          colors={ClayGradients[tone]}
+          locations={[0, 0.38, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFillObject, shape]}
+          pointerEvents="none"
+        />
+      ) : null}
+      <View
+        style={[styles.bevel, shape, edges]}
+        pointerEvents="none"
+        importantForAccessibility="no-hide-descendants"
       />
-      <View style={[styles.bevel, shape, edges]} />
-    </View>
+    </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   bevel: {

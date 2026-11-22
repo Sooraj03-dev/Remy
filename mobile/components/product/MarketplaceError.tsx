@@ -3,7 +3,7 @@ import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { ClayButton } from '@components/clay/ClayButton';
 import { ClayCard } from '@components/clay/ClayCard';
 import { ClayText } from '@components/ui/ClayText';
-import { RemyArt } from '@components/ui/RemyArt';
+import { DizzyRemy } from '@components/ui/RemyReactions';
 import { Copy, isOfflineError } from '@constants/copy';
 import { Spacing } from '@constants/theme';
 
@@ -15,10 +15,12 @@ interface MarketplaceErrorProps {
 
 export function MarketplaceError({ error, onRetry, style }: MarketplaceErrorProps) {
   const [retrying, setRetrying] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const offline = isOfflineError(error);
 
   const retry = async () => {
     setRetrying(true);
+    setAttempt((count) => count + 1);
     try {
       await onRetry();
     } finally {
@@ -28,7 +30,7 @@ export function MarketplaceError({ error, onRetry, style }: MarketplaceErrorProp
 
   return (
     <ClayCard outlined style={[styles.card, style]}>
-      <RemyArt size={82} pose="dizzy" />
+      <DizzyRemy attempt={attempt} />
       <ClayText variant="h3" align="center">
         {offline ? Copy.error.offlineTitle : Copy.error.title}
       </ClayText>

@@ -11,7 +11,6 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { RemyArt } from '@components/ui/RemyArt';
 import { Icon } from '@components/ui/Icon';
 import { ClayText } from '@components/ui/ClayText';
@@ -32,7 +31,7 @@ export function VerifiedBadge({ label = 'Verified', compact = false }: VerifiedB
   }, [reduced, shine]);
 
   const shineStyle = useAnimatedStyle(() => ({
-    opacity: shine.value === 0 || shine.value === 1 ? 0 : 0.8,
+    opacity: Math.sin(shine.value * Math.PI) * 0.22,
     transform: [{ translateX: (shine.value * 2 - 1) * 90 }],
   }));
 
@@ -46,14 +45,7 @@ export function VerifiedBadge({ label = 'Verified', compact = false }: VerifiedB
         {label}
       </ClayText>
       {reduced ? null : (
-        <Animated.View style={[styles.shine, shineStyle]} pointerEvents="none">
-          <LinearGradient
-            colors={['transparent', 'rgba(255,255,255,0.9)', 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
+        <Animated.View style={[styles.shine, shineStyle]} pointerEvents="none" />
       )}
     </View>
   );
@@ -74,5 +66,5 @@ const styles = StyleSheet.create({
   compact: { paddingVertical: 3, paddingHorizontal: 8 },
   mascot: { width: 26, height: 22, alignItems: 'center', justifyContent: 'center' },
   label: { color: Colors.successText },
-  shine: { ...StyleSheet.absoluteFillObject },
+  shine: { ...StyleSheet.absoluteFillObject, width: '40%', backgroundColor: Colors.white },
 });

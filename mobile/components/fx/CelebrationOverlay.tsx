@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { RemyArt } from '@components/ui/RemyArt';
+import { CelebratingRemy, NibblingRemy } from '@components/ui/RemyReactions';
 import { ClayText } from '@components/ui/ClayText';
 import { Colors, Radius, Spacing } from '@constants/theme';
 
@@ -22,6 +22,7 @@ export interface CelebrationOverlayProps {
   message?: string;
   onDismiss: () => void;
   autoDismissMs?: number;
+  pendingApproval?: boolean;
 }
 
 const CONFETTI_COLORS = [Colors.primary, Colors.successBg, Colors.accent, Colors.white, Colors.text];
@@ -32,6 +33,7 @@ export function CelebrationOverlay({
   message,
   onDismiss,
   autoDismissMs = 2500,
+  pendingApproval = false,
 }: CelebrationOverlayProps) {
   const reduced = useReducedMotion();
   const progress = useSharedValue(0);
@@ -61,7 +63,7 @@ export function CelebrationOverlay({
         accessibilityRole="button"
         accessibilityLabel="Dismiss celebration"
       />
-      {!reduced ? (
+      {!reduced && !pendingApproval ? (
         <View style={styles.confetti} pointerEvents="none">
           <ConfettiCannon
             count={110}
@@ -76,7 +78,7 @@ export function CelebrationOverlay({
       ) : null}
 
       <Animated.View style={[styles.card, cardStyle]}>
-        <RemyArt size={145} pose="bouncing" />
+        {pendingApproval ? <NibblingRemy size={130} /> : <CelebratingRemy size={145} />}
         <ClayText variant="h2" align="center" style={styles.title}>
           {title}
         </ClayText>

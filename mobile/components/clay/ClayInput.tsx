@@ -11,6 +11,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { runOnUI, useSharedValue } from 'react-native-reanimated';
 import { ClayText } from '@components/ui/ClayText';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { ClayEdges, Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
@@ -36,7 +37,7 @@ export function ClayInput({
   const [focused, setFocused] = useState(false);
   const [peekMounted, setPeekMounted] = useState(false);
   const [peekVisible, setPeekVisible] = useState(false);
-  const [keystrokes, setKeystrokes] = useState(0);
+  const keystrokes = useSharedValue(0);
 
   useEffect(() => {
     if (!showMascotOnFocus || !focused) return;
@@ -46,14 +47,14 @@ export function ClayInput({
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
         setPeekVisible(false);
-        setKeystrokes(0);
+        keystrokes.value = 0;
       },
     );
     return () => {
       show.remove();
       hide.remove();
     };
-  }, [focused, showMascotOnFocus]);
+  }, [focused, keystrokes, showMascotOnFocus]);
 
   const handleFocus = useCallback(
     (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
@@ -71,16 +72,21 @@ export function ClayInput({
     (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
       setFocused(false);
       setPeekVisible(false);
-      setKeystrokes(0);
+      keystrokes.value = 0;
       onBlur?.(e);
     },
-    [onBlur],
+    [keystrokes, onBlur],
   );
 
-  const handleChangeText = (text: string) => {
-    if (peekVisible) setKeystrokes((previous) => previous + 1);
+  const handleChangeText = useCallback((text: string) => {
+    if (peekVisible) {
+      runOnUI(() => {
+        'worklet';
+        keystrokes.value += 1;
+      })();
+    }
     onChangeText?.(text);
-  };
+  }, [keystrokes, onChangeText, peekVisible]);
 
   const input = (
     <TextInput

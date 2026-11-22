@@ -79,7 +79,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   return (
     <Animated.View style={[styles.overlay, fadeOut]} accessibilityViewIsModal>
       <Animated.View entering={reduced ? undefined : badgeEntrance}>
-        <RemyLogo size="lg" tone="muted" badgeOnly />
+        <RemyLogo size="lg" tone="muted" badgeOnly gradient />
       </Animated.View>
       <Animated.View entering={reduced ? undefined : nameEntrance} style={styles.name}>
         <ClayText variant="wordmark">{Copy.app.name}</ClayText>

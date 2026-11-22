@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
+  runOnUI,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -26,40 +27,47 @@ interface RemyLogoProps {
   stacked?: boolean;
   badgeOnly?: boolean;
   tone?: 'caramel' | 'muted';
+  gradient?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-export function RemyLogo({ size = 'md', stacked = false, badgeOnly = false, tone = 'caramel', style }: RemyLogoProps) {
+export const RemyLogo = React.memo(function RemyLogo({
+  size = 'md', stacked = false, badgeOnly = false, tone = 'caramel', gradient = false, style,
+}: RemyLogoProps) {
   const { badge, text, radius } = sizes[size];
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const bounce = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const onPress = useCallback(() => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    }
+    if (!reducedMotion) {
+      runOnUI(() => {
+        'worklet';
+        scale.value = withSequence(withSpring(1.07, Springs.snappy), withSpring(1, Springs.bouncy));
+      })();
+    }
+  }, [reducedMotion, scale]);
 
   return (
     <Pressable
       accessibilityLabel={Copy.app.name}
       accessibilityRole="button"
       accessibilityHint={reducedMotion ? undefined : 'Makes Remy bounce'}
-      onPress={() => {
-        if (Platform.OS !== 'web') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
-        }
-        if (!reducedMotion) {
-          scale.value = withSequence(withSpring(1.07, Springs.snappy), withSpring(1, Springs.bouncy));
-        }
-      }}
+      onPress={onPress}
       style={[styles.touchTarget, style]}
     >
       <Animated.View style={[styles.lockup, stacked && styles.stacked, bounce]} pointerEvents="none">
-        <View style={[styles.badge, { width: badge, height: badge, borderRadius: radius, backgroundColor: ClayGradients[tone][0] }]}>
-          <ClayFinish tone={tone} radius={radius} />
+        <View style={[styles.badge, { width: badge, height: badge, borderRadius: radius, backgroundColor: ClayGradients[tone][gradient ? 0 : 1] }]}>
+          <ClayFinish tone={tone} radius={radius} gradient={gradient} />
           <RemyArt size={badge * 0.82} />
         </View>
         {badgeOnly ? null : <ClayText variant="wordmark" style={{ fontSize: text }}>{Copy.app.name}</ClayText>}
       </Animated.View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   touchTarget: { minWidth: 44, minHeight: 44, justifyContent: 'center' },

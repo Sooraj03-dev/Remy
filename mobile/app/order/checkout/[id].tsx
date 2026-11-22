@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import {
@@ -131,6 +132,8 @@ export default function CheckoutScreen() {
     }
   };
 
+  const feedback = useRemyFormFeedback(error, handlePlaceOrder);
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
@@ -182,12 +185,6 @@ export default function CheckoutScreen() {
           <Text style={[Typography.caption, styles.infoNote]}>
             🤝 Remy transactions happen in person on campus. Coordinate where and when to meet the seller.
           </Text>
-
-          {error ? (
-            <View style={styles.inlineError}>
-              <Text style={styles.inlineErrorText}>⚠️ {error}</Text>
-            </View>
-          ) : null}
 
           {/* Certified Campus Safe Meetup Points */}
           {certifiedLocations.length > 0 && (
@@ -265,10 +262,11 @@ export default function CheckoutScreen() {
             </Text>
           </ClayCard>
 
+          <RemyFormError message={feedback.message} attempt={feedback.attempt} />
           <View style={styles.buttonRow}>
             <ClayButton
-              label={submitting ? 'Placing Order...' : `Confirm Order (₹${product?.price.toLocaleString('en-IN')})`}
-              onPress={handlePlaceOrder}
+              label={submitting ? 'Placing Order...' : feedback.message ? Copy.error.retry : `Confirm Order (₹${product?.price.toLocaleString('en-IN')})`}
+              onPress={feedback.onSubmit}
               loading={submitting}
               style={styles.confirmBtn}
             />
@@ -315,12 +313,5 @@ const styles = StyleSheet.create({
   buttonRow: { gap: Spacing.sm },
   confirmBtn: { width: '100%' },
   cancelBtn: { width: '100%' },
-  inlineError: {
-    backgroundColor: Colors.errorBg,
-    padding: Spacing.sm,
-    borderRadius: Radius.sm,
-    marginBottom: Spacing.sm,
-  },
-  inlineErrorText: { color: Colors.error, fontSize: FontSize.caption },
 });
 
