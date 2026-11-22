@@ -1,11 +1,11 @@
 // mobile/components/clay/ClayButton.tsx
-// Claymorphism pill button — squish, haptics, dot loader and disabled style.
+// Clay pill button with tactile press feedback and a loading spinner.
 
 import React from 'react';
 import { StyleSheet, type PressableProps, type TextStyle, type ViewStyle } from 'react-native';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { ClayText } from '@components/ui/ClayText';
-import { Colors, Radius, Spacing, clayElevation } from '@constants/theme';
+import { Colors, Radius, Spacing, type ClayTone } from '@constants/theme';
 
 export type ClayButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -19,35 +19,22 @@ interface ClayButtonProps extends Omit<PressableProps, 'style' | 'children'> {
 
 const variantStyles: Record<
   ClayButtonVariant,
-  { container: ViewStyle; text: TextStyle; loadingColor: string; elevated: boolean }
+  { tone?: ClayTone; color: string }
 > = {
   primary: {
-    container: { backgroundColor: Colors.primary },
-    text: { color: Colors.white },
-    loadingColor: Colors.white,
-    elevated: true,
+    tone: 'espresso',
+    color: Colors.background,
   },
   secondary: {
-    container: {
-      backgroundColor: Colors.white,
-      borderWidth: 1.5,
-      borderColor: Colors.primary,
-    },
-    text: { color: Colors.primary },
-    loadingColor: Colors.primary,
-    elevated: true,
+    tone: 'muted',
+    color: Colors.primary,
   },
   ghost: {
-    container: { backgroundColor: 'transparent' },
-    text: { color: Colors.primary },
-    loadingColor: Colors.primary,
-    elevated: false,
+    color: Colors.primary,
   },
   danger: {
-    container: { backgroundColor: Colors.error },
-    text: { color: Colors.white },
-    loadingColor: Colors.white,
-    elevated: true,
+    tone: 'terracotta',
+    color: Colors.surface,
   },
 };
 
@@ -66,12 +53,14 @@ export function ClayButton({
     <ClayPressable
       {...rest}
       loading={loading}
-      loadingColor={vs.loadingColor}
-      disabled={disabled || loading}
+      loadingColor={vs.color}
+      disabled={disabled}
       accessibilityLabel={rest.accessibilityLabel ?? label}
-      style={[styles.base, vs.elevated && clayElevation, vs.container, style]}
+      tone={vs.tone}
+      pressScale={0.95}
+      style={[styles.base, style]}
     >
-      <ClayText variant="button" style={[vs.text, textStyle]} maxFontSizeMultiplier={1.2} numberOfLines={1}>
+      <ClayText variant="button" style={[{ color: vs.color }, textStyle]} maxFontSizeMultiplier={1.2} numberOfLines={1}>
         {label}
       </ClayText>
     </ClayPressable>
@@ -81,8 +70,8 @@ export function ClayButton({
 const styles = StyleSheet.create({
   base: {
     minHeight: 48,
-    borderRadius: Radius.full,
-    paddingVertical: Spacing.md,
+    borderRadius: Radius.card,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',

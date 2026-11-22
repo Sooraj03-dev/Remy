@@ -9,6 +9,7 @@ import { Spacing } from '@constants/theme';
 
 interface ClayHeaderProps {
   title: string;
+  eyebrow?: string;
   subtitle?: string;
   rightAccessory?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -19,6 +20,7 @@ interface ClayHeaderProps {
 
 export function ClayHeader({
   title,
+  eyebrow,
   subtitle,
   rightAccessory,
   rightIcon,
@@ -31,6 +33,7 @@ export function ClayHeader({
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.sm }, style]}>
       <View style={styles.textBlock}>
+        {eyebrow ? <ClayText variant="body" color="textSecondary">{eyebrow}</ClayText> : null}
         <ClayText variant="h1" numberOfLines={1}>
           {title}
         </ClayText>

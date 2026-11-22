@@ -1,7 +1,7 @@
 // mobile/components/fx/index.ts
 export { AnimatedOwl, type OwlMood } from './AnimatedOwl';
 export { AnimatedSplash } from './AnimatedSplash';
-export { ClayPressable, Dots } from './ClayPressable';
+export { ClayPressable } from './ClayPressable';
 export { FloatingBlobs } from './FloatingBlobs';
 export { HeartBurst } from './HeartBurst';
 export { useStaggeredEntrance, StaggeredItem, SkeletonCard, ShimmerSweep } from './Stagger';

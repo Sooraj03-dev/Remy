@@ -42,7 +42,7 @@ export const Copy = {
     title: 'Something went wrong',
     generic: 'Something went sideways. Please try again.',
     offline: 'Check your connection and try again.',
-    offlineTitle: 'You are offline',
+    offlineTitle: "You're offline",
     retry: 'Try again',
   },
   owl: {

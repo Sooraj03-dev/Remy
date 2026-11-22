@@ -4,8 +4,9 @@
 import 'react-native-gesture-handler';
 
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
-import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from '@expo-google-fonts/nunito';
+import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -85,11 +86,13 @@ function SplashGate({ fontsReady }: { fontsReady: boolean }) {
     SplashScreen.hideAsync().catch(() => undefined);
   }, [fontsReady]);
 
+  if (!fontsReady) return null;
+
   return (
     <>
       <AuthGate />
-      {!splashDone && fontsReady ? (
-        <AnimatedSplash ready={fontsReady && isLoaded} onFinish={() => setSplashDone(true)} />
+      {!splashDone ? (
+        <AnimatedSplash ready={isLoaded} onFinish={() => setSplashDone(true)} />
       ) : null}
     </>
   );
@@ -97,11 +100,9 @@ function SplashGate({ fontsReady }: { fontsReady: boolean }) {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Fredoka_600SemiBold,
-    Fredoka_700Bold,
-    Nunito_400Regular,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
   });
 
   const fontsReady = fontsLoaded || Boolean(fontError);
@@ -110,7 +111,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-          <StatusBar style="dark" backgroundColor="transparent" translucent />
+          <StatusBar style="dark" backgroundColor={Colors.background} translucent />
           <ToastProvider>
             <SplashGate fontsReady={fontsReady} />
           </ToastProvider>
@@ -121,5 +122,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: Colors.background },
 });

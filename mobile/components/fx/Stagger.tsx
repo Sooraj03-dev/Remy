@@ -26,7 +26,7 @@ export function useStaggeredEntrance(index: number): FadeInDown | undefined {
   return FadeInDown.delay(index * Stagger.step)
     .duration(320)
     .springify()
-    .damping(16)
+    .damping(18)
     .stiffness(180);
 }
 
@@ -106,16 +106,16 @@ export function ShimmerSweep({ width = 160, paused = false }: { width?: number; 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: Radius.md,
+    borderRadius: Radius.card,
     overflow: 'hidden',
     padding: 0,
     shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 4, height: 6 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.10,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 3,
   },
-  block: { backgroundColor: Colors.lavender },
+  block: { backgroundColor: Colors.surfaceMuted },
   lines: { padding: Spacing.md, gap: Spacing.sm },
   lineWide: { height: 12, borderRadius: 6, width: '82%' },
   lineShort: { height: 10, borderRadius: 5, width: '48%' },

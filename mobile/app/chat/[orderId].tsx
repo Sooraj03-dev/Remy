@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   senderLabel: { fontSize: 10, color: Colors.textSecondary, marginBottom: 2, marginLeft: Spacing.xs },
   bubble: { padding: Spacing.md, borderRadius: Radius.lg },
   myBubble: { backgroundColor: Colors.primary, borderBottomRightRadius: Spacing.xs },
-  theirBubble: { backgroundColor: Colors.mint, borderBottomLeftRadius: Spacing.xs },
+  theirBubble: { backgroundColor: Colors.surfaceMuted, borderBottomLeftRadius: Spacing.xs },
   messageText: { fontSize: FontSize.body },
   myText: { color: Colors.white },
   theirText: { color: Colors.text },

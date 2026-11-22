@@ -38,7 +38,7 @@ import {
 import type { Product, ReportReason } from '../../../shared/types';
 
 const PLACEHOLDER_IMAGE =
-  'https://via.placeholder.com/400x300/B9A0EB/FFFFFF?text=🛍️';
+  'https://via.placeholder.com/400x300/EADFD5/4A2E1B?text=Remy';
 
 const conditionLabel: Record<string, string> = {
   new: 'Brand New',
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.base, gap: Spacing.base },
   badgeRow: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', flexWrap: 'wrap' },
   verifiedBadge: { paddingVertical: 4, paddingHorizontal: 10 },
-  verifiedText: { fontSize: 12, fontWeight: '600', color: '#1A7A52' },
+  verifiedText: { fontSize: 12, fontWeight: '600', color: Colors.successText },
   pendingText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
   rejectionCard: { padding: Spacing.sm, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   errorText: { color: Colors.error, textAlign: 'center' },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(52, 41, 73, 0.5)',
+    backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,

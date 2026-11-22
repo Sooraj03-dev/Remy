@@ -20,7 +20,7 @@ import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@cons
 import { fetchOrderById, updateOrderStatus, submitReturnRequest } from '../../services/api';
 import type { Order, ReturnReason } from '../../../shared/types';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/B9A0EB/FFFFFF?text=🛍️';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/EADFD5/4A2E1B?text=Remy';
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   actionBtn: { width: '100%' },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(52, 41, 73, 0.5)',
+    backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,

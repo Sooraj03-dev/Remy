@@ -41,7 +41,7 @@ export function VerifiedBadge({ label = 'Verified', compact = false }: VerifiedB
       <View style={styles.mascot}>
         <RemyArt size={compact ? 20 : 23} />
       </View>
-      <Icon name="SealCheck" size="sm" weight="fill" color="mint" />
+      <Icon name="SealCheck" size="sm" weight="fill" color="successText" />
       <ClayText variant="captionBold" style={styles.label}>
         {label}
       </ClayText>
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.mint,
+    backgroundColor: Colors.successBg,
     borderRadius: Radius.full,
     paddingVertical: 5,
     paddingHorizontal: 10,
@@ -73,6 +73,6 @@ const styles = StyleSheet.create({
   },
   compact: { paddingVertical: 3, paddingHorizontal: 8 },
   mascot: { width: 26, height: 22, alignItems: 'center', justifyContent: 'center' },
-  label: { color: '#1A7A52' },
+  label: { color: Colors.successText },
   shine: { ...StyleSheet.absoluteFillObject },
 });

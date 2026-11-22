@@ -1,5 +1,5 @@
 // mobile/components/fx/FloatingBlobs.tsx
-// Slow pastel clay blobs for headers, auth screens and empty states.
+// Soft gradients used by the motion lab.
 
 import React, { useEffect } from 'react';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
@@ -13,12 +13,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '@constants/theme';
 
-type BlobTone = 'lavender' | 'mint' | 'peach';
+type BlobTone = 'oat' | 'sage' | 'caramel';
 
 const TONES: Record<BlobTone, string> = {
-  lavender: Colors.primary,
-  mint: Colors.mint,
-  peach: Colors.peach,
+  oat: Colors.primarySoft,
+  sage: Colors.successBg,
+  caramel: Colors.accentSoft,
 };
 
 interface BlobSpec {
@@ -33,18 +33,18 @@ interface BlobSpec {
 
 const LAYOUTS: Record<'header' | 'auth' | 'empty', BlobSpec[]> = {
   header: [
-    { tone: 'lavender', size: 180, top: -70, left: '-8%', opacity: 0.5, drift: [14, 10], duration: 7000 },
-    { tone: 'mint', size: 130, top: -30, left: '58%', opacity: 0.55, drift: [-12, 12], duration: 8600 },
-    { tone: 'peach', size: 96, top: 30, left: '28%', opacity: 0.4, drift: [10, -8], duration: 9600 },
+    { tone: 'oat', size: 180, top: -70, left: '-8%', opacity: 0.5, drift: [14, 10], duration: 7000 },
+    { tone: 'sage', size: 130, top: -30, left: '58%', opacity: 0.55, drift: [-12, 12], duration: 8600 },
+    { tone: 'caramel', size: 96, top: 30, left: '28%', opacity: 0.4, drift: [10, -8], duration: 9600 },
   ],
   auth: [
-    { tone: 'lavender', size: 220, top: -90, left: '-20%', opacity: 0.45, drift: [18, 12], duration: 8200 },
-    { tone: 'mint', size: 160, top: 60, left: '62%', opacity: 0.5, drift: [-14, 16], duration: 7400 },
-    { tone: 'peach', size: 120, top: 200, left: '4%', opacity: 0.35, drift: [12, -10], duration: 9000 },
+    { tone: 'oat', size: 220, top: -90, left: '-20%', opacity: 0.45, drift: [18, 12], duration: 8200 },
+    { tone: 'sage', size: 160, top: 60, left: '62%', opacity: 0.5, drift: [-14, 16], duration: 7400 },
+    { tone: 'caramel', size: 120, top: 200, left: '4%', opacity: 0.35, drift: [12, -10], duration: 9000 },
   ],
   empty: [
-    { tone: 'lavender', size: 160, top: -40, left: '8%', opacity: 0.4, drift: [10, 8], duration: 8000 },
-    { tone: 'mint', size: 120, top: 20, left: '64%', opacity: 0.45, drift: [-10, 10], duration: 9000 },
+    { tone: 'oat', size: 160, top: -40, left: '8%', opacity: 0.4, drift: [10, 8], duration: 8000 },
+    { tone: 'sage', size: 120, top: 20, left: '64%', opacity: 0.45, drift: [-10, 10], duration: 9000 },
   ],
 };
 

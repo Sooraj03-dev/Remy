@@ -5,7 +5,7 @@ import { Colors } from '@constants/theme';
 
 type Part = Exclude<keyof typeof art, 'width' | 'height' | 'peekHeight' | 'colors' | 'poses'>;
 
-const fills: Record<string, string> = { ...art.colors, peach: Colors.peach };
+const fills: Record<string, string> = art.colors;
 
 interface RemyArtProps {
   size: number;

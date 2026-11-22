@@ -58,7 +58,7 @@ export function OwlArt({
         />
         <Circle cx={220} cy={190} r={OWL_GEOMETRY.pupil.r} fill={ink} />
         <Circle cx={308} cy={190} r={OWL_GEOMETRY.pupil.r} fill={ink} />
-        <Path d={OWL_GEOMETRY.beak} fill={Colors.peach} />
+        <Path d={OWL_GEOMETRY.beak} fill={Colors.accent} />
       </G>
     </Svg>
   );
@@ -80,7 +80,7 @@ export function OwlBodyOnly({
       <Path d={OWL_GEOMETRY.rightEar} fill={ink} />
       <Path d={OWL_GEOMETRY.body} fill={ink} />
       <Ellipse cx={256} cy={238} rx={64} ry={48} fill={bubbleFill} />
-      <Path d={OWL_GEOMETRY.beak} fill={Colors.peach} />
+      <Path d={OWL_GEOMETRY.beak} fill={Colors.accent} />
     </Svg>
   );
 }

@@ -1,5 +1,5 @@
 // mobile/app/(tabs)/home.tsx
-// Home feed with a blob header and staggered clay cards.
+// Home feed with staggered clay cards.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -19,16 +19,16 @@ import {
   ClayButton,
   ClayText,
   CategoryChip,
-  FloatingBlobs,
   SkeletonCard,
   StaggeredItem,
   Icon,
 } from '@components/index';
+import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing } from '@constants/theme';
-import { Copy, isOfflineError, pickVariant } from '@constants/copy';
+import { Colors, Radius, Spacing } from '@constants/theme';
+import { Copy, pickVariant } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product, ProductCategory } from '../../../shared/types';
 
@@ -55,11 +55,11 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadProducts = useCallback(async () => {
-    setError(null);
     try {
       const params =
         selectedCategory === 'all' ? {} : { category: selectedCategory as ProductCategory };
       const data = await fetchProducts(params);
+      setError(null);
       setProducts(data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Could not load products.';
@@ -82,14 +82,13 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <FloatingBlobs variant="header" paused={!focused} />
+      <StaggeredItem index={0} style={styles.headerWrap}>
         <ClayHeader
-          title={`Hey, ${firstName}`}
-          subtitle="What are you looking for today?"
-          rightAccessory={<RemyLogo size="sm" style={styles.logo} />}
+          eyebrow="Welcome back,"
+          title={firstName}
+          rightAccessory={<RemyLogo size="sm" badgeOnly style={styles.logo} />}
         />
-      </View>
+      </StaggeredItem>
 
       <ScrollView
         style={styles.scroll}
@@ -104,14 +103,15 @@ export default function HomeScreen() {
             Categories
           </ClayText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {CATEGORIES.map((cat) => (
-              <CategoryChip
-                key={cat.key}
-                label={cat.label}
-                category={cat.key}
-                selected={selectedCategory === cat.key}
-                onPress={() => setSelectedCategory(cat.key)}
-              />
+            {CATEGORIES.map((cat, index) => (
+              <StaggeredItem key={cat.key} index={index + 1}>
+                <CategoryChip
+                  label={cat.label}
+                  category={cat.key}
+                  selected={selectedCategory === cat.key}
+                  onPress={() => setSelectedCategory(cat.key)}
+                />
+              </StaggeredItem>
             ))}
           </ScrollView>
         </View>
@@ -138,23 +138,10 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : error ? (
-            <ClayCard variant="peach" style={styles.statusCard}>
-              {isOfflineError(error) ? (
-                <Icon name="WifiSlash" size="lg" weight="duotone" color="primary" />
-              ) : (
-                <RemyArt size={110} />
-              )}
-              <ClayText variant="bodyBold" align="center">
-                {isOfflineError(error) ? Copy.error.offlineTitle : Copy.error.title}
-              </ClayText>
-              <ClayText variant="caption" style={styles.errorText}>
-                {isOfflineError(error) ? `${Copy.error.offline} (${error})` : error}
-              </ClayText>
-              <ClayButton label={Copy.error.retry} variant="secondary" onPress={loadProducts} style={styles.retryBtn} />
-            </ClayCard>
+            <MarketplaceError error={error} onRetry={loadProducts} />
           ) : products.length === 0 ? (
-            <ClayCard style={styles.statusCard}>
-              <RemyArt size={118} />
+            <ClayCard outlined style={styles.statusCard}>
+              <RemyArt size={82} />
               <ClayText variant="bodyBold" align="center">
                 {Copy.empty.listingsTitle}
               </ClayText>
@@ -185,17 +172,19 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View style={styles.section}>
-          <ClayCard variant="mint" style={styles.guideCard}>
-            <View style={styles.guideHeader}>
-              <ClayText variant="bodyBold">Safe Campus Meetups</ClayText>
+        <StaggeredItem index={3} style={styles.section}>
+          <ClayCard variant="success" style={styles.guideCard}>
+            <View style={styles.guideIcon}>
+              <Icon name="ShieldCheck" size={22} color="successText" />
             </View>
-            <ClayText variant="caption" style={styles.guideText}>
-              Meet in well-lit public campus spots like the Student Union, Library foyer, or
-              University Cafe. Inspect items before completing trades.
-            </ClayText>
+            <View style={styles.guideText}>
+              <ClayText variant="bodyBold" color="successText">Safe Campus Meetups</ClayText>
+              <ClayText variant="caption" color="successText">
+                Meet in a well-lit public spot on campus and inspect the item before trading.
+              </ClayText>
+            </View>
           </ClayCard>
-        </View>
+        </StaggeredItem>
       </ScrollView>
       {!loading ? <RemyMascot state="roaming" paused={!focused} /> : null}
     </View>
@@ -204,7 +193,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerWrap: { paddingTop: Spacing.xl, overflow: 'hidden' },
+  headerWrap: { paddingTop: Spacing.base },
   logo: { marginLeft: Spacing.sm },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: Spacing.base },
@@ -215,21 +204,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  sectionTitle: { marginBottom: Spacing.sm },
-  chips: { flexDirection: 'row', gap: Spacing.sm, paddingVertical: 2 },
+  sectionTitle: { marginBottom: Spacing.xs },
+  chips: { flexDirection: 'row', gap: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
   skeletonRow: { flexDirection: 'row', gap: Spacing.sm, overflow: 'hidden' },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', padding: Spacing.base },
-  productList: { gap: Spacing.sm, paddingVertical: Spacing.xs },
+  productList: { gap: Spacing.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
   productCard: { width: 180 },
   statusCard: {
     alignItems: 'center',
     padding: Spacing.lg,
     gap: Spacing.xs,
   },
-  errorText: { color: Colors.error, textAlign: 'center' },
   emptyText: { textAlign: 'center', color: Colors.textSecondary },
   retryBtn: { marginTop: Spacing.sm, alignSelf: 'center' },
-  guideCard: { padding: Spacing.base },
-  guideHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  guideText: { marginTop: 4 },
+  guideCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, padding: Spacing.md },
+  guideIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.successBg,
+  },
+  guideText: { flex: 1, gap: 2 },
 });

@@ -36,7 +36,7 @@ export interface AnimatedOwlProps {
   accessibilityLabel?: string;
 }
 
-const CONFETTI_COLORS = [Colors.primary, Colors.mint, Colors.peach, Colors.text, Colors.white];
+const CONFETTI_COLORS = [Colors.primary, Colors.successBg, Colors.accentSoft, Colors.text, Colors.white];
 
 export function AnimatedOwl({
   mood = 'idle',

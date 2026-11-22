@@ -75,9 +75,14 @@ npm run typecheck    # verify TypeScript
 
 ### 2. Mobile App
 
+Create `mobile/.env` from `mobile/.env.example` if you haven't configured it
+yet. Then run these commands from the repository root.
+
 ```bash
-cd mobile
-cp .env.example .env # configure credentials
-npx expo start       # scan QR with Expo Go or run on simulator
-npm run typecheck    # verify TypeScript
+npm --prefix mobile install
+npm run mobile
+npm --prefix mobile run typecheck
 ```
+
+`npm run mobile` launches Expo from the mobile project and loads the Expo Router
+entry point. To clear Metro's cache, use `npm run mobile -- --clear`.

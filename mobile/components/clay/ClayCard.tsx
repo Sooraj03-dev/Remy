@@ -3,38 +3,50 @@
 
 import React from 'react';
 import { View, StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
-import { Colors, Radius, Spacing, clayElevation } from '@constants/theme';
+import { ClayGradients, Colors, Spacing, clayElevation, type ClayTone } from '@constants/theme';
+import { ClayFinish, resolveClayRadius } from './ClayFinish';
 
-export type ClayCardVariant = 'default' | 'mint' | 'peach' | 'lavender';
+export type ClayCardVariant = 'default' | 'muted' | 'success' | 'error' | 'mint' | 'peach' | 'lavender';
 
-const variantBackground: Record<ClayCardVariant, string> = {
-  default: Colors.white,
-  mint: Colors.mint,
-  peach: Colors.peach,
-  lavender: Colors.lavender,
+const variantTone: Record<ClayCardVariant, ClayTone> = {
+  default: 'oat',
+  muted: 'muted',
+  success: 'sage',
+  error: 'blush',
+  mint: 'sage',
+  peach: 'blush',
+  lavender: 'muted',
 };
 
 interface ClayCardProps extends ViewProps {
   variant?: ClayCardVariant;
+  outlined?: boolean;
   style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
 }
 
 export function ClayCard({
   variant = 'default',
+  outlined = false,
   style,
   children,
   ...rest
 }: ClayCardProps) {
+  const tone = variantTone[variant];
+  const radius = resolveClayRadius(StyleSheet.flatten(style)?.borderRadius);
+
   return (
     <View
       style={[
         styles.card,
-        { backgroundColor: variantBackground[variant] },
+        { backgroundColor: ClayGradients[tone][0] },
         style,
+        { borderRadius: radius },
+        outlined && styles.outlined,
       ]}
       {...rest}
     >
+      <ClayFinish tone={tone} radius={radius} />
       {children}
     </View>
   );
@@ -42,9 +54,9 @@ export function ClayCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radius.md,
     padding: Spacing.base,
     ...clayElevation,
   },
+  outlined: { borderWidth: 1, borderColor: Colors.border },
 });
 

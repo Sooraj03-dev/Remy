@@ -98,7 +98,7 @@ function Particle({ index, total, size }: { index: number; total: number; size: 
 
   return (
     <Animated.View style={[styles.particle, animatedStyle]} pointerEvents="none">
-      <Icon name={index % 2 === 0 ? 'Heart' : 'SealCheck'} size={size * 0.42} weight="fill" color={index % 2 === 0 ? 'peach' : 'primary'} />
+      <Icon name={index % 2 === 0 ? 'Heart' : 'SealCheck'} size={size * 0.42} weight="fill" color={index % 2 === 0 ? 'accent' : 'primary'} />
     </Animated.View>
   );
 }

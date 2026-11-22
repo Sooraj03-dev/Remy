@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useSignIn, useAuth } from '@clerk/clerk-expo';
-import { ClayCard, ClayInput, ClayButton, FloatingBlobs } from '@components/index';
+import { ClayCard, ClayInput, ClayButton } from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { Colors, Spacing, FontSize, FontWeight, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
@@ -83,7 +83,6 @@ export default function LoginScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <FloatingBlobs variant="auth" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scroll}

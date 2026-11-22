@@ -6,24 +6,27 @@
     "fur": "#C6946C",
     "furShade": "#A76F50",
     "furLight": "#F1C797",
-    "blush": "#E99487",
-    "pink": "#DF8F98",
-    "eyes": "#2D232D"
+    "blush": "#D99179",
+    "pink": "#CF8B7E",
+    "innerEar": "#EDB9A0",
+    "eyes": "#241710",
+    "spark": "#C47B48"
   },
   "poses": {
     "sitting": ["tail", "feet", "leftEar", "rightEar", "body", "face", "eyes", "paws"],
     "bouncing": ["tail", "feet", "leftEar", "rightEar", "body", "face", "eyes", "raisedPaws"],
     "walking": ["walkingTail", "walkingFeet", "leftEar", "rightEar", "walkingBody", "walkingFace"],
-    "peeking": ["leftEar", "rightEar", "body", "face", "eyes", "peekPaws"]
+    "peeking": ["leftEar", "rightEar", "body", "face", "eyes", "peekPaws"],
+    "dizzy": ["tail", "feet", "leftEar", "rightEar", "body", "face", "dizzyEyes", "paws"]
   },
   "leftEar": [
     { "d": "M37 47C19 49 9 38 10 25C11 14 19 5 28 7C39 8 49 23 49 35Z", "fill": "fur", "stroke": 2.4 },
-    { "d": "M35 42C22 45 14 36 15 26C16 17 23 12 29 13C37 15 44 25 43 34Z", "fill": "peach", "stroke": 1.1 },
+    { "d": "M35 42C22 45 14 36 15 26C16 17 23 12 29 13C37 15 44 25 43 34Z", "fill": "innerEar", "stroke": 1.1 },
     { "d": "M18 29C18 36 25 42 32 39C36 37 38 33 37 29C32 35 24 33 18 29Z", "fill": "pink", "opacity": 0.45 }
   ],
   "rightEar": [
     { "d": "M71 34C72 20 82 7 93 6C104 5 111 15 111 26C111 39 101 48 85 47Z", "fill": "fur", "stroke": 2.4 },
-    { "d": "M77 33C79 22 86 13 94 12C101 11 106 18 106 26C106 36 99 42 88 42Z", "fill": "peach", "stroke": 1.1 },
+    { "d": "M77 33C79 22 86 13 94 12C101 11 106 18 106 26C106 36 99 42 88 42Z", "fill": "innerEar", "stroke": 1.1 },
     { "d": "M104 27C101 33 94 36 87 31C87 37 89 40 94 39C99 38 102 34 104 27Z", "fill": "pink", "opacity": 0.45 }
   ],
   "tail": [
@@ -47,6 +50,10 @@
   ],
   "eyes": [
     { "d": "M47 49A2.6 3 0 1 0 47 55A2.6 3 0 1 0 47 49ZM71 49A2.6 3 0 1 0 71 55A2.6 3 0 1 0 71 49Z", "fill": "eyes" }
+  ],
+  "dizzyEyes": [
+    { "d": "M47 51C49 49 51 52 49 54C46 57 42 53 45 49C47 46 52 48 53 51M70 51C72 49 74 52 72 54C69 57 65 53 68 49C70 46 75 48 76 51", "stroke": 1.5 },
+    { "d": "M57 15L58.5 19L62.5 20.5L58.5 22L57 26L55.5 22L51.5 20.5L55.5 19Z", "fill": "spark" }
   ],
   "paws": [
     { "d": "M41 72C43 75 48 76 51 78C55 80 53 84 50 83C46 83 41 81 38 78M77 72C74 76 70 77 67 78C63 80 65 84 68 83C72 83 77 81 80 78", "fill": "fur", "stroke": 1.65 }

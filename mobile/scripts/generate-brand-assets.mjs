@@ -10,11 +10,10 @@ const IMAGES = path.join(ROOT, 'assets', 'images');
 const ANDROID_RES = path.join(ROOT, 'android', 'app', 'src', 'main', 'res');
 const art = JSON.parse(await fs.readFile(path.join(BRAND, 'source', 'remy-art.json'), 'utf8'));
 
-const INK = '#342949';
-const LAVENDER = '#B9A0EB';
-const BACKGROUND = '#F3EEFA';
-const MINT = '#CFF2E2';
-const fills = { ...art.colors, peach: '#FFC6BA' };
+const INK = '#241710';
+const CARAMEL = '#C47B48';
+const BACKGROUND = '#FAF6F1';
+const fills = art.colors;
 
 function svg(width, height, content) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${content}</svg>`;
@@ -49,33 +48,37 @@ function mouse(pose, x, y, scale = 1, silhouette = false) {
   return `<g transform="translate(${x} ${y}) scale(${scale})" stroke-linecap="round" stroke-linejoin="round">${paths.join('')}${texture}</g>`;
 }
 
-const badge = `
+function badge([highlight, middle, underside]) {
+  return `
   <defs>
     <linearGradient id="clay" x2="1" y2="1">
-      <stop stop-color="#E8DFFF"/>
-      <stop offset=".62" stop-color="${LAVENDER}"/>
-      <stop offset="1" stop-color="#A189D2"/>
+      <stop stop-color="${highlight}"/>
+      <stop offset=".45" stop-color="${middle}"/>
+      <stop offset="1" stop-color="${underside}"/>
     </linearGradient>
     <linearGradient id="light" x2="0" y2="1">
       <stop stop-color="white" stop-opacity=".72"/>
       <stop offset="1" stop-color="white" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect x="9" y="14" width="142" height="140" rx="37" fill="${INK}" opacity=".16"/>
+  <rect x="9" y="14" width="142" height="140" rx="37" fill="${INK}" opacity=".14"/>
   <rect x="9" y="8" width="142" height="140" rx="37" fill="url(#clay)"/>
   <rect x="12" y="11" width="136" height="134" rx="34" fill="none" stroke="url(#light)" stroke-width="2"/>
+  <path d="M147 64V110Q147 144 112 144H56" fill="none" stroke="#4A2E1B" opacity=".16" stroke-width="3" stroke-linecap="round"/>
   ${mouse('sitting', 18, 19, 1.04)}
-`;
+  `;
+}
 
-const launcher = svg(160, 160, `<rect width="160" height="160" fill="${LAVENDER}"/>${badge}`);
-const foreground = svg(160, 160, `<g transform="translate(27 27) scale(.6625)">${badge}</g>`);
+const caramelBadge = badge(['#F8DCCA', '#E7B38E', '#C98A60']);
+const launcher = svg(160, 160, `<rect width="160" height="160" fill="${CARAMEL}"/>${caramelBadge}`);
+const foreground = svg(160, 160, `<g transform="translate(27 27) scale(.6625)">${caramelBadge}</g>`);
 const monochrome = svg(160, 160, mouse('sitting', 28, 31, 0.87, true));
 const notification = svg(120, 120, mouse('sitting', 0, 5, 1, true));
-const splash = svg(160, 160, badge);
+const splash = svg(160, 160, badge(['#FFFCF8', '#F2EAE1', '#E9DCD0']));
 
 const stars = `
-  <path d="M212 51L216 62L227 66L216 70L212 81L208 70L197 66L208 62Z" fill="${LAVENDER}" stroke="${INK}" stroke-width="1.4"/>
-  <path d="M322 69L325 78L334 81L325 84L322 93L319 84L310 81L319 78Z" fill="${MINT}" stroke="${INK}" stroke-width="1.4"/>
+  <path d="M212 51L216 62L227 66L216 70L212 81L208 70L197 66L208 62Z" fill="${CARAMEL}" stroke="${INK}" stroke-width="1.4"/>
+  <path d="M322 69L325 78L334 81L325 84L322 93L319 84L310 81L319 78Z" fill="#F4DECB" stroke="${INK}" stroke-width="1.4"/>
 `;
 const spriteSheet = svg(720, 180, `
   <rect width="720" height="180" fill="${BACKGROUND}"/>

@@ -301,7 +301,7 @@ export default function SellScreen() {
                         <Text
                           style={[
                             Typography.captionBold,
-                            isSelected && { color: '#1A7A52' },
+                            isSelected && { color: Colors.successText },
                           ]}
                         >
                           {cat.label}
@@ -340,7 +340,7 @@ export default function SellScreen() {
                         <Text
                           style={[
                             Typography.captionBold,
-                            isSelected && { color: '#1A7A52' },
+                            isSelected && { color: Colors.successText },
                           ]}
                         >
                           {cond.label}
@@ -385,7 +385,7 @@ export default function SellScreen() {
               <ClayCard variant="mint" style={{ marginTop: Spacing.sm, padding: Spacing.sm }}>
                 <Text style={Typography.bodyBold}>📊 Listing Score: {aiQualityScore}/100</Text>
                 {aiFeedback.map((fb, idx) => (
-                  <Text key={`fb-${idx}`} style={[Typography.caption, { color: '#1A7A52', marginTop: 2 }]}>
+                  <Text key={`fb-${idx}`} style={[Typography.caption, { color: Colors.successText, marginTop: 2 }]}>
                     ✓ {fb}
                   </Text>
                 ))}
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   pillSelected: {
-    borderColor: '#1A7A52',
+    borderColor: Colors.successText,
     borderWidth: 1.5,
   },
   multiline: { height: 90, textAlignVertical: 'top' },

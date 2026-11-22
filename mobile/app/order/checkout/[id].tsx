@@ -33,7 +33,7 @@ import {
 } from '../../../services/api';
 import type { Product, CampusMeetupLocation, PaymentMethod } from '../../../../shared/types';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/B9A0EB/FFFFFF?text=🛍️';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/EADFD5/4A2E1B?text=Remy';
 
 export default function CheckoutScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   confirmBtn: { width: '100%' },
   cancelBtn: { width: '100%' },
   inlineError: {
-    backgroundColor: Colors.peach,
+    backgroundColor: Colors.errorBg,
     padding: Spacing.sm,
     borderRadius: Radius.sm,
     marginBottom: Spacing.sm,

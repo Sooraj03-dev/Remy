@@ -1,23 +1,14 @@
 // mobile/components/ui/Icon.tsx
-// Typed wrapper around the Phosphor registry. No other file imports icon sets.
+// Typed wrapper for the shared Lucide stroke and sizes.
 
 import React from 'react';
-import type { IconWeight } from 'phosphor-react-native';
 import { IconRegistry, type IconName } from '@constants/icons';
 import { Colors } from '@constants/theme';
 
 const SIZES = { sm: 20, md: 24, lg: 28 } as const;
 export type IconSize = keyof typeof SIZES;
 
-type Glyph = React.ComponentType<{
-  size?: number;
-  color?: string;
-  weight?: IconWeight;
-  accessible?: boolean;
-  accessibilityLabel?: string;
-  accessibilityElementsHidden?: boolean;
-  importantForAccessibility?: 'auto' | 'yes' | 'no' | 'no-hide-descendants';
-}>;
+type IconWeight = 'regular' | 'bold' | 'duotone' | 'fill';
 
 export interface IconProps {
   name: IconName;
@@ -43,14 +34,16 @@ export function Icon({
   decorative = true,
   accessibilityLabel,
 }: IconProps) {
-  const GlyphComponent = IconRegistry[name] as unknown as Glyph;
+  const GlyphComponent = IconRegistry[name];
   const px = typeof size === 'number' ? size : SIZES[size];
+  const ink = resolveColor(color);
 
   return (
     <GlyphComponent
       size={px}
-      color={resolveColor(color)}
-      weight={weight}
+      color={ink}
+      strokeWidth={1.75}
+      fill={name === 'Heart' && weight === 'fill' ? ink : 'none'}
       accessible={!decorative}
       accessibilityLabel={accessibilityLabel}
       accessibilityElementsHidden={decorative}

@@ -4,7 +4,8 @@
   "scripts": {
     "build": "npm run build --prefix server",
     "start": "npm run start --prefix server",
-    "test": "npm run test --prefix server"
+    "test": "npm run test --prefix server",
+    "mobile": "npm --prefix mobile start --"
   },
   "dependencies": {
     "@neon/config": "^1.14.6",

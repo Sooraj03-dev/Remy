@@ -30,7 +30,7 @@ import { Copy } from '@constants/copy';
 import { fetchMyBuyerOrders, fetchMySellerOrders } from '../../services/api';
 import type { Order } from '../../../shared/types';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=Remy';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/EADFD5/4A2E1B?text=Remy';
 
 type OrdersTab = 'purchases' | 'sales';
 

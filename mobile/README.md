@@ -5,13 +5,15 @@ Expo + React Native + TypeScript + Expo Router. Claymorphism tokens live in
 
 ## Run
 
+From the repository root, run the mobile project's Expo server.
+
 ```bash
-npm install
-npx expo start -c
+npm --prefix mobile install
+npm run mobile
 ```
 
-`-c` clears the Metro cache, which is required after changing `app.json`,
-`babel.config.js`, fonts or icon assets.
+From inside the mobile directory, use `npm start`. To clear Metro's cache from
+the repository root, use `npm run mobile -- --clear`.
 
 ## Brand assets
 
@@ -23,10 +25,10 @@ The generator uses the same SVG geometry in `assets/brand/source/remy-art.json`
 as the in-app mascot. It refreshes the checked-in Android resources and these
 Expo assets in `assets/images/`.
 
-- `icon.png` 1024×1024 — Remy in a lavender clay badge
+- `icon.png` 1024×1024 — Remy in a caramel clay badge
 - `adaptive-icon.png` — transparent foreground inside Android's 66% safe zone
 - `monochrome-icon.png` — Android 13 themed icon
-- `splash-icon.png` — transparent, shown on `#F3EEFA`
+- `splash-icon.png` — oat badge on the `#FAF6F1` canvas
 - `favicon.png`, `notification-icon.png` (96×96, white on transparent)
 
 The four-pose sprite sheet is saved to `assets/brand/remy-sprite-sheet.png`.
@@ -63,8 +65,8 @@ dashboard redirect URLs, then re-run `npx expo prebuild --clean`. The checked-in
   CelebrationOverlay, Toast.
 - `app/dev/motion-lab.tsx` — dev-only gallery (`__DEV__`), reachable at
   `/dev/motion-lab`.
-- Only `transform` and `opacity` are animated. Loops pause with `paused`
-  (`useIsFocused` in screens) and respect `useReducedMotion()`.
+- Press feedback animates the surface transform and shadow depth. Idle loops
+  pause on unfocused screens and respect reduced motion.
 
 ## Checks
 

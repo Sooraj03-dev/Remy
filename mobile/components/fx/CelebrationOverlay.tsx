@@ -24,7 +24,7 @@ export interface CelebrationOverlayProps {
   autoDismissMs?: number;
 }
 
-const CONFETTI_COLORS = [Colors.primary, Colors.mint, Colors.peach, Colors.white, Colors.text];
+const CONFETTI_COLORS = [Colors.primary, Colors.successBg, Colors.accent, Colors.white, Colors.text];
 
 export function CelebrationOverlay({
   visible,
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     zIndex: 900,
     elevation: 90,
   },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(52,41,73,0.45)' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: Colors.overlay },
   confetti: { ...StyleSheet.absoluteFillObject, overflow: 'visible' },
   card: {
     width: '82%',

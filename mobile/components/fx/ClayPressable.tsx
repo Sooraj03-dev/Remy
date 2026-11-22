@@ -3,10 +3,10 @@
 
 import React, { useCallback } from 'react';
 import {
+  ActivityIndicator,
   Platform,
   Pressable,
   StyleSheet,
-  View,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -18,20 +18,21 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '@constants/theme';
+import { ClayGradients, Colors, clayElevation, type ClayTone } from '@constants/theme';
+import { ClayFinish, resolveClayRadius } from '@components/clay/ClayFinish';
 import { Springs } from '@constants/motion';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const usesElevation = Platform.OS === 'android';
 
 export interface ClayPressableProps extends Omit<PressableProps, 'style' | 'children'> {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Shows a three-dot bounce and blocks presses. */
   loading?: boolean;
-  /** Defaults to a light selection tick. */
   haptic?: boolean;
-  /** Dot colour while loading. */
   loadingColor?: string;
+  tone?: ClayTone;
+  pressScale?: number;
 }
 
 export function ClayPressable({
@@ -39,105 +40,86 @@ export function ClayPressable({
   style,
   loading = false,
   haptic = true,
-  loadingColor,
+  loadingColor = Colors.primary,
+  tone,
+  pressScale = 0.96,
   disabled,
+  onPress,
   onPressIn,
   onPressOut,
   accessibilityLabel,
   ...rest
 }: ClayPressableProps) {
-  const scale = useSharedValue(1);
-  const lift = useSharedValue(0);
+  const pressure = useSharedValue(0);
   const reduced = useReducedMotion();
   const isDisabled = disabled || loading;
+  const radius = resolveClayRadius(StyleSheet.flatten(style)?.borderRadius);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: lift.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const depth = pressure.value;
+    return {
+      transform: [{ translateY: 2 * depth }, { scale: 1 + (pressScale - 1) * depth }],
+      ...(tone && (usesElevation
+        ? { elevation: clayElevation.elevation - depth * 4 }
+        : {
+            shadowOpacity: clayElevation.shadowOpacity - depth * 0.06,
+            shadowRadius: clayElevation.shadowRadius - depth * 6,
+          })),
+    };
+  });
+
+  const handlePress = useCallback<NonNullable<PressableProps['onPress']>>(
+    (event) => {
+      if (haptic && Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+      }
+      onPress?.(event);
+    },
+    [haptic, onPress],
+  );
 
   const handlePressIn = useCallback<NonNullable<PressableProps['onPressIn']>>(
     (event) => {
-      if (!isDisabled) {
-        scale.value = withSpring(0.96, Springs.snappy);
-        lift.value = withSpring(1, Springs.snappy);
-        if (haptic && Platform.OS !== 'web') {
-          Haptics.selectionAsync().catch(() => undefined);
-        }
+      if (!isDisabled && !reduced) {
+        pressure.value = withSpring(1, { ...Springs.snappy, overshootClamping: true });
       }
       onPressIn?.(event);
     },
-    [haptic, isDisabled, lift, onPressIn, scale],
+    [isDisabled, onPressIn, pressure, reduced],
   );
 
   const handlePressOut = useCallback<NonNullable<PressableProps['onPressOut']>>(
     (event) => {
-      scale.value = withSpring(1, Springs.bouncy);
-      lift.value = withSpring(0, Springs.bouncy);
+      if (!reduced) pressure.value = withSpring(0, { ...Springs.snappy, overshootClamping: true });
       onPressOut?.(event);
     },
-    [lift, onPressOut, scale],
+    [onPressOut, pressure, reduced],
   );
 
   return (
     <AnimatedPressable
       {...rest}
       disabled={isDisabled}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       accessibilityRole={rest.accessibilityRole ?? 'button'}
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: isDisabled, ...rest.accessibilityState }}
-      style={[style, isDisabled && styles.disabled, reduced ? undefined : animatedStyle]}
+      accessibilityState={{ ...rest.accessibilityState, disabled: isDisabled, busy: loading }}
+      style={[
+        tone && [clayElevation, { backgroundColor: ClayGradients[tone][0] }],
+        style,
+        tone && { borderRadius: radius },
+        disabled && !loading && styles.disabled,
+        reduced ? undefined : animatedStyle,
+      ]}
     >
-      {loading ? <Dots color={loadingColor} /> : children}
+      {tone ? <ClayFinish tone={tone} radius={radius} /> : null}
+      {loading ? <ActivityIndicator color={loadingColor} accessibilityLabel="Loading" /> : children}
     </AnimatedPressable>
   );
 }
 
-/** Three clay dots that bounce in sequence while work is in flight. */
-export function Dots({ color = Colors.primary }: { color?: string }) {
-  return (
-    <View style={styles.dots} accessibilityLabel="Loading" accessibilityRole="progressbar">
-      {[0, 1, 2].map((index) => (
-        <BouncingDot key={index} index={index} color={color} />
-      ))}
-    </View>
-  );
-}
-
-function BouncingDot({ index, color }: { index: number; color: string }) {
-  const progress = useSharedValue(0);
-  const reduced = useReducedMotion();
-
-  React.useEffect(() => {
-    if (reduced) return;
-    let cancelled = false;
-    const run = () => {
-      if (cancelled) return;
-      progress.value = withSpring(1, { damping: 8, stiffness: 220 }, (finished) => {
-        if (finished) {
-          progress.value = withSpring(0, { damping: 12, stiffness: 160 });
-        }
-      });
-    };
-    const timer = setInterval(run, 260 + index * 90);
-    run();
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [index, progress, reduced]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -6 * progress.value }],
-    opacity: 0.45 + progress.value * 0.55,
-  }));
-
-  return <Animated.View style={[styles.dot, { backgroundColor: color }, animatedStyle]} />;
-}
-
 const styles = StyleSheet.create({
   disabled: { opacity: 0.55 },
-  dots: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', height: 20 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
 });

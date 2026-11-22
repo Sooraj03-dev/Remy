@@ -14,16 +14,16 @@ import {
   ClayInput,
   ClayCard,
   ProductCard,
-  ClayButton,
   ClayText,
   SkeletonCard,
   StaggeredItem,
   Icon,
 } from '@components/index';
+import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing } from '@constants/theme';
-import { Copy, isOfflineError } from '@constants/copy';
+import { Copy } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product } from '../../../shared/types';
 
@@ -36,9 +36,9 @@ export default function ExploreScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const performSearch = useCallback(async (query: string) => {
-    setError(null);
     try {
       const data = await fetchProducts({ search: query.trim() || undefined });
+      setError(null);
       setProducts(data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to search products.';
@@ -63,7 +63,9 @@ export default function ExploreScreen() {
 
   return (
     <View style={styles.container}>
-      <ClayHeader title="Explore" subtitle="Find second-hand gems on campus" />
+      <StaggeredItem index={0}>
+        <ClayHeader title="Explore" subtitle="Find second-hand gems on campus" />
+      </StaggeredItem>
 
       <View style={styles.searchBar}>
         <ClayInput
@@ -73,7 +75,11 @@ export default function ExploreScreen() {
           placeholder="Search by title, brand, or course..."
           returnKeyType="search"
           accessibilityLabel="Search products"
+          style={styles.searchInput}
         />
+        <View style={styles.searchIcon} pointerEvents="none">
+          <Icon name="MagnifyingGlass" size={20} color="textSecondary" />
+        </View>
       </View>
 
       <View style={styles.results}>
@@ -87,28 +93,10 @@ export default function ExploreScreen() {
             </View>
           </View>
         ) : error ? (
-          <ClayCard variant="peach" style={styles.emptyCard}>
-            {isOfflineError(error) ? (
-              <Icon name="WifiSlash" size="lg" weight="duotone" color="primary" />
-            ) : (
-              <RemyArt size={110} />
-            )}
-            <ClayText variant="bodyBold" align="center">
-              {isOfflineError(error) ? Copy.error.offlineTitle : Copy.error.title}
-            </ClayText>
-            <ClayText variant="caption" style={styles.errorText}>
-              {isOfflineError(error) ? `${Copy.error.offline} (${error})` : error}
-            </ClayText>
-            <ClayButton
-              label={Copy.error.retry}
-              variant="secondary"
-              onPress={() => performSearch(search)}
-              style={{ marginTop: Spacing.sm }}
-            />
-          </ClayCard>
+          <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
         ) : products.length === 0 ? (
-          <ClayCard style={styles.emptyCard}>
-            <RemyArt size={118} />
+          <ClayCard outlined style={styles.emptyCard}>
+            <RemyArt size={82} />
             <ClayText variant="bodyBold" align="center">
               {Copy.empty.searchTitle}
             </ClayText>
@@ -145,6 +133,8 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   searchBar: { paddingHorizontal: Spacing.base, marginTop: Spacing.xs, zIndex: 1 },
+  searchInput: { paddingLeft: 44 },
+  searchIcon: { position: 'absolute', left: Spacing.base + Spacing.md, top: 0, bottom: 0, justifyContent: 'center' },
   results: { flex: 1 },
   list: { padding: Spacing.base, gap: Spacing.sm },
   row: { gap: Spacing.sm },
@@ -162,6 +152,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.xs,
   },
-  errorText: { color: Colors.error, textAlign: 'center' },
+  resultMargin: { margin: Spacing.base },
   emptyText: { textAlign: 'center', color: Colors.textSecondary },
 });

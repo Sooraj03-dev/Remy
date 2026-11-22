@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { ClayText } from '@components/ui/ClayText';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
+import { ClayEdges, Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
 
 interface ClayInputProps extends TextInputProps {
   label?: string;
@@ -94,6 +94,7 @@ export function ClayInput({
       onBlur={handleBlur}
       onChangeText={showMascotOnFocus ? handleChangeText : onChangeText}
       placeholderTextColor={Colors.textSecondary}
+      underlineColorAndroid="transparent"
       accessibilityLabel={label}
       {...rest}
     />
@@ -131,33 +132,27 @@ const styles = StyleSheet.create({
     fontSize: FontSize.caption,
   },
   input: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.input,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    paddingVertical: 14,
+    borderTopWidth: 2,
+    borderLeftWidth: 1.5,
+    borderRightWidth: 1.5,
+    borderBottomWidth: 2,
+    ...ClayEdges.inset,
+    minHeight: 48,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.base,
     fontSize: FontSize.body,
     fontFamily: FontFamily.body,
     color: Colors.text,
-    shadowColor: Colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
   },
   focused: {
-    borderColor: Colors.primary,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    borderTopColor: Colors.accent,
+    borderLeftColor: Colors.accent,
   },
   errored: {
-    borderColor: Colors.error,
-  },
-  errorText: {
-    fontSize: FontSize.caption,
-    color: Colors.error,
+    borderTopColor: Colors.errorText,
+    borderLeftColor: Colors.errorText,
   },
 });
 

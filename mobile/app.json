@@ -10,11 +10,11 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F3EEFA"
+      "backgroundColor": "#FAF6F1"
     },
     "notification": {
       "icon": "./assets/images/notification-icon.png",
-      "color": "#342949"
+      "color": "#4A2E1B"
     },
     "ios": {
       "supportsTablet": false,
@@ -24,7 +24,7 @@
       "package": "com.unimart.campusmarketplace",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#B9A0EB",
+        "backgroundColor": "#C47B48",
         "monochromeImage": "./assets/images/monochrome-icon.png"
       },
       "permissions": [

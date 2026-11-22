@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.sm },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(52, 41, 73, 0.5)',
+    backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,

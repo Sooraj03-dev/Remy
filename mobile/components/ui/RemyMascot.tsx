@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -12,7 +13,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, Ellipse, Path, RadialGradient, Stop } from 'react-native-svg';
 import { ClayCard } from '@components/clay/ClayCard';
 import { Copy } from '@constants/copy';
 import { Durations, Springs } from '@constants/motion';
@@ -124,10 +125,11 @@ function LoadingRemy({ status, size = 60, paused, busy = true }: LoadingProps) {
 
   const bob = useAnimatedStyle(() => ({ transform: [{ translateY: -5 * pulse.value }] }));
   const ring = useAnimatedStyle(() => ({ transform: [{ scale: 0.88 + pulse.value * 0.12 }] }));
-  const mint = useAnimatedStyle(() => ({ opacity: pulse.value }));
+  const accentRing = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
   return (
     <ClayCard
+      variant="muted"
       style={styles.loadingCard}
       accessible={Boolean(status) || busy}
       accessibilityLabel={status ?? (busy ? 'Loading' : undefined)}
@@ -136,7 +138,7 @@ function LoadingRemy({ status, size = 60, paused, busy = true }: LoadingProps) {
     >
       <View style={[styles.loadingStage, { width: size + 12, height: size + 12 }]}>
         <Animated.View style={[styles.ring, ring]}>
-          <Animated.View style={[styles.ring, styles.mintRing, mint]} />
+          <Animated.View style={[styles.ring, styles.accentRing, accentRing]} />
         </Animated.View>
         <Animated.View style={bob}>
           <RemyArt size={size} pose="bouncing" />
@@ -157,6 +159,7 @@ function RoamingRemy({ paused }: RoamingProps) {
   const facing = useSharedValue(1);
   const hop = useSharedValue(0);
   const wiggle = useSharedValue(0);
+  const idleWiggle = useSharedValue(0);
   const pop = useSharedValue(0);
   const popLift = useSharedValue(0);
 
@@ -166,6 +169,11 @@ function RoamingRemy({ paused }: RoamingProps) {
     blink.value = withRepeat(withSequence(
       withDelay(3600, withTiming(0.12, { duration: 80 })),
       withTiming(1, { duration: 110 }),
+    ), -1);
+    idleWiggle.value = withRepeat(withSequence(
+      withDelay(4700, withTiming(-3.5, { duration: 100 })),
+      withTiming(2.5, { duration: 130 }),
+      withSpring(0, Springs.gentle),
     ), -1);
 
     let stop = REST_STOPS[0];
@@ -195,12 +203,13 @@ function RoamingRemy({ paused }: RoamingProps) {
       walk.value = 0;
       hop.value = 0;
       wiggle.value = 0;
+      idleWiggle.value = 0;
       pop.value = 0;
     };
-  }, [blink, breath, facing, hop, paused, pop, position, reducedMotion, walk, wiggle]);
+  }, [blink, breath, facing, hop, idleWiggle, paused, pop, position, reducedMotion, walk, wiggle]);
 
   const travel = useAnimatedStyle(() => ({
-    transform: [{ translateX: Spacing.sm + position.value * Math.max(0, width - ROAM_SIZE - Spacing.base) }],
+    transform: [{ translateX: Spacing.base + position.value * Math.max(0, width - ROAM_SIZE - Spacing.xxl) }],
   }));
   const bodyMotion = useAnimatedStyle(() => ({
     transform: [{ translateY: hop.value }, { scaleY: 1 + breath.value * 0.045 }],
@@ -212,20 +221,27 @@ function RoamingRemy({ paused }: RoamingProps) {
     opacity: Math.min(1, walk.value * 8),
     transform: [{ scaleX: facing.value }, { translateY: -Math.abs(Math.sin(walk.value * Math.PI * 6)) * 4 }],
   }));
-  const leftEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${wiggle.value}deg` }] }));
-  const rightEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${-wiggle.value}deg` }] }));
+  const leftEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${wiggle.value + idleWiggle.value}deg` }] }));
+  const rightEar = useAnimatedStyle(() => ({ transform: [{ rotate: `${-wiggle.value - idleWiggle.value}deg` }] }));
   const eyes = useAnimatedStyle(() => ({ opacity: blink.value }));
   const sparkles = useAnimatedStyle(() => ({
     opacity: pop.value,
     transform: [{ translateY: popLift.value }],
   }));
+  const ground = useAnimatedStyle(() => ({
+    opacity: 1 + Math.min(0, hop.value) * 0.038,
+    transform: [{ scaleX: 1 + Math.min(0, hop.value) * 0.022 }],
+  }));
 
   const celebrate = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    }
     walk.value = 0;
     pop.value = withSequence(withTiming(1, { duration: 0 }), withDelay(200, withTiming(0, { duration: 440 })));
     if (reducedMotion) return;
     popLift.value = withSequence(withTiming(0, { duration: 0 }), withTiming(-24, { duration: 640 }));
-    hop.value = withSequence(withTiming(-10, { duration: 115 }), withSpring(0, Springs.bouncy));
+    hop.value = withSequence(withSpring(-10, Springs.snappy), withSpring(0, Springs.bouncy));
     wiggle.value = withSequence(
       withTiming(-6, { duration: 95 }),
       withTiming(5, { duration: 100 }),
@@ -242,17 +258,26 @@ function RoamingRemy({ paused }: RoamingProps) {
       {width > 0 && !paused ? (
         <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
           <Animated.View style={[styles.traveler, travel]} pointerEvents="box-none">
+            <Animated.View style={[styles.ground, ground]} pointerEvents="none">
+              <Svg width={48} height={12} viewBox="0 0 48 12">
+                <Defs>
+                  <RadialGradient id="remy-ground">
+                    <Stop offset="0" stopColor={Colors.shadowColor} stopOpacity={0.38} />
+                    <Stop offset="1" stopColor={Colors.shadowColor} stopOpacity={0} />
+                  </RadialGradient>
+                </Defs>
+                <Ellipse cx={24} cy={6} rx={24} ry={6} fill="url(#remy-ground)" />
+              </Svg>
+            </Animated.View>
             <Animated.View style={[styles.sparkles, sparkles]} pointerEvents="none">
               <Svg width={38} height={24} viewBox="0 0 38 24">
-                <Path d="M19 19C17 16 10 12 10 8C10 3 16 2 19 7C22 2 28 3 28 8C28 12 21 16 19 19Z" fill={Colors.peach} stroke={Colors.text} />
-                <Path d="M5 6L6.5 10L10 11.5L6.5 13L5 17L3.5 13L0 11.5L3.5 10Z" fill={Colors.primary} stroke={Colors.text} strokeWidth={0.6} />
-                <Path d="M33 10L34.5 14L38 15.5L34.5 17L33 21L31.5 17L28 15.5L31.5 14Z" fill={Colors.mint} stroke={Colors.text} strokeWidth={0.6} />
+                <Path d="M19 3L21 8L26 10L21 12L19 17L17 12L12 10L17 8ZM7 11L8 14L11 15L8 16L7 19L6 16L3 15L6 14ZM31 12L32 15L35 16L32 17L31 20L30 17L27 16L30 15Z" fill={Colors.accent} />
               </Svg>
             </Animated.View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={Copy.app.name}
-              accessibilityHint={reducedMotion ? 'Shows a heart' : 'Makes Remy hop'}
+              accessibilityHint={reducedMotion ? 'Shows sparkles' : 'Makes Remy hop'}
               onPress={celebrate}
               style={styles.roamButton}
             >
@@ -289,16 +314,16 @@ const styles = StyleSheet.create({
   loadingCard: {
     alignSelf: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     gap: Spacing.xs,
   },
   loadingStage: { alignItems: 'center', justifyContent: 'center' },
   ring: { ...StyleSheet.absoluteFillObject, borderWidth: 2, borderRadius: Radius.full, borderColor: Colors.primary },
-  mintRing: { borderColor: Colors.mint, margin: -2 },
+  accentRing: { borderColor: Colors.accent, margin: -2 },
   roamSpace: { height: ROAM_SIZE },
   traveler: { position: 'absolute', bottom: 0 },
+  ground: { position: 'absolute', left: 3, bottom: -2 },
   roamButton: { width: ROAM_SIZE, height: ROAM_SIZE, alignItems: 'center', justifyContent: 'center' },
   sparkles: { position: 'absolute', left: Spacing.sm, top: -Spacing.sm, zIndex: 1 },
 });

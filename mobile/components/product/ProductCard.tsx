@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { HeartBurst } from '@components/fx/HeartBurst';
 import { ClayText } from '@components/ui/ClayText';
+import { Icon } from '@components/ui/Icon';
 import { StatusBadge } from './StatusBadge';
 import type { Product } from '@shared/index';
 import { Colors, Spacing, Radius } from '@constants/theme';
@@ -17,8 +18,6 @@ interface ProductCardProps {
   isWishlisted?: boolean;
   onWishlistToggle?: () => void;
 }
-
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=Owl';
 
 export function ProductCard({
   product,
@@ -33,15 +32,21 @@ export function ProductCard({
       onPress={() => router.push(`/product/${product.id}`)}
       accessibilityLabel={`${product.title}, ₹${product.price}`}
       style={[styles.card, style]}
-      haptic={false}
+      tone="oat"
     >
       <View style={styles.imageWrapper}>
-        <Image
-          source={{ uri: product.images[0] ?? PLACEHOLDER_IMAGE }}
-          style={styles.image}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-        />
+        {product.images[0] ? (
+          <Image
+            source={{ uri: product.images[0] }}
+            style={styles.image}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
+        ) : (
+          <View style={[styles.image, styles.placeholder]}>
+            <Icon name="ImageSquare" size="lg" color="textSecondary" />
+          </View>
+        )}
         <View style={styles.badgeOverlay}>
           <StatusBadge status={product.status} />
         </View>
@@ -74,22 +79,15 @@ export function ProductCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.md,
-    overflow: 'hidden',
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 4, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-    elevation: 7,
+    borderRadius: Radius.card,
   },
-  imageWrapper: { position: 'relative' },
+  imageWrapper: { position: 'relative', margin: Spacing.xs, marginBottom: 0 },
   image: {
     width: '100%',
     height: 120,
-    borderTopLeftRadius: Radius.md,
-    borderTopRightRadius: Radius.md,
+    borderRadius: Radius.md,
   },
+  placeholder: { backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
   badgeOverlay: {
     position: 'absolute',
     top: Spacing.xs,
@@ -97,9 +95,9 @@ const styles = StyleSheet.create({
   },
   heartButton: {
     position: 'absolute',
-    top: -4,
-    left: -4,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    top: Spacing.xs,
+    left: Spacing.xs,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.full,
   },
   info: {

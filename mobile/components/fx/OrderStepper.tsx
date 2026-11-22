@@ -97,7 +97,7 @@ export function OrderStepper({ status, compact = false }: OrderStepperProps) {
             autoStart
             fadeOut
             fallSpeed={2600}
-            colors={[Colors.primary, Colors.mint, Colors.peach]}
+            colors={[Colors.primary, Colors.accent, Colors.accentSoft]}
           />
         </View>
       ) : null}
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.peach,
+    backgroundColor: Colors.accentSoft,
     borderRadius: Radius.full,
     paddingVertical: 6,
     paddingHorizontal: 12,

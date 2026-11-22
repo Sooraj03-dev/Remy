@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { ProductStatus, OrderStatus } from '@shared/index';
-import { Radius, Spacing, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Radius, Spacing, FontSize, FontWeight } from '@constants/theme';
 
 type AnyStatus = ProductStatus | OrderStatus;
 
@@ -13,23 +13,23 @@ const statusConfig: Record<
   { backgroundColor: string; color: string; label: string }
 > = {
   // Product statuses
-  available: { backgroundColor: '#CFF2E2', color: '#1A7A52', label: 'Available' },
-  pending: { backgroundColor: '#FFF3CD', color: '#856404', label: 'Pending' },
-  pending_review: { backgroundColor: '#E8DFFF', color: '#5B3FA6', label: 'Pending Review' },
-  under_review: { backgroundColor: '#E8DFFF', color: '#5B3FA6', label: 'Under Review' },
-  sold: { backgroundColor: '#FFE0DC', color: '#C0392B', label: 'Sold' },
-  rejected: { backgroundColor: '#FFE0DC', color: '#C0392B', label: 'Rejected' },
-  verified: { backgroundColor: '#CFF2E2', color: '#1A7A52', label: 'Verified' },
-  changes_requested: { backgroundColor: '#FFF3CD', color: '#856404', label: 'Changes Requested' },
-  removed: { backgroundColor: '#FFE0DC', color: '#C0392B', label: 'Removed' },
+  available: { backgroundColor: Colors.successBg, color: Colors.successText, label: 'Available' },
+  pending: { backgroundColor: Colors.warningBg, color: Colors.warningText, label: 'Pending' },
+  pending_review: { backgroundColor: Colors.primarySoft, color: Colors.primary, label: 'Pending Review' },
+  under_review: { backgroundColor: Colors.primarySoft, color: Colors.primary, label: 'Under Review' },
+  sold: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Sold' },
+  rejected: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Rejected' },
+  verified: { backgroundColor: Colors.successBg, color: Colors.successText, label: 'Verified' },
+  changes_requested: { backgroundColor: Colors.warningBg, color: Colors.warningText, label: 'Changes Requested' },
+  removed: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Removed' },
 
   // Order statuses
-  placed: { backgroundColor: '#FFF3CD', color: '#856404', label: 'Placed' },
-  confirmed: { backgroundColor: '#E8DFFF', color: '#5B3FA6', label: 'Confirmed' },
-  meetup_arranged: { backgroundColor: '#CFF2E2', color: '#1A7A52', label: 'Meetup Arranged' },
-  completed: { backgroundColor: '#CFF2E2', color: '#1A7A52', label: 'Completed' },
-  refunded: { backgroundColor: '#FFE0DC', color: '#C0392B', label: 'Refunded' },
-  cancelled: { backgroundColor: '#FFE0DC', color: '#C0392B', label: 'Cancelled' },
+  placed: { backgroundColor: Colors.warningBg, color: Colors.warningText, label: 'Placed' },
+  confirmed: { backgroundColor: Colors.primarySoft, color: Colors.primary, label: 'Confirmed' },
+  meetup_arranged: { backgroundColor: Colors.successBg, color: Colors.successText, label: 'Meetup Arranged' },
+  completed: { backgroundColor: Colors.successBg, color: Colors.successText, label: 'Completed' },
+  refunded: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Refunded' },
+  cancelled: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Cancelled' },
 };
 
 interface StatusBadgeProps {
@@ -38,8 +38,8 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const config = statusConfig[status] || {
-    backgroundColor: '#E8DFFF',
-    color: '#5B3FA6',
+    backgroundColor: Colors.primarySoft,
+    color: Colors.primary,
     label: String(status),
   };
   return (

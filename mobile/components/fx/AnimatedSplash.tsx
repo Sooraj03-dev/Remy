@@ -5,21 +5,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
   Easing,
+  FadeInDown,
+  ZoomIn,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { RemyLogo } from '@components/ui/RemyLogo';
-import { FloatingBlobs } from './FloatingBlobs';
 import { ClayText } from '@components/ui/ClayText';
-import { Colors } from '@constants/theme';
-import { Springs } from '@constants/motion';
+import { Colors, Spacing } from '@constants/theme';
 import { Copy } from '@constants/copy';
 
 export interface AnimatedSplashProps {
@@ -30,6 +26,9 @@ export interface AnimatedSplashProps {
 
 const MIN_VISIBLE_MS = 900;
 const MAX_VISIBLE_MS = 1800;
+const badgeEntrance = ZoomIn.springify().damping(18);
+const nameEntrance = FadeInDown.delay(120).springify().damping(18);
+const taglineEntrance = FadeInDown.delay(220).springify().damping(18);
 
 export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const reduced = useReducedMotion();
@@ -39,9 +38,6 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const finished = useRef(false);
 
   const opacity = useSharedValue(1);
-  const scale = useSharedValue(reduced ? 1 : 0.72);
-  const wobble = useSharedValue(0);
-  const glow = useSharedValue(0);
 
   const finish = () => {
     if (finished.current) return;
@@ -56,24 +52,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
     opacity.value = withTiming(0, { duration: reduced ? 120 : 280, easing: Easing.out(Easing.quad) }, (ok) => {
       if (ok) runOnJS(finish)();
     });
-    scale.value = withTiming(1.04, { duration: reduced ? 120 : 280 });
   };
-
-  // Entrance
-  useEffect(() => {
-    if (reduced) return;
-    scale.value = withSpring(1, Springs.bouncy);
-    wobble.value = withDelay(
-      260,
-      withSequence(
-        withTiming(-3, { duration: 140 }),
-        withTiming(2.4, { duration: 140 }),
-        withSpring(0, Springs.gentle),
-      ),
-    );
-    glow.value = withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
 
   // Leave after the minimum display time once auth is ready…
   useEffect(() => {
@@ -93,27 +72,21 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const logoStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { rotate: `${wobble.value}deg` }],
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: 0.25 + glow.value * 0.3,
-    transform: [{ scale: 0.9 + glow.value * 0.12 }],
-  }));
+  const fadeOut = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   if (done) return null;
 
   return (
-    <Animated.View style={[styles.overlay, { opacity }]} accessibilityViewIsModal>
-      <FloatingBlobs variant="auth" />
-      <Animated.View style={[styles.glow, glowStyle]} />
-      <Animated.View style={logoStyle}>
-        <RemyLogo size="lg" stacked style={styles.branding} />
+    <Animated.View style={[styles.overlay, fadeOut]} accessibilityViewIsModal>
+      <Animated.View entering={reduced ? undefined : badgeEntrance}>
+        <RemyLogo size="lg" tone="muted" badgeOnly />
       </Animated.View>
-      <ClayText variant="caption" color="textSecondary" style={styles.tagline}>
-        {Copy.app.tagline}
-      </ClayText>
+      <Animated.View entering={reduced ? undefined : nameEntrance} style={styles.name}>
+        <ClayText variant="wordmark">{Copy.app.name}</ClayText>
+      </Animated.View>
+      <Animated.View entering={reduced ? undefined : taglineEntrance}>
+        <ClayText variant="body" color="textSecondary">{Copy.app.tagline}</ClayText>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -127,13 +100,5 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     elevation: 100,
   },
-  glow: {
-    position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: Colors.primary,
-  },
-  branding: { minHeight: 195 },
-  tagline: { marginTop: 6 },
+  name: { marginTop: Spacing.base, marginBottom: Spacing.xs },
 });

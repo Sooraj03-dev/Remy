@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.mint,
+    backgroundColor: Colors.successBg,
   },
   addPhotoIcon: { fontSize: 20 },
   addPhotoText: { fontSize: 9, color: Colors.text, marginTop: 2, fontWeight: FontWeight.bold },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   saveBtn: { width: '100%' },
   cancelBtn: { width: '100%' },
   inlineError: {
-    backgroundColor: Colors.peach,
+    backgroundColor: Colors.errorBg,
     padding: Spacing.sm,
     borderRadius: Radius.sm,
     marginBottom: Spacing.sm,

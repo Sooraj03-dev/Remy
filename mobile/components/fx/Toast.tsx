@@ -33,7 +33,7 @@ const ICONS: Record<ToastType, IconName> = {
 };
 
 const ACCENTS: Record<ToastType, string> = {
-  success: '#1A7A52',
+  success: Colors.successText,
   error: Colors.error,
   info: Colors.primary,
 };
