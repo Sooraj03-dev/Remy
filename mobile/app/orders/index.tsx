@@ -1,5 +1,5 @@
 // mobile/app/orders/index.tsx
-// My Orders — purchases/sales with animated lifecycle stepper and owl states.
+// My Orders — purchases and sales with an animated lifecycle stepper.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -20,16 +20,17 @@ import {
   ClayButton,
   StatusBadge,
   ClayText,
-  AnimatedOwl,
   OrderStepper,
   SkeletonCard,
 } from '@components/index';
+import { RemyArt } from '@components/ui/RemyArt';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { fetchMyBuyerOrders, fetchMySellerOrders } from '../../services/api';
 import type { Order } from '../../../shared/types';
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=Owl';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/160x120/B9A0EB/FFFFFF?text=Remy';
 
 type OrdersTab = 'purchases' | 'sales';
 
@@ -113,13 +114,13 @@ export default function MyOrdersScreen() {
             {[0, 1, 2].map((index) => (
               <SkeletonCard key={index} height={104} paused={!focused} style={styles.skeletonItem} />
             ))}
-            <ClayText variant="caption" align="center">
-              {Copy.loading.orders[0]}
-            </ClayText>
+            <View style={styles.loadingOverlay} pointerEvents="none">
+              <RemyMascot state="loading" status={Copy.loading.orders[0]} paused={!focused} />
+            </View>
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <AnimatedOwl mood="shocked" size={140} paused={!focused} />
+            <RemyArt size={118} />
             <ClayText variant="bodyBold" align="center">
               {Copy.error.title}
             </ClayText>
@@ -130,7 +131,7 @@ export default function MyOrdersScreen() {
           </ClayCard>
         ) : currentList.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <AnimatedOwl mood="sleepy" size={150} paused={!focused} />
+            <RemyArt size={125} />
             <ClayText variant="bodyBold" align="center">
               {Copy.empty.ordersTitle}
             </ClayText>
@@ -180,6 +181,7 @@ export default function MyOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', padding: Spacing.base },
   container: { flex: 1, backgroundColor: Colors.background },
   tabsContainer: {
     flexDirection: 'row',

@@ -10,6 +10,7 @@ import { Spacing } from '@constants/theme';
 interface ClayHeaderProps {
   title: string;
   subtitle?: string;
+  rightAccessory?: React.ReactNode;
   rightIcon?: React.ReactNode;
   onRightPress?: () => void;
   rightLabel?: string;
@@ -19,6 +20,7 @@ interface ClayHeaderProps {
 export function ClayHeader({
   title,
   subtitle,
+  rightAccessory,
   rightIcon,
   onRightPress,
   rightLabel = 'Header action',
@@ -38,6 +40,7 @@ export function ClayHeader({
           </ClayText>
         ) : null}
       </View>
+      {rightAccessory}
       {rightIcon ? (
         <Pressable
           onPress={onRightPress}

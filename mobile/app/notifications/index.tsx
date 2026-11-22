@@ -9,8 +9,8 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
@@ -140,8 +140,7 @@ export default function NotificationsScreen() {
       >
         {loading && !refreshing ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary} size="large" />
-            <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading notifications...</Text>
+            <RemyMascot state="loading" status="Loading notifications..." />
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>

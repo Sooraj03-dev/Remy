@@ -9,9 +9,9 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
 
           {/* Live Statistics Row from Neon DB */}
           {loading && !refreshing ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginTop: 8 }} />
+            <RemyMascot state="loading" size={44} status="Loading profile stats..." />
           ) : (
             <View style={styles.statsRow}>
               <View style={styles.stat}>

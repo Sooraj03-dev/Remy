@@ -10,8 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  ActivityIndicator,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import {
@@ -134,8 +134,7 @@ export default function CheckoutScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-        <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading checkout...</Text>
+        <RemyMascot state="loading" status="Loading checkout..." />
       </View>
     );
   }
@@ -181,7 +180,7 @@ export default function CheckoutScreen() {
         <ClayCard variant="lavender" style={styles.formCard}>
           <Text style={[Typography.h3, styles.sectionTitle]}>Campus Meetup Details</Text>
           <Text style={[Typography.caption, styles.infoNote]}>
-            🤝 Thrifty Owl transactions happen in person on campus. Coordinate where and when to meet the seller.
+            🤝 Remy transactions happen in person on campus. Coordinate where and when to meet the seller.
           </Text>
 
           {error ? (

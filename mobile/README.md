@@ -1,4 +1,4 @@
-# Thrifty Owl — mobile app
+# Remy mobile app
 
 Expo + React Native + TypeScript + Expo Router. Claymorphism tokens live in
 `constants/theme.ts`; motion tokens in `constants/motion.ts`.
@@ -19,19 +19,17 @@ npx expo start -c
 npm run assets:brand
 ```
 
-Reads `assets/brand/source/owl-logo.svg` (layered: bubble, ears, body, belly,
-eyes, pupils, beak) and renders every runtime asset into `assets/images/`:
+The generator uses the same SVG geometry in `assets/brand/source/remy-art.json`
+as the in-app mascot. It refreshes the checked-in Android resources and these
+Expo assets in `assets/images/`.
 
-- `icon.png` 1024×1024 — Ink owl on Lavender `#B9A0EB`
+- `icon.png` 1024×1024 — Remy in a lavender clay badge
 - `adaptive-icon.png` — transparent foreground inside Android's 66% safe zone
 - `monochrome-icon.png` — Android 13 themed icon
 - `splash-icon.png` — transparent, shown on `#F3EEFA`
 - `favicon.png`, `notification-icon.png` (96×96, white on transparent)
 
-If you add a raster original at `assets/brand/source/owl-logo.png`, the script
-also traces it to `assets/brand/owl-logo.traced.svg` for reference. The traced
-result is flat regions, not semantic layers, so the layered SVG remains the
-animation source.
+The four-pose sprite sheet is saved to `assets/brand/remy-sprite-sheet.png`.
 
 ## Important: icons and app name in Expo Go
 
@@ -51,7 +49,7 @@ shows its own shell icon and name, even though the in-app UI is already rebrande
 installs keep working:
 
 - Android package / iOS bundle id: `com.unimart.campusmarketplace`
-- URL scheme: `thriftyowl` (changed)
+- URL scheme: `thriftyowl`
 
 If you want `com.yourteam.thriftyowl`, update `app.json` **and** the Clerk
 dashboard redirect URLs, then re-run `npx expo prebuild --clean`. The checked-in
@@ -59,6 +57,7 @@ dashboard redirect URLs, then re-run `npx expo prebuild --clean`. The checked-in
 
 ## Motion system
 
+- `components/ui/` contains `RemyLogo` and `RemyMascot`.
 - `components/fx/` — AnimatedOwl, AnimatedSplash, ClayPressable, FloatingBlobs,
   HeartBurst, Stagger/SkeletonCard, AnimatedTabBar, VerifiedBadge, OrderStepper,
   CelebrationOverlay, Toast.

@@ -7,10 +7,10 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   Pressable,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index';
@@ -69,8 +69,7 @@ export default function WishlistScreen() {
 
       {loading && !refreshing ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator color={Colors.primary} size="large" />
-          <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading saved items...</Text>
+          <RemyMascot state="loading" status="Loading saved items..." />
         </View>
       ) : error ? (
         <View style={styles.content}>

@@ -9,12 +9,12 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayInput, ClayButton } from '@components/index';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
 import { fetchOrderMessages, sendMessage, fetchOrderById } from '../../services/api';
 import type { Message, Order } from '../../../shared/types';
@@ -113,8 +113,7 @@ export default function ChatScreen() {
 
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary} size="large" />
-            <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading conversation...</Text>
+            <RemyMascot state="loading" status="Loading conversation..." />
           </View>
         ) : messages.length === 0 ? (
           <View style={styles.centerBox}>
@@ -156,6 +155,7 @@ export default function ChatScreen() {
         <View style={styles.inputBar}>
           <View style={styles.inputContainer}>
             <ClayInput
+              showMascotOnFocus
               value={inputText}
               onChangeText={setInputText}
               placeholder="Type your message..."
@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
   myTimeText: { color: 'rgba(255,255,255,0.7)' },
   theirTimeText: { color: Colors.textSecondary },
   inputBar: {
+    zIndex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.sm,

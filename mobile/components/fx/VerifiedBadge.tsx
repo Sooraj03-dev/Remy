@@ -1,5 +1,5 @@
 // mobile/components/fx/VerifiedBadge.tsx
-// Owl + check seal with a single shine sweep when it first appears.
+// Remy and a check seal with a single shine sweep when it first appears.
 
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { OwlArt } from './OwlArt';
+import { RemyArt } from '@components/ui/RemyArt';
 import { Icon } from '@components/ui/Icon';
 import { ClayText } from '@components/ui/ClayText';
 import { Colors, Radius } from '@constants/theme';
@@ -38,8 +38,8 @@ export function VerifiedBadge({ label = 'Verified', compact = false }: VerifiedB
 
   return (
     <View style={[styles.badge, compact && styles.compact]}>
-      <View style={styles.owl}>
-        <OwlArt size={compact ? 20 : 26} bubble={false} />
+      <View style={styles.mascot}>
+        <RemyArt size={compact ? 20 : 23} />
       </View>
       <Icon name="SealCheck" size="sm" weight="fill" color="mint" />
       <ClayText variant="captionBold" style={styles.label}>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   compact: { paddingVertical: 3, paddingHorizontal: 8 },
-  owl: { width: 26, height: 22, alignItems: 'center', justifyContent: 'center' },
+  mascot: { width: 26, height: 22, alignItems: 'center', justifyContent: 'center' },
   label: { color: '#1A7A52' },
   shine: { ...StyleSheet.absoluteFillObject },
 });

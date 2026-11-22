@@ -1,5 +1,5 @@
 // mobile/components/fx/CelebrationOverlay.tsx
-// Confetti + celebrating owl for listing submitted/approved and order placed.
+// Confetti for listing submissions, approvals, and orders.
 
 import React, { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { AnimatedOwl } from './AnimatedOwl';
+import { RemyArt } from '@components/ui/RemyArt';
 import { ClayText } from '@components/ui/ClayText';
 import { Colors, Radius, Spacing } from '@constants/theme';
 
@@ -76,7 +76,7 @@ export function CelebrationOverlay({
       ) : null}
 
       <Animated.View style={[styles.card, cardStyle]}>
-        <AnimatedOwl mood="celebrate" size={170} />
+        <RemyArt size={145} pose="bouncing" />
         <ClayText variant="h2" align="center" style={styles.title}>
           {title}
         </ClayText>

@@ -1,11 +1,10 @@
 // mobile/components/fx/AnimatedSplash.tsx
-// Post-native splash: owl springs in, wordmark staggers, blobs drift, then fades out.
+// Post-native splash with a logo entrance and handoff to the app.
 
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   Easing,
-  FadeInDown,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
@@ -16,10 +15,10 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { OwlArt } from './OwlArt';
+import { RemyLogo } from '@components/ui/RemyLogo';
 import { FloatingBlobs } from './FloatingBlobs';
 import { ClayText } from '@components/ui/ClayText';
-import { Colors, FontFamily } from '@constants/theme';
+import { Colors } from '@constants/theme';
 import { Springs } from '@constants/motion';
 import { Copy } from '@constants/copy';
 
@@ -105,33 +104,13 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
 
   if (done) return null;
 
-  const letters = Copy.app.wordmark.split('');
-
   return (
     <Animated.View style={[styles.overlay, { opacity }]} accessibilityViewIsModal>
       <FloatingBlobs variant="auth" />
       <Animated.View style={[styles.glow, glowStyle]} />
       <Animated.View style={logoStyle}>
-        <OwlArt size={188} />
+        <RemyLogo size="lg" stacked style={styles.branding} />
       </Animated.View>
-
-      <View style={styles.wordmark} accessibilityLabel={Copy.app.wordmark}>
-        {letters.map((letter, index) =>
-          reduced ? (
-            <ClayText key={`${letter}-${index}`} variant="wordmark">
-              {letter === ' ' ? ' ' : letter}
-            </ClayText>
-          ) : (
-            <Animated.Text
-              key={`${letter}-${index}`}
-              entering={FadeInDown.delay(180 + index * 38).duration(260).springify().damping(16)}
-              style={styles.letter}
-            >
-              {letter === ' ' ? ' ' : letter}
-            </Animated.Text>
-          ),
-        )}
-      </View>
       <ClayText variant="caption" color="textSecondary" style={styles.tagline}>
         {Copy.app.tagline}
       </ClayText>
@@ -155,11 +134,6 @@ const styles = StyleSheet.create({
     borderRadius: 130,
     backgroundColor: Colors.primary,
   },
-  wordmark: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
-  letter: {
-    fontSize: 34,
-    fontFamily: FontFamily.wordmark,
-    color: Colors.text,
-  },
+  branding: { minHeight: 195 },
   tagline: { marginTop: 6 },
 });

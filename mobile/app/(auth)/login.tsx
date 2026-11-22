@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useSignIn, useAuth } from '@clerk/clerk-expo';
-import { ClayCard, ClayInput, ClayButton, AnimatedOwl, FloatingBlobs } from '@components/index';
+import { ClayCard, ClayInput, ClayButton, FloatingBlobs } from '@components/index';
+import { RemyLogo } from '@components/ui/RemyLogo';
 import { Colors, Spacing, FontSize, FontWeight, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
@@ -90,8 +91,9 @@ export default function LoginScreen() {
       >
         {/* Mascot / branding */}
         <View style={styles.branding}>
-          <AnimatedOwl mood="curious" size={150} lookAt={{ x: 0.4, y: 0.2 }} />
-          <Text style={Typography.wordmark}>{Copy.auth.loginTitle}</Text>
+          <View style={styles.brandRow}>
+            <RemyLogo size="lg" stacked />
+          </View>
           <Text style={[Typography.caption, styles.tagline]}>{Copy.app.tagline}</Text>
         </View>
 
@@ -167,6 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 48,
     marginBottom: Spacing.sm,
   },
+  brandRow: { minHeight: 163, flexDirection: 'row', alignItems: 'center', gap: Spacing.base },
   tagline: {
     textAlign: 'center',
     marginTop: Spacing.xs,

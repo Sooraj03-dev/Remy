@@ -9,9 +9,9 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayButton, ClayCard, StatusBadge } from '@components/index';
@@ -189,10 +189,7 @@ export default function SellerDashboard() {
       >
         {loading && !refreshing ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary} size="large" />
-            <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>
-              Loading your listings...
-            </Text>
+            <RemyMascot state="loading" status="Loading your listings..." />
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>

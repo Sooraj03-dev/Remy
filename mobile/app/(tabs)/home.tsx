@@ -1,5 +1,5 @@
 // mobile/app/(tabs)/home.tsx
-// Home — Thrifty Owl feed with blob header, staggered clay cards and owl states.
+// Home feed with a blob header and staggered clay cards.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -19,12 +19,14 @@ import {
   ClayButton,
   ClayText,
   CategoryChip,
-  AnimatedOwl,
   FloatingBlobs,
   SkeletonCard,
   StaggeredItem,
   Icon,
 } from '@components/index';
+import { RemyArt } from '@components/ui/RemyArt';
+import { RemyLogo } from '@components/ui/RemyLogo';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing } from '@constants/theme';
 import { Copy, isOfflineError, pickVariant } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
@@ -82,10 +84,11 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.headerWrap}>
         <FloatingBlobs variant="header" paused={!focused} />
-        <ClayText variant="captionBold" color="primary" style={styles.wordmark}>
-          THRIFTY OWL
-        </ClayText>
-        <ClayHeader title={`Hey, ${firstName}`} subtitle="What are you looking for today?" />
+        <ClayHeader
+          title={`Hey, ${firstName}`}
+          subtitle="What are you looking for today?"
+          rightAccessory={<RemyLogo size="sm" style={styles.logo} />}
+        />
       </View>
 
       <ScrollView
@@ -130,16 +133,16 @@ export default function HomeScreen() {
                   <SkeletonCard key={index} width={160} height={196} paused={!focused} />
                 ))}
               </View>
-              <ClayText variant="caption" align="center" style={styles.loadingText}>
-                {pickVariant(Copy.loading.feed, 1)}
-              </ClayText>
+              <View style={styles.loadingOverlay} pointerEvents="none">
+                <RemyMascot state="loading" status={pickVariant(Copy.loading.feed, 1)} paused={!focused} />
+              </View>
             </View>
           ) : error ? (
             <ClayCard variant="peach" style={styles.statusCard}>
               {isOfflineError(error) ? (
                 <Icon name="WifiSlash" size="lg" weight="duotone" color="primary" />
               ) : (
-                <AnimatedOwl mood="shocked" size={130} paused={!focused} />
+                <RemyArt size={110} />
               )}
               <ClayText variant="bodyBold" align="center">
                 {isOfflineError(error) ? Copy.error.offlineTitle : Copy.error.title}
@@ -151,7 +154,7 @@ export default function HomeScreen() {
             </ClayCard>
           ) : products.length === 0 ? (
             <ClayCard style={styles.statusCard}>
-              <AnimatedOwl mood="sleepy" size={140} paused={!focused} />
+              <RemyArt size={118} />
               <ClayText variant="bodyBold" align="center">
                 {Copy.empty.listingsTitle}
               </ClayText>
@@ -186,9 +189,6 @@ export default function HomeScreen() {
           <ClayCard variant="mint" style={styles.guideCard}>
             <View style={styles.guideHeader}>
               <ClayText variant="bodyBold">Safe Campus Meetups</ClayText>
-              <ClayText variant="caption" color="textSecondary">
-                Owl approved
-              </ClayText>
             </View>
             <ClayText variant="caption" style={styles.guideText}>
               Meet in well-lit public campus spots like the Student Union, Library foyer, or
@@ -197,16 +197,17 @@ export default function HomeScreen() {
           </ClayCard>
         </View>
       </ScrollView>
+      {!loading ? <RemyMascot state="roaming" paused={!focused} /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerWrap: { paddingTop: Spacing.sm, overflow: 'hidden' },
-  wordmark: { paddingHorizontal: Spacing.base, letterSpacing: 1.5 },
+  headerWrap: { paddingTop: Spacing.xl, overflow: 'hidden' },
+  logo: { marginLeft: Spacing.sm },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: Spacing.xxxl },
+  scrollContent: { paddingBottom: Spacing.base },
   section: { paddingHorizontal: Spacing.base, marginTop: Spacing.xl },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
   sectionTitle: { marginBottom: Spacing.sm },
   chips: { flexDirection: 'row', gap: Spacing.sm, paddingVertical: 2 },
   skeletonRow: { flexDirection: 'row', gap: Spacing.sm, overflow: 'hidden' },
-  loadingText: { marginTop: Spacing.sm },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', padding: Spacing.base },
   productList: { gap: Spacing.sm, paddingVertical: Spacing.xs },
   productCard: { width: 180 },
   statusCard: {

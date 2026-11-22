@@ -8,11 +8,11 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge, OrderStepper } from '@components/index';
@@ -109,8 +109,7 @@ export default function OrderDetailsScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-        <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading order details...</Text>
+        <RemyMascot state="loading" status="Loading order details..." />
       </View>
     );
   }

@@ -14,6 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -250,6 +251,7 @@ export default function SellScreen() {
             <Text style={[Typography.h3, styles.sectionTitle]}>Item Details</Text>
 
             <ClayInput
+              showMascotOnFocus
               label="Listing Title *"
               value={title}
               onChangeText={(t) => {
@@ -359,6 +361,7 @@ export default function SellScreen() {
             />
 
             <ClayInput
+              showMascotOnFocus
               label="Description"
               value={description}
               onChangeText={setDescription}
@@ -445,9 +448,7 @@ export default function SellScreen() {
           </ClayCard>
 
           {statusMessage ? (
-            <Text style={[Typography.caption, styles.statusMsg]}>
-              {statusMessage}
-            </Text>
+            <RemyMascot state="loading" size={50} status={statusMessage} />
           ) : null}
 
           <ClayButton
@@ -461,7 +462,7 @@ export default function SellScreen() {
         <CelebrationOverlay
           visible={showCelebration}
           title={Copy.success.submitted}
-          message="Your listing is pending review. We will hoot when it goes live."
+          message="Your listing will appear on the campus feed once it’s approved."
           onDismiss={() => {
             setShowCelebration(false);
             router.push('/seller/dashboard');
@@ -538,6 +539,5 @@ const styles = StyleSheet.create({
   noticeCard: { padding: Spacing.base },
   errorCard: { padding: Spacing.md },
   errorText: { color: Colors.error, fontWeight: '600' },
-  statusMsg: { textAlign: 'center', color: Colors.primary },
   submitBtn: { marginTop: Spacing.xs },
 });

@@ -9,11 +9,11 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography, FontWeight } from '@constants/theme';
 import { fetchConversations } from '../../services/api';
 import type { Conversation } from '../../../shared/types';
@@ -62,8 +62,7 @@ export default function ChatsScreen() {
       >
         {loading && !refreshing ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary} size="large" />
-            <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading conversations...</Text>
+            <RemyMascot state="loading" status="Loading conversations..." />
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>

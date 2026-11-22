@@ -1,8 +1,10 @@
 // mobile/components/clay/ClayInput.tsx
 // Claymorphism text input with label, error and focus states
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
+  Keyboard,
+  Platform,
   View,
   TextInput,
   StyleSheet,
@@ -10,12 +12,14 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { ClayText } from '@components/ui/ClayText';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
 
 interface ClayInputProps extends TextInputProps {
   label?: string;
   error?: string;
   containerStyle?: ViewStyle;
+  showMascotOnFocus?: boolean;
 }
 
 export function ClayInput({
@@ -25,24 +29,74 @@ export function ClayInput({
   style,
   onFocus,
   onBlur,
+  onChangeText,
+  showMascotOnFocus = false,
   ...rest
 }: ClayInputProps) {
   const [focused, setFocused] = useState(false);
+  const [peekMounted, setPeekMounted] = useState(false);
+  const [peekVisible, setPeekVisible] = useState(false);
+  const [keystrokes, setKeystrokes] = useState(0);
+
+  useEffect(() => {
+    if (!showMascotOnFocus || !focused) return;
+    // Android can dismiss the keyboard while the TextInput still has focus.
+    const show = Keyboard.addListener('keyboardDidShow', () => setPeekVisible(true));
+    const hide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setPeekVisible(false);
+        setKeystrokes(0);
+      },
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [focused, showMascotOnFocus]);
 
   const handleFocus = useCallback(
     (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
       setFocused(true);
+      if (showMascotOnFocus) {
+        setPeekMounted(true);
+        setPeekVisible(true);
+      }
       onFocus?.(e);
     },
-    [onFocus],
+    [onFocus, showMascotOnFocus],
   );
 
   const handleBlur = useCallback(
     (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
       setFocused(false);
+      setPeekVisible(false);
+      setKeystrokes(0);
       onBlur?.(e);
     },
     [onBlur],
+  );
+
+  const handleChangeText = (text: string) => {
+    if (peekVisible) setKeystrokes((previous) => previous + 1);
+    onChangeText?.(text);
+  };
+
+  const input = (
+    <TextInput
+      style={[
+        styles.input,
+        focused && styles.focused,
+        error ? styles.errored : null,
+        style,
+      ]}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChangeText={showMascotOnFocus ? handleChangeText : onChangeText}
+      placeholderTextColor={Colors.textSecondary}
+      accessibilityLabel={label}
+      {...rest}
+    />
   );
 
   return (
@@ -52,19 +106,14 @@ export function ClayInput({
           {label}
         </ClayText>
       ) : null}
-      <TextInput
-        style={[
-          styles.input,
-          focused && styles.focused,
-          error ? styles.errored : null,
-          style,
-        ]}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholderTextColor={Colors.textSecondary}
-        accessibilityLabel={label}
-        {...rest}
-      />
+      {showMascotOnFocus ? (
+        <View>
+          {peekMounted ? (
+            <RemyMascot state="typing" visible={peekVisible && focused} keystrokes={keystrokes} />
+          ) : null}
+          {input}
+        </View>
+      ) : input}
       {error ? (
         <ClayText variant="caption" color="error">
           {error}

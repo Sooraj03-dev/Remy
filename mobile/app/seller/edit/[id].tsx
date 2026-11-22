@@ -12,8 +12,8 @@ import {
   Image,
   Pressable,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
@@ -174,8 +174,7 @@ export default function EditProductScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-        <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading listing details...</Text>
+        <RemyMascot state="loading" status="Loading listing details..." />
       </View>
     );
   }

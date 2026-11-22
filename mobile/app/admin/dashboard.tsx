@@ -8,11 +8,11 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
   Alert,
   Modal,
 } from 'react-native';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { ClayButton, ClayCard, StatusBadge, ClayInput } from '@components/index';
@@ -302,8 +302,7 @@ export default function AdminDashboard() {
 
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator color={Colors.primary} size="large" />
-          <Text style={[Typography.caption, { marginTop: Spacing.sm }]}>Loading records...</Text>
+          <RemyMascot state="loading" status="Loading records..." />
         </View>
       ) : (
         <ScrollView

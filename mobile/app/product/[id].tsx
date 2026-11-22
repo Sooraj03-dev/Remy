@@ -20,12 +20,12 @@ import {
   ClayCard,
   ClayInput,
   StatusBadge,
-  ClayText,
-  AnimatedOwl,
   HeartBurst,
   VerifiedBadge,
   useToast,
 } from '@components/index';
+import { RemyArt } from '@components/ui/RemyArt';
+import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
@@ -145,10 +145,7 @@ export default function ProductDetailsScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centerBox]}>
-        <AnimatedOwl mood="sleepy" size={150} paused={!focused} />
-        <ClayText variant="caption" align="center">
-          {Copy.loading.product[0]}
-        </ClayText>
+        <RemyMascot state="loading" status={Copy.loading.product[0]} paused={!focused} />
       </View>
     );
   }
@@ -157,7 +154,7 @@ export default function ProductDetailsScreen() {
     return (
       <View style={[styles.container, styles.centerBox]}>
         <ClayCard variant="peach" style={styles.errorCard}>
-          <AnimatedOwl mood="shocked" size={130} paused={!focused} />
+          <RemyArt size={110} />
           <Text style={Typography.bodyBold}>Product Not Available</Text>
           <Text style={[Typography.caption, styles.errorText]}>
             {error || 'This listing may have been removed or is pending approval.'}
