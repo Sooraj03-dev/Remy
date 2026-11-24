@@ -34,6 +34,7 @@ import {
   removeFromWishlist,
   checkWishlist,
   submitReport,
+  startConversationWithSeller,
 } from '../../services/api';
 import type { Product, ReportReason } from '../../../shared/types';
 
@@ -65,6 +66,25 @@ export default function ProductDetailsScreen() {
   const [reportReason, setReportReason] = useState<ReportReason>('spam');
   const [reportDetails, setReportDetails] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [chatStarting, setChatStarting] = useState(false);
+
+  const handleStartChat = async () => {
+    if (!product) return;
+    setChatStarting(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Sign In Required', 'Please sign in to message the seller.');
+        return;
+      }
+      const result = await startConversationWithSeller(token, product.id);
+      router.push(`/chat/${result.orderId}`);
+    } catch (err) {
+      Alert.alert('Chat Error', err instanceof Error ? err.message : 'Could not open chat.');
+    } finally {
+      setChatStarting(false);
+    }
+  };
 
   const handleSubmitReport = async () => {
     if (!product) return;
@@ -315,6 +335,13 @@ export default function ProductDetailsScreen() {
                     style={styles.actionButton}
                   />
                 )}
+                <ClayButton
+                  label="💬 Chat with Seller"
+                  variant="secondary"
+                  loading={chatStarting}
+                  onPress={handleStartChat}
+                  style={styles.actionButton}
+                />
                 <ClayButton
                   label="🚩 Report Listing"
                   variant="ghost"

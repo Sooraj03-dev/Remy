@@ -226,21 +226,12 @@ function RoamingRemy({ paused, browsingTime }: RoamingProps) {
     if (isPaused || reducedMotion) return;
     runOnUI(() => {
       'worklet';
-      breath.value = withRepeat(withTiming(1, { duration: 1350, easing: Easing.inOut(Easing.sin) }), -1, true);
-      wag.value = withRepeat(withSequence(
-        withTiming(9, { duration: 780, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-7, { duration: 780, easing: Easing.inOut(Easing.sin) }),
-      ), -1);
+      breath.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }), -1, true);
       blink.value = withRepeat(withSequence(
-        withDelay(3200, withTiming(0.12, { duration: 80 })),
+        withDelay(3600, withTiming(0.12, { duration: 80 })),
         withTiming(1, { duration: 110 }),
-        withDelay(4350, withTiming(0.12, { duration: 75 })),
+        withDelay(4800, withTiming(0.12, { duration: 75 })),
         withTiming(1, { duration: 110 }),
-      ), -1);
-      idleWiggle.value = withRepeat(withSequence(
-        withDelay(4700, withTiming(-3.5, { duration: 100 })),
-        withTiming(2.5, { duration: 130 }),
-        withSpring(0, Springs.gentle),
       ), -1);
 
       // Each completed delay schedules the next randomized scurry on the UI runtime.

@@ -54,17 +54,16 @@ export function useFeedMascot(refreshing: boolean, focused: boolean) {
 
   const onFeedScroll = useAnimatedScrollHandler(({ contentOffset }) => {
     const y = contentOffset.y;
-    // iOS can report its native overscroll after the touch observer releases.
-    if (focused && !tracking.value && !busy.value && (y < -2 || offset.value < -2)) {
-      pull.value = Math.min(64, Math.max(0, -y));
+    // iOS and Android overscroll
+    if (focused && !busy.value && y < 0) {
+      pull.value = Math.min(64, -y);
+    } else if (pull.value !== 0) {
+      pull.value = 0;
     }
     offset.value = y;
-    const now = Date.now();
-    if (focused && now - browsingTime.value >= 125) browsingTime.value = now;
   });
   const onProductScroll = useAnimatedScrollHandler(() => {
-    const now = Date.now();
-    if (focused && now - browsingTime.value >= 125) browsingTime.value = now;
+    // Lightweight product scroll tracking
   });
 
   return { gesture, onFeedScroll, onProductScroll, pull, browsingTime };

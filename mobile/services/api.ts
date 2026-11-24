@@ -52,22 +52,35 @@ async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  const json: ApiResponse<T> = await response.json().catch(() => ({
-    success: false,
-    error: 'PARSE_ERROR',
-    message: `Server returned HTTP ${response.status}`,
-  }));
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-  if (!json.success) {
-    throw new Error(json.message || json.error || 'API Request failed');
+    const json: ApiResponse<T> = await response.json().catch(() => ({
+      success: false,
+      error: 'PARSE_ERROR',
+      message: `Server returned HTTP ${response.status}`,
+    }));
+
+    if (!json.success) {
+      throw new Error(json.message || json.error || 'API Request failed');
+    }
+
+    return (json as ApiSuccess<T>).data;
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if ((err as Error)?.name === 'AbortError') {
+      throw new Error('Network request timed out');
+    }
+    throw err;
   }
-
-  return (json as ApiSuccess<T>).data;
 }
 
 // ── Auth APIs ──────────────────────────────────────────────
@@ -327,6 +340,17 @@ export async function sendMessage(token: string, payload: SendMessagePayload) {
     {
       method: 'POST',
       body: JSON.stringify(payload),
+    },
+    token,
+  );
+}
+
+export async function startConversationWithSeller(token: string, productId: string) {
+  return apiRequest<{ orderId: string; isNew: boolean }>(
+    '/messages/start',
+    {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
     },
     token,
   );

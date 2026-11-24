@@ -11,6 +11,7 @@ export interface Message {
   content: string;
   read: boolean;
   createdAt: string;
+  isMine?: boolean;
 }
 
 export interface Conversation {
@@ -27,7 +28,11 @@ export interface Conversation {
 
 export interface SendMessagePayload {
   orderId: string;
-  receiverId: string;
+  receiverId?: string;
   content: string;
+}
+
+export interface StartChatPayload {
+  productId: string;
 }
 

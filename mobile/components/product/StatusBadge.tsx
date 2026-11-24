@@ -24,6 +24,7 @@ const statusConfig: Record<
   removed: { backgroundColor: Colors.errorBg, color: Colors.errorText, label: 'Removed' },
 
   // Order statuses
+  inquiry: { backgroundColor: Colors.primarySoft, color: Colors.primary, label: 'Inquiry' },
   placed: { backgroundColor: Colors.warningBg, color: Colors.warningText, label: 'Placed' },
   confirmed: { backgroundColor: Colors.primarySoft, color: Colors.primary, label: 'Confirmed' },
   meetup_arranged: { backgroundColor: Colors.successBg, color: Colors.successText, label: 'Meetup Arranged' },

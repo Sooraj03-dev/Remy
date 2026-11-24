@@ -2,6 +2,7 @@
 // Shared Order types used by both mobile and server
 
 export type OrderStatus =
+  | 'inquiry'
   | 'placed'
   | 'confirmed'
   | 'meetup_arranged'

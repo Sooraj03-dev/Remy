@@ -11,8 +11,9 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { useUser, useAuth } from '@clerk/clerk-expo';
+import { useUser, useAuth, useClerk } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
 import { Colors, Spacing, Typography } from '@constants/theme';
@@ -21,12 +22,14 @@ import type { UserProfile } from '../../../shared/types';
 
 export default function ProfileScreen() {
   const { user } = useUser();
-  const { signOut, getToken } = useAuth();
+  const { getToken } = useAuth();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -51,18 +54,39 @@ export default function ProfileScreen() {
     loadProfile();
   }, [loadProfile]);
 
-  const handleSignOut = async () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/(auth)/login');
+  const performSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } catch (err) {
+      console.warn('[SignOut] Clerk signOut error:', err);
+    } finally {
+      try {
+        await SecureStore.deleteItemAsync('__clerk_client_jwt');
+      } catch (err) {
+        console.warn('[SignOut] Failed to clear token from SecureStore:', err);
+      }
+      setSigningOut(false);
+      router.replace('/(auth)/login');
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            void performSignOut();
+          },
         },
-      },
-    ]);
+      ],
+      { cancelable: true }
+    );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -211,8 +235,10 @@ export default function ProfileScreen() {
         </View>
 
         <ClayButton
-          label="Sign Out"
+          label={signingOut ? 'Signing Out...' : 'Sign Out'}
           variant="danger"
+          loading={signingOut}
+          disabled={signingOut}
           onPress={handleSignOut}
           style={styles.signOut}
         />

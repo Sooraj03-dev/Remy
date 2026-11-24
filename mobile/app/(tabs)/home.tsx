@@ -108,7 +108,7 @@ export default function HomeScreen() {
           <Animated.ScrollView
             style={styles.scroll}
             onScroll={onFeedScroll}
-            scrollEventThrottle={16}
+            scrollEventThrottle={32}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -182,7 +182,7 @@ export default function HomeScreen() {
                   windowSize={5}
                   horizontal
                   onScroll={onProductScroll}
-                  scrollEventThrottle={16}
+                  scrollEventThrottle={32}
                   showsHorizontalScrollIndicator={false}
                   renderItem={renderProduct}
                   contentContainerStyle={styles.productList}

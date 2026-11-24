@@ -175,6 +175,7 @@ messagesRouter.get('/order/:orderId', protect, async (req, res, next) => {
       content: r.messages.content,
       read: r.messages.read,
       createdAt: new Date(r.messages.createdAt).toISOString(),
+      isMine: r.messages.senderId === currentUser.id,
     }));
 
     res.status(200).json({ success: true, data });
@@ -261,12 +262,128 @@ messagesRouter.post('/', protect, async (req, res, next) => {
       content: createdMsg.content,
       read: createdMsg.read,
       createdAt: new Date(createdMsg.createdAt).toISOString(),
+      isMine: true,
     };
 
     res.status(201).json({
       success: true,
       data: fullMessage,
       message: 'Message sent successfully.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const startChatSchema = z.object({
+  productId: z.string().uuid('Invalid product ID format'),
+});
+
+/**
+ * POST /api/messages/start
+ * Finds existing conversation for a product or creates an inquiry order to chat
+ */
+messagesRouter.post('/start', protect, async (req, res, next) => {
+  try {
+    const { userId } = getAuthContext(req);
+    const db = getDb();
+
+    const validation = startChatSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        success: false,
+        error: 'VALIDATION_ERROR',
+        message: validation.error.errors.map((e) => e.message).join(' '),
+      });
+      return;
+    }
+
+    const { productId } = validation.data;
+
+    const [currentUser] = await db.select().from(users).where(eq(users.clerkId, userId!));
+    if (!currentUser) {
+      res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: 'User not found.' });
+      return;
+    }
+
+    const [product] = await db.select().from(products).where(eq(products.id, productId));
+    if (!product) {
+      res.status(404).json({ success: false, error: 'PRODUCT_NOT_FOUND', message: 'Product not found.' });
+      return;
+    }
+
+    if (product.sellerId === currentUser.id) {
+      res.status(400).json({
+        success: false,
+        error: 'CANNOT_CHAT_WITH_SELF',
+        message: 'You are the seller of this listing.',
+      });
+      return;
+    }
+
+    // Check if an order or inquiry already exists between this buyer and seller for this product
+    const [existingOrder] = await db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.productId, productId),
+          eq(orders.buyerId, currentUser.id),
+          eq(orders.sellerId, product.sellerId),
+        ),
+      )
+      .orderBy(desc(orders.createdAt))
+      .limit(1);
+
+    if (existingOrder) {
+      res.status(200).json({
+        success: true,
+        data: {
+          orderId: existingOrder.id,
+          isNew: false,
+        },
+      });
+      return;
+    }
+
+    // Create an inquiry order to host the conversation
+    const [newOrder] = await db
+      .insert(orders)
+      .values({
+        productId: product.id,
+        buyerId: currentUser.id,
+        sellerId: product.sellerId,
+        status: 'inquiry',
+        amount: product.price,
+        meetupLocation: product.campusLocation || 'Campus Library / Common Area',
+      })
+      .returning();
+
+    // Starter message from buyer to seller
+    const starterContent = `Hi! I'm interested in "${product.title}". Is it still available for meetup?`;
+    await db.insert(messages).values({
+      orderId: newOrder.id,
+      senderId: currentUser.id,
+      receiverId: product.sellerId,
+      content: starterContent,
+      read: false,
+    });
+
+    // Notify seller
+    await createNotification({
+      userId: product.sellerId,
+      type: 'new_message',
+      title: `Inquiry on "${product.title}"`,
+      message: `${currentUser.fullName}: ${starterContent}`,
+      data: { orderId: newOrder.id },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        orderId: newOrder.id,
+        isNew: true,
+      },
     });
   } catch (err) {
     next(err);

@@ -61,12 +61,10 @@ export function ClayPressable({
     const depth = pressure.value;
     return {
       transform: [{ translateY: 2 * depth }, { scale: 1 + (pressScale - 1) * depth }],
-      ...(gradient && tone && (usesElevation
-        ? { elevation: clayElevation.elevation - depth * 4 }
-        : {
-            shadowOpacity: clayElevation.shadowOpacity - depth * 0.06,
-            shadowRadius: clayElevation.shadowRadius - depth * 6,
-          })),
+      ...(gradient && tone && !usesElevation && {
+        shadowOpacity: clayElevation.shadowOpacity - depth * 0.06,
+        shadowRadius: clayElevation.shadowRadius - depth * 6,
+      }),
     };
   });
 

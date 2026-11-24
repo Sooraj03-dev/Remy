@@ -42,6 +42,13 @@ const tokenCache = {
       // ignore write failures
     }
   },
+  async clearToken(key: string) {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch {
+      // ignore write failures
+    }
+  },
 };
 
 /** Redirect authenticated/unauthenticated users to the right stack */
