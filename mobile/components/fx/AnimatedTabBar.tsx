@@ -5,6 +5,7 @@ import Animated, {
   useDerivedValue,
   useReducedMotion,
   useSharedValue,
+  withSequence,
   withSpring,
 } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -20,12 +21,23 @@ const dockSpring = { ...Springs.snappy, overshootClamping: true };
 
 function TabGlyph({ name, focused, isSell }: { name: IconName; focused: boolean; isSell: boolean }) {
   const reduced = useReducedMotion();
+  const pop = useSharedValue(1);
+
+  useEffect(() => {
+    if (focused && !reduced) {
+      pop.value = withSequence(
+        withSpring(1.12, Springs.snappy),
+        withSpring(1, Springs.bouncy),
+      );
+    }
+  }, [focused, pop, reduced]);
+
   const emphasis = useDerivedValue(() => {
     const target = focused ? 1 : 0;
     return reduced ? target : withSpring(target, dockSpring);
   });
   const glyphStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -2 * emphasis.value }, { scale: 1 + 0.06 * emphasis.value }],
+    transform: [{ translateY: -2 * emphasis.value }, { scale: pop.value }],
   }));
   return (
     <Animated.View pointerEvents="none" style={glyphStyle}>

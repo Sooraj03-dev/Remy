@@ -15,10 +15,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
-import { AppIcon } from '@components/index';
+import { AppIcon, TypingDots } from '@components/index';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { Durations, Easings } from '@constants/motion';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import {
   fetchOrderMessages,
@@ -40,6 +43,8 @@ const QUICK_PROMPTS = [
 export default function ChatScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   const { getToken } = useAuth();
 
   const [order, setOrder] = useState<Order | null>(null);
@@ -252,7 +257,14 @@ export default function ChatScreen() {
                 : '';
 
               return (
-                <View
+                <Animated.View
+                  entering={
+                    reduced
+                      ? undefined
+                      : FadeInDown.duration(Durations.micro)
+                          .easing(Easings.enter)
+                          .withInitialValues({ opacity: 0, transform: [{ translateY: 6 }, { scale: 0.97 }] })
+                  }
                   style={[
                     styles.bubbleWrapper,
                     isMine ? styles.myBubbleWrapper : styles.theirBubbleWrapper,
@@ -286,7 +298,7 @@ export default function ChatScreen() {
                       {timeStr}
                     </Text>
                   </View>
-                </View>
+                </Animated.View>
               );
             }}
           />
@@ -311,8 +323,15 @@ export default function ChatScreen() {
           </ScrollView>
         </View>
 
+        {/* Typing / Sending Indicator */}
+        {sending ? (
+          <View style={styles.sendingBar}>
+            <TypingDots color={Colors.primary} />
+          </View>
+        ) : null}
+
         {/* Input Bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, Spacing.sm) }]}>
           <View style={styles.inputContainer}>
             <TextInput
               ref={inputRef}
@@ -604,6 +623,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.caption,
     color: Colors.text,
     fontFamily: FontFamily.label,
+  },
+  sendingBar: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 4,
+    backgroundColor: Colors.background,
+    alignItems: 'flex-end',
   },
   inputBar: {
     flexDirection: 'row',

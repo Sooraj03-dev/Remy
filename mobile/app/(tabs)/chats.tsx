@@ -11,11 +11,13 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import Animated, { useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
-import { AppIcon, ClayHeader, ClayCard, ClayButton, ClayText } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayButton, ClayText, PulseDot, StaggeredItem } from '@components/index';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { RemyArt } from '@components/ui/RemyArt';
+import { SleepyRemy } from '@components/ui/RemyReactions';
+import { Durations } from '@constants/motion';
 import { Colors, Spacing, Radius, Typography, FontFamily } from '@constants/theme';
 import { fetchConversations } from '../../services/api';
 import type { Conversation } from '../../../shared/types';
@@ -23,6 +25,7 @@ import type { Conversation } from '../../../shared/types';
 export default function ChatsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   const { getToken } = useAuth();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -114,7 +117,7 @@ export default function ChatsScreen() {
           </ClayCard>
         ) : conversations.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <RemyArt size={96} />
+            <SleepyRemy size={96} />
             <Text style={[Typography.bodyBold, { marginTop: Spacing.xs }]}>No conversations yet</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
               Tap &quot;Chat with Seller&quot; on any item or place an order to coordinate with fellow campus students!
@@ -126,74 +129,83 @@ export default function ChatsScreen() {
             />
           </ClayCard>
         ) : (
-          conversations.map((conv) => {
+          conversations.map((conv, index) => {
             const hasUnread = conv.unreadCount > 0;
             return (
-              <Pressable
-                key={conv.orderId}
-                onPress={() => router.push(`/chat/${conv.orderId}`)}
-                style={({ pressed }) => [
-                  styles.cardPressable,
-                  pressed && styles.cardPressed,
-                ]}
-              >
-                <ClayCard
-                  variant={hasUnread ? 'mint' : 'default'}
-                  style={[styles.convCard, hasUnread && styles.unreadBorder]}
+              <StaggeredItem key={conv.orderId} index={index}>
+                <Pressable
+                  onPress={() => router.push(`/chat/${conv.orderId}`)}
+                  style={({ pressed }) => [
+                    styles.cardPressable,
+                    pressed && styles.cardPressed,
+                  ]}
                 >
-                  {/* User Avatar Circle */}
-                  <View style={[styles.avatar, hasUnread && styles.avatarUnread]}>
-                    <Text style={[styles.avatarText, hasUnread && styles.avatarTextUnread]}>
-                      {conv.otherUserName ? conv.otherUserName[0].toUpperCase() : 'U'}
-                    </Text>
-                  </View>
-
-                  {/* Conversation Meta */}
-                  <View style={styles.convInfo}>
-                    <View style={styles.topRow}>
-                      <Text
-                        style={[
-                          Typography.bodyBold,
-                          styles.name,
-                          hasUnread && styles.nameUnread,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {conv.otherUserName}
+                  <ClayCard
+                    variant={hasUnread ? 'mint' : 'default'}
+                    style={[styles.convCard, hasUnread && styles.unreadBorder]}
+                  >
+                    {/* User Avatar Circle */}
+                    <View style={[styles.avatar, hasUnread && styles.avatarUnread]}>
+                      <Text style={[styles.avatarText, hasUnread && styles.avatarTextUnread]}>
+                        {conv.otherUserName ? conv.otherUserName[0].toUpperCase() : 'U'}
                       </Text>
-                      <Text style={[styles.timeText, hasUnread && styles.timeTextUnread]}>
-                        {formatMessageTime(conv.lastMessageAt)}
-                      </Text>
-                    </View>
-
-                    <View style={styles.productTagRow}>
-                      <AppIcon name="package" size={14} tint="primary" />
-                      <ClayText variant="label" color="primary" style={styles.productTagText} numberOfLines={1}>
-                        {conv.productTitle}
-                      </ClayText>
-                    </View>
-
-                    <View style={styles.msgBottomRow}>
-                      <Text
-                        style={[
-                          Typography.caption,
-                          styles.lastMsg,
-                          hasUnread && styles.lastMsgUnread,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {conv.lastMessage}
-                      </Text>
-
-                      {hasUnread && (
-                        <View style={styles.unreadBadge}>
-                          <Text style={styles.unreadText}>{conv.unreadCount}</Text>
+                      {hasUnread ? (
+                        <View style={styles.onlinePulse}>
+                          <PulseDot color={Colors.successText} size={7} />
                         </View>
-                      )}
+                      ) : null}
                     </View>
-                  </View>
-                </ClayCard>
-              </Pressable>
+
+                    {/* Conversation Meta */}
+                    <View style={styles.convInfo}>
+                      <View style={styles.topRow}>
+                        <Text
+                          style={[
+                            Typography.bodyBold,
+                            styles.name,
+                            hasUnread && styles.nameUnread,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {conv.otherUserName}
+                        </Text>
+                        <Text style={[styles.timeText, hasUnread && styles.timeTextUnread]}>
+                          {formatMessageTime(conv.lastMessageAt)}
+                        </Text>
+                      </View>
+
+                      <View style={styles.productTagRow}>
+                        <AppIcon name="package" size={14} tint="primary" />
+                        <ClayText variant="label" color="primary" style={styles.productTagText} numberOfLines={1}>
+                          {conv.productTitle}
+                        </ClayText>
+                      </View>
+
+                      <View style={styles.msgBottomRow}>
+                        <Text
+                          style={[
+                            Typography.caption,
+                            styles.lastMsg,
+                            hasUnread && styles.lastMsgUnread,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {conv.lastMessage}
+                        </Text>
+
+                        {hasUnread && (
+                          <Animated.View
+                            entering={reduced ? undefined : ZoomIn.duration(Durations.micro)}
+                            style={styles.unreadBadge}
+                          >
+                            <Text style={styles.unreadText}>{conv.unreadCount}</Text>
+                          </Animated.View>
+                        )}
+                      </View>
+                    </View>
+                  </ClayCard>
+                </Pressable>
+              </StaggeredItem>
             );
           })
         )}
@@ -236,6 +248,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
+    position: 'relative',
+  },
+  onlinePulse: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
   },
   avatarUnread: {
     backgroundColor: Colors.primary,

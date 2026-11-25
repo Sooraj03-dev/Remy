@@ -5,10 +5,12 @@ import React, { useCallback } from 'react';
 import { View, StyleSheet, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useReducedMotion } from 'react-native-reanimated';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { HeartBurst } from '@components/fx/HeartBurst';
 import { ClayText } from '@components/ui/ClayText';
 import { Icon } from '@components/ui/Icon';
+import { Durations } from '@constants/motion';
 import { StatusBadge } from './StatusBadge';
 import type { Product } from '@shared/index';
 import { Colors, Spacing, Radius } from '@constants/theme';
@@ -27,6 +29,7 @@ export const ProductCard = React.memo(function ProductCard({
   onWishlistToggle,
 }: ProductCardProps) {
   const router = useRouter();
+  const reduced = useReducedMotion();
   const { id } = product;
   const image = product.images[0];
   const openProduct = useCallback(() => router.push(`/product/${id}`), [id, router]);
@@ -45,6 +48,7 @@ export const ProductCard = React.memo(function ProductCard({
             style={styles.image}
             contentFit="cover"
             cachePolicy="memory-disk"
+            transition={reduced ? 0 : Durations.micro}
             recyclingKey={image}
             accessibilityIgnoresInvertColors
           />

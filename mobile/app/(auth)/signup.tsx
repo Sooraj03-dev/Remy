@@ -1,7 +1,7 @@
 // mobile/app/(auth)/signup.tsx
 // Signup screen with email verification code flow and database synchronization
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,18 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Link, useRouter } from 'expo-router';
 import { useSignUp, useAuth } from '@clerk/clerk-expo';
-import { ClayCard, ClayInput, ClayButton } from '@components/index';
+import {
+  AnimatedCheckDraw,
+  ClayCard,
+  ClayInput,
+  ClayButton,
+  ClayText,
+  StaggeredItem,
+  useShakeAnimation,
+} from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { Colors, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
@@ -31,23 +40,39 @@ export default function SignupScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorAttempt, setErrorAttempt] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const shakeStyle = useShakeAnimation(errorAttempt);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const reportError = (message: string) => {
+    setError(message);
+    setErrorAttempt((c) => c + 1);
+  };
 
   // Step 1: Create user with email and password, then send verification code
   const handleSignUp = async () => {
     if (!isLoaded || !signUp) return;
 
     if (!fullName.trim() || !email.trim() || !password) {
-      setError('All fields are required.');
+      reportError('All fields are required.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      reportError('Passwords do not match.');
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      reportError('Password must be at least 8 characters long.');
       return;
     }
 
@@ -69,13 +94,14 @@ export default function SignupScreen() {
       // Send verification code to email
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setPendingVerification(true);
+      setResendCooldown(30);
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
           : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ||
             'Sign up failed. Please try again.';
-      setError(msg);
+      reportError(msg);
     } finally {
       setLoading(false);
     }
@@ -86,7 +112,7 @@ export default function SignupScreen() {
     if (!isLoaded || !signUp) return;
 
     if (!verificationCode.trim()) {
-      setError('Please enter the verification code sent to your email.');
+      reportError('Please enter the verification code sent to your email.');
       return;
     }
 
@@ -99,6 +125,7 @@ export default function SignupScreen() {
       });
 
       if (completeSignUp.status === 'complete') {
+        setOtpSuccess(true);
         await setActive({ session: completeSignUp.createdSessionId });
 
         // Synchronize authenticated user into Neon database
@@ -114,9 +141,10 @@ export default function SignupScreen() {
           console.warn('[Sync warning]', syncErr);
         }
 
+        await new Promise((r) => setTimeout(r, 420));
         router.replace('/(tabs)/home');
       } else {
-        setError('Verification could not be completed.');
+        reportError('Verification could not be completed.');
       }
     } catch (err: unknown) {
       const msg =
@@ -124,9 +152,25 @@ export default function SignupScreen() {
           ? err.message
           : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ||
             'Invalid verification code.';
-      setError(msg);
+      reportError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!isLoaded || !signUp || resendCooldown > 0) return;
+    setError('');
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setResendCooldown(30);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ||
+            'Could not resend verification code.';
+      reportError(msg);
     }
   };
 
@@ -142,7 +186,7 @@ export default function SignupScreen() {
       >
         <View style={styles.branding}>
           <View style={styles.brandRow}>
-            <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked />
+            <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked idleMotion paused={isTyping || loading} />
           </View>
           <Text style={Typography.h2}>
             {pendingVerification ? 'Verify Email' : Copy.auth.signupTitle}
@@ -154,110 +198,157 @@ export default function SignupScreen() {
           </Text>
         </View>
 
-        <ClayCard style={styles.card}>
-          {pendingVerification ? (
-            // Verification step
-            <>
-              <ClayInput
-                showMascotOnFocus
-                label="Verification Code"
-                value={verificationCode}
-                onChangeText={(text) => {
-                  setVerificationCode(text);
-                  if (error) setError('');
-                }}
-                placeholder="123456"
-                keyboardType="number-pad"
-                autoFocus
-                error={error}
-                containerStyle={styles.field}
-              />
+        <StaggeredItem index={0}>
+          <Animated.View style={shakeStyle}>
+            <ClayCard style={styles.card}>
+              {pendingVerification ? (
+                otpSuccess ? (
+                  <View style={styles.otpSuccessBox}>
+                    <AnimatedCheckDraw visible size={56} />
+                    <ClayText variant="h3" align="center">Email verified!</ClayText>
+                    <ClayText variant="caption" color="textSecondary" align="center">
+                      Setting up your campus account...
+                    </ClayText>
+                  </View>
+                ) : (
+                  // Verification step
+                  <>
+                    <StaggeredItem index={1}>
+                      <ClayInput
+                        showMascotOnFocus
+                        label="Verification Code"
+                        value={verificationCode}
+                        onFocus={() => setIsTyping(true)}
+                        onBlur={() => setIsTyping(false)}
+                        onChangeText={(text) => {
+                          setVerificationCode(text.replace(/[^0-9]/g, '').slice(0, 6));
+                          if (error) setError('');
+                        }}
+                        placeholder="123456"
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        autoFocus
+                        error={error}
+                        containerStyle={styles.field}
+                      />
+                    </StaggeredItem>
 
-              <ClayButton
-                label="Verify & Sign In"
-                onPress={handleVerifyCode}
-                loading={loading}
-                style={styles.button}
-              />
+                    <StaggeredItem index={2}>
+                      <ClayButton
+                        label="Verify & Sign In"
+                        onPress={handleVerifyCode}
+                        loading={loading}
+                        style={styles.button}
+                      />
+                    </StaggeredItem>
 
-              <ClayButton
-                label="Change Email / Back"
-                variant="ghost"
-                onPress={() => setPendingVerification(false)}
-                style={styles.backBtn}
-              />
-            </>
-          ) : (
-            // Initial signup step
-            <>
-              <ClayInput
-                label="Full Name"
-                value={fullName}
-                onChangeText={(text) => {
-                  setFullName(text);
-                  if (error) setError('');
-                }}
-                placeholder="Alex Johnson"
-                autoComplete="name"
-                containerStyle={styles.field}
-              />
+                    <ClayButton
+                      label={resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : 'Resend code'}
+                      variant="secondary"
+                      disabled={resendCooldown > 0}
+                      onPress={handleResendCode}
+                      style={styles.backBtn}
+                    />
 
-              <ClayInput
-                label="University Email"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (error) setError('');
-                }}
-                placeholder="student@university.edu"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                containerStyle={styles.field}
-              />
+                    <ClayButton
+                      label="Change Email / Back"
+                      variant="ghost"
+                      onPress={() => setPendingVerification(false)}
+                      style={styles.backBtn}
+                    />
+                  </>
+                )
+              ) : (
+                // Initial signup step
+                <>
+                  <StaggeredItem index={1}>
+                    <ClayInput
+                      label="Full Name"
+                      value={fullName}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setFullName(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="Alex Johnson"
+                      autoComplete="name"
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <ClayInput
-                label="Password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (error) setError('');
-                }}
-                placeholder="••••••••"
-                secureTextEntry
-                autoComplete="new-password"
-                containerStyle={styles.field}
-              />
+                  <StaggeredItem index={2}>
+                    <ClayInput
+                      label="University Email"
+                      value={email}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="student@university.edu"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <ClayInput
-                label="Confirm Password"
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  setConfirmPassword(text);
-                  if (error) setError('');
-                }}
-                placeholder="••••••••"
-                secureTextEntry
-                error={error}
-                containerStyle={styles.field}
-              />
+                  <StaggeredItem index={3}>
+                    <ClayInput
+                      label="Password"
+                      value={password}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="••••••••"
+                      secureTextEntry
+                      autoComplete="new-password"
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <ClayButton
-                label="Create Account"
-                onPress={handleSignUp}
-                loading={loading}
-                style={styles.button}
-              />
+                  <StaggeredItem index={4}>
+                    <ClayInput
+                      label="Confirm Password"
+                      value={confirmPassword}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="••••••••"
+                      secureTextEntry
+                      error={error}
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <View style={styles.footer}>
-                <Text style={Typography.caption}>Already have an account? </Text>
-                <Link href="/(auth)/login">
-                  <Text style={styles.link}>Sign In</Text>
-                </Link>
-              </View>
-            </>
-          )}
-        </ClayCard>
+                  <StaggeredItem index={5}>
+                    <ClayButton
+                      label="Create Account"
+                      onPress={handleSignUp}
+                      loading={loading}
+                      style={styles.button}
+                    />
+                  </StaggeredItem>
+
+                  <View style={styles.footer}>
+                    <Text style={Typography.caption}>Already have an account? </Text>
+                    <Link href="/(auth)/login">
+                      <Text style={styles.link}>Sign In</Text>
+                    </Link>
+                  </View>
+                </>
+              )}
+            </ClayCard>
+          </Animated.View>
+        </StaggeredItem>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -277,6 +368,12 @@ const styles = StyleSheet.create({
   brandRow: { alignItems: 'center', justifyContent: 'center' },
   tagline: { textAlign: 'center', marginTop: Spacing.xs },
   card: { gap: Spacing.sm },
+  otpSuccessBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
+    gap: Spacing.sm,
+  },
   field: { marginVertical: Spacing.xs },
   button: { marginTop: Spacing.sm },
   backBtn: { marginTop: Spacing.xs },

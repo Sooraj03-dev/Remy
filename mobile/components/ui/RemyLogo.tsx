@@ -1,12 +1,17 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
+  cancelAnimation,
+  Easing,
   runOnUI,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
+  withRepeat,
   withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { ClayFinish } from '@components/clay/ClayFinish';
@@ -28,16 +33,49 @@ interface RemyLogoProps {
   badgeOnly?: boolean;
   tone?: 'caramel' | 'muted';
   gradient?: boolean;
+  /** Subtle <= 3s breathe loop on auth screens; pauses while typing. */
+  idleMotion?: boolean;
+  paused?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
 export const RemyLogo = React.memo(function RemyLogo({
-  size = 'md', stacked = false, badgeOnly = false, tone = 'caramel', gradient = false, style,
+  size = 'md',
+  stacked = false,
+  badgeOnly = false,
+  tone = 'caramel',
+  gradient = false,
+  idleMotion = false,
+  paused = false,
+  style,
 }: RemyLogoProps) {
   const { badge, text, radius } = sizes[size];
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
-  const bounce = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const breathe = useSharedValue(0);
+
+  useEffect(() => {
+    if (!idleMotion || paused || reducedMotion) {
+      cancelAnimation(breathe);
+      breathe.value = withTiming(0, { duration: 180 });
+      return;
+    }
+    breathe.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
+        withDelay(200, withTiming(0, { duration: 1300, easing: Easing.inOut(Easing.sin) })),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(breathe);
+  }, [breathe, idleMotion, paused, reducedMotion]);
+
+  const bounce = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value * (1 + breathe.value * 0.025) },
+      { translateY: -2 * breathe.value },
+    ],
+  }));
   const onPress = useCallback(() => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);

@@ -1,48 +1,96 @@
 // mobile/components/product/ProductGallery.tsx
-// Edge-to-edge hero gallery with top readability scrim and thumbnail switcher.
+// Edge-to-edge parallax hero gallery with top readability scrim and animated page dots.
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { AppIcon } from '@components/ui/AppIcon';
-import { Durations } from '@constants/motion';
+import { Durations, Easings } from '@constants/motion';
 import { Colors, Radius, Spacing } from '@constants/theme';
+
+const HERO_HEIGHT = 310;
+
+function PageDot({ active }: { active: boolean }) {
+  const reduced = useReducedMotion();
+  const progress = useSharedValue(active ? 1 : 0);
+
+  useEffect(() => {
+    const target = active ? 1 : 0;
+    progress.value = reduced
+      ? target
+      : withTiming(target, { duration: Durations.micro, easing: Easings.enter });
+  }, [active, progress, reduced]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    width: 7 + progress.value * 13,
+    opacity: 0.55 + progress.value * 0.45,
+  }));
+
+  return <Animated.View style={[styles.dot, dotStyle]} />;
+}
 
 export function ProductGallery({
   images,
   title,
   topInset = 0,
+  scrollY,
 }: {
   images: string[];
   title: string;
   topInset?: number;
+  scrollY?: SharedValue<number>;
 }) {
   const [selected, setSelected] = useState(0);
   const reduced = useReducedMotion();
   const index = selected < images.length ? selected : 0;
   const photo = images[index];
 
+  const parallaxStyle = useAnimatedStyle(() => {
+    if (!scrollY || reduced) return {};
+    const y = scrollY.value;
+    return {
+      transform: [
+        {
+          translateY: y > 0 ? y * 0.35 : y * 0.45,
+        },
+        {
+          scale: interpolate(y, [-120, 0, HERO_HEIGHT], [1.14, 1, 1], Extrapolation.CLAMP),
+        },
+      ],
+    };
+  });
+
   return (
     <View>
       <View style={styles.heroWrap}>
-        {photo ? (
-          <Image
-            source={photo}
-            style={styles.photo}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            transition={reduced ? 0 : Durations.fast}
-            accessible
-            accessibilityLabel={`${title}, photo ${index + 1} of ${images.length}`}
-            accessibilityIgnoresInvertColors
-          />
-        ) : (
-          <View style={styles.photo} accessible accessibilityLabel="No listing photo">
-            <AppIcon name="image" size={48} tint="textSecondary" />
-          </View>
-        )}
+        <Animated.View style={[styles.heroMedia, parallaxStyle]}>
+          {photo ? (
+            <Image
+              source={photo}
+              style={styles.photo}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={reduced ? 0 : Durations.micro}
+              accessible
+              accessibilityLabel={`${title}, photo ${index + 1} of ${images.length}`}
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <View style={styles.photo} accessible accessibilityLabel="No listing photo">
+              <AppIcon name="image" size={48} tint="textSecondary" />
+            </View>
+          )}
+        </Animated.View>
 
         {/* Top scrim ensures status bar and floating back action remain legible on bright photos */}
         <LinearGradient
@@ -55,10 +103,7 @@ export function ProductGallery({
         {images.length > 1 ? (
           <View style={styles.dots} pointerEvents="none">
             {images.map((_, position) => (
-              <View
-                key={`dot-${position}`}
-                style={[styles.dot, position === index && styles.dotActive]}
-              />
+              <PageDot key={`dot-${position}`} active={position === index} />
             ))}
           </View>
         ) : null}
@@ -89,10 +134,11 @@ export function ProductGallery({
 }
 
 const styles = StyleSheet.create({
-  heroWrap: { position: 'relative' },
+  heroWrap: { position: 'relative', height: HERO_HEIGHT, overflow: 'hidden', backgroundColor: Colors.surfaceMuted },
+  heroMedia: { width: '100%', height: HERO_HEIGHT },
   photo: {
     width: '100%',
-    height: 310,
+    height: HERO_HEIGHT,
     backgroundColor: Colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
@@ -113,13 +159,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dot: {
-    width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-  },
-  dotActive: {
-    width: 20,
     backgroundColor: Colors.white,
   },
   strip: {

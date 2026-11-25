@@ -28,10 +28,9 @@ import {
   StaggeredItem,
 } from '@components/index';
 import { MarketplaceError } from '@components/product/MarketplaceError';
-import { RemyArt } from '@components/ui/RemyArt';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { RefreshingRemy } from '@components/ui/RemyReactions';
+import { RefreshingRemy, SleepyRemy } from '@components/ui/RemyReactions';
 import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { Copy, pickVariant } from '@constants/copy';
@@ -71,10 +70,10 @@ export default function HomeScreen() {
   const showSkeleton = loading && products.length === 0;
   const { gesture, onFeedScroll, onProductScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
   const categoryActions = useMemo(() => CATEGORIES.map(({ key }) => () => setSelectedCategory(key)), []);
-  const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
-    <View style={styles.productCard}>
+  const renderProduct = useCallback<ListRenderItem<Product>>(({ item, index }) => (
+    <StaggeredItem index={index} style={styles.productCard}>
       <ProductCard product={item} />
-    </View>
+    </StaggeredItem>
   ), []);
 
   const loadProducts = useCallback(async () => {
@@ -192,7 +191,7 @@ export default function HomeScreen() {
                 <MarketplaceError error={error} onRetry={loadProducts} />
               ) : products.length === 0 ? (
                 <ClayCard outlined style={styles.statusCard}>
-                  <RemyArt size={82} />
+                  <SleepyRemy size={86} paused={!focused} />
                   <ClayText variant="bodyBold" align="center">
                     {Copy.empty.listingsTitle}
                   </ClayText>

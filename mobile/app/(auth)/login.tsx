@@ -1,7 +1,7 @@
 // mobile/app/(auth)/login.tsx
 // Login screen with Clerk authentication and automatic database synchronization
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,20 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Link, useRouter } from 'expo-router';
 import { useSignIn, useAuth } from '@clerk/clerk-expo';
-import { ClayCard, ClayInput, ClayButton } from '@components/index';
+import {
+  AnimatedCheckDraw,
+  ClayCard,
+  ClayInput,
+  ClayButton,
+  ClayText,
+  StaggeredItem,
+  useShakeAnimation,
+} from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
-import { Colors, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
+import { Colors, Radius, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
 
@@ -31,8 +40,24 @@ export default function LoginScreen() {
   const [factorKind, setFactorKind] = useState<FactorKind | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorAttempt, setErrorAttempt] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const shakeStyle = useShakeAnimation(errorAttempt);
 
   const pendingVerification = factorKind !== null;
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const reportError = (message: string) => {
+    setError(message);
+    setErrorAttempt((c) => c + 1);
+  };
 
   const readError = (err: unknown, fallback: string) =>
     err instanceof Error
@@ -61,7 +86,7 @@ export default function LoginScreen() {
   const handleSignIn = async () => {
     if (!isLoaded || !signIn) return;
     if (!email.trim() || !password) {
-      setError('Please enter both your university email and password.');
+      reportError('Please enter both your university email and password.');
       return;
     }
 
@@ -88,6 +113,7 @@ export default function LoginScreen() {
       if (result.status === 'needs_second_factor') {
         await signIn.prepareSecondFactor({ strategy: 'email_code' });
         setFactorKind('second');
+        setResendCooldown(30);
         return;
       }
 
@@ -97,7 +123,7 @@ export default function LoginScreen() {
         ) as { emailAddressId: string } | undefined;
 
         if (!emailCode) {
-          setError('This account requires a sign-in method that is not supported here.');
+          reportError('This account requires a sign-in method that is not supported here.');
           return;
         }
 
@@ -106,12 +132,13 @@ export default function LoginScreen() {
           emailAddressId: emailCode.emailAddressId,
         });
         setFactorKind('first');
+        setResendCooldown(30);
         return;
       }
 
-      setError(`Sign in could not be completed (status: ${result.status}).`);
+      reportError(`Sign in could not be completed (status: ${result.status}).`);
     } catch (err: unknown) {
-      setError(readError(err, 'Sign in failed. Please verify your credentials.'));
+      reportError(readError(err, 'Sign in failed. Please verify your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +147,7 @@ export default function LoginScreen() {
   const handleVerifyCode = async () => {
     if (!isLoaded || !signIn || !factorKind) return;
     if (!verificationCode.trim()) {
-      setError('Please enter the verification code sent to your email.');
+      reportError('Please enter the verification code sent to your email.');
       return;
     }
 
@@ -135,17 +162,42 @@ export default function LoginScreen() {
           : await signIn.attemptFirstFactor(params);
 
       if (result.status === 'complete') {
+        setOtpSuccess(true);
         const name = `${result.userData?.firstName || ''} ${
           result.userData?.lastName || ''
         }`.trim();
+        await new Promise((r) => setTimeout(r, 420));
         await finishSignIn(result.createdSessionId, name);
       } else {
-        setError(`Verification could not be completed (status: ${result.status}).`);
+        reportError(`Verification could not be completed (status: ${result.status}).`);
       }
     } catch (err: unknown) {
-      setError(readError(err, 'Invalid verification code.'));
+      reportError(readError(err, 'Invalid verification code.'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!isLoaded || !signIn || !factorKind || resendCooldown > 0) return;
+    setError('');
+    try {
+      if (factorKind === 'second') {
+        await signIn.prepareSecondFactor({ strategy: 'email_code' });
+      } else {
+        const emailCode = (signIn.supportedFirstFactors ?? []).find(
+          (factor) => factor.strategy === 'email_code',
+        ) as { emailAddressId: string } | undefined;
+        if (emailCode) {
+          await signIn.prepareFirstFactor({
+            strategy: 'email_code',
+            emailAddressId: emailCode.emailAddressId,
+          });
+        }
+      }
+      setResendCooldown(30);
+    } catch (err: unknown) {
+      reportError(readError(err, 'Could not resend code.'));
     }
   };
 
@@ -168,100 +220,139 @@ export default function LoginScreen() {
         {/* Mascot / branding */}
         <View style={styles.branding}>
           <View style={styles.brandRow}>
-            <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked />
+            <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked idleMotion paused={isTyping || loading} />
           </View>
           <Text style={[Typography.caption, styles.tagline]}>{Copy.app.tagline}</Text>
         </View>
 
         {/* Login card */}
-        <ClayCard style={styles.card}>
-          {pendingVerification ? (
-            <>
-              <Text style={[Typography.h2, styles.cardTitle]}>Verify it&apos;s you</Text>
-              <Text style={[Typography.caption, styles.cardSubtitle]}>
-                {`Enter the 6-digit code sent to ${email.trim()}`}
-              </Text>
+        <StaggeredItem index={0}>
+          <Animated.View style={shakeStyle}>
+            <ClayCard style={styles.card}>
+              {pendingVerification ? (
+                otpSuccess ? (
+                  <View style={styles.otpSuccessBox}>
+                    <AnimatedCheckDraw visible size={56} />
+                    <ClayText variant="h3" align="center">Verified!</ClayText>
+                    <ClayText variant="caption" color="textSecondary" align="center">
+                      Signing you in to Remy...
+                    </ClayText>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={[Typography.h2, styles.cardTitle]}>Verify it&apos;s you</Text>
+                    <Text style={[Typography.caption, styles.cardSubtitle]}>
+                      {`Enter the 6-digit code sent to ${email.trim()}`}
+                    </Text>
 
-              <ClayInput
-                showMascotOnFocus
-                label="Verification Code"
-                value={verificationCode}
-                onChangeText={(text) => {
-                  setVerificationCode(text);
-                  if (error) setError('');
-                }}
-                placeholder="123456"
-                keyboardType="number-pad"
-                autoFocus
-                error={error}
-                containerStyle={styles.field}
-              />
+                    <StaggeredItem index={1}>
+                      <ClayInput
+                        showMascotOnFocus
+                        label="Verification Code"
+                        value={verificationCode}
+                        onFocus={() => setIsTyping(true)}
+                        onBlur={() => setIsTyping(false)}
+                        onChangeText={(text) => {
+                          setVerificationCode(text.replace(/[^0-9]/g, '').slice(0, 6));
+                          if (error) setError('');
+                        }}
+                        placeholder="123456"
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        autoFocus
+                        error={error}
+                        containerStyle={styles.field}
+                      />
+                    </StaggeredItem>
 
-              <ClayButton
-                label="Verify & Sign In"
-                onPress={handleVerifyCode}
-                loading={loading}
-                style={styles.button}
-              />
+                    <StaggeredItem index={2}>
+                      <ClayButton
+                        label="Verify & Sign In"
+                        onPress={handleVerifyCode}
+                        loading={loading}
+                        style={styles.button}
+                      />
+                    </StaggeredItem>
 
-              <ClayButton
-                label="Back to sign in"
-                variant="ghost"
-                onPress={cancelVerification}
-                style={styles.backBtn}
-              />
-            </>
-          ) : (
-            <>
-              <Text style={[Typography.h2, styles.cardTitle]}>Welcome back</Text>
-              <Text style={[Typography.caption, styles.cardSubtitle]}>
-                Sign in with your university account
-              </Text>
+                    <ClayButton
+                      label={resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : 'Resend code'}
+                      variant="secondary"
+                      disabled={resendCooldown > 0}
+                      onPress={handleResendCode}
+                      style={styles.backBtn}
+                    />
 
-              <ClayInput
-                label="University Email"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (error) setError('');
-                }}
-                placeholder="student@university.edu"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                containerStyle={styles.field}
-              />
+                    <ClayButton
+                      label="Back to sign in"
+                      variant="ghost"
+                      onPress={cancelVerification}
+                      style={styles.backBtn}
+                    />
+                  </>
+                )
+              ) : (
+                <>
+                  <Text style={[Typography.h2, styles.cardTitle]}>Welcome back</Text>
+                  <Text style={[Typography.caption, styles.cardSubtitle]}>
+                    Sign in with your university account
+                  </Text>
 
-              <ClayInput
-                label="Password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (error) setError('');
-                }}
-                placeholder="••••••••"
-                secureTextEntry
-                autoComplete="current-password"
-                error={error}
-                containerStyle={styles.field}
-              />
+                  <StaggeredItem index={1}>
+                    <ClayInput
+                      label="University Email"
+                      value={email}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="student@university.edu"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <ClayButton
-                label="Sign In"
-                onPress={handleSignIn}
-                loading={loading}
-                style={styles.button}
-              />
+                  <StaggeredItem index={2}>
+                    <ClayInput
+                      label="Password"
+                      value={password}
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => setIsTyping(false)}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (error) setError('');
+                      }}
+                      placeholder="••••••••"
+                      secureTextEntry
+                      autoComplete="current-password"
+                      error={error}
+                      containerStyle={styles.field}
+                    />
+                  </StaggeredItem>
 
-              <View style={styles.footer}>
-                <Text style={Typography.caption}>Don't have an account? </Text>
-                <Link href="/(auth)/signup">
-                  <Text style={styles.link}>Sign Up</Text>
-                </Link>
-              </View>
-            </>
-          )}
-        </ClayCard>
+                  <StaggeredItem index={3}>
+                    <ClayButton
+                      label="Sign In"
+                      onPress={handleSignIn}
+                      loading={loading}
+                      style={styles.button}
+                    />
+                  </StaggeredItem>
+
+                  <View style={styles.footer}>
+                    <Text style={Typography.caption}>Don't have an account? </Text>
+                    <Link href="/(auth)/signup">
+                      <Text style={styles.link}>Sign Up</Text>
+                    </Link>
+                  </View>
+                </>
+              )}
+            </ClayCard>
+          </Animated.View>
+        </StaggeredItem>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -288,6 +379,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   card: {
+    gap: Spacing.sm,
+    borderRadius: Radius.card,
+  },
+  otpSuccessBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
     gap: Spacing.sm,
   },
   cardTitle: {

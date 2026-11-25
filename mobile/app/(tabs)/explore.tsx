@@ -22,9 +22,8 @@ import {
   StaggeredItem,
 } from '@components/index';
 import { MarketplaceError } from '@components/product/MarketplaceError';
-import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { RefreshingRemy } from '@components/ui/RemyReactions';
+import { MagnifierRemy, RefreshingRemy } from '@components/ui/RemyReactions';
 import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Spacing } from '@constants/theme';
 import { Copy } from '@constants/copy';
@@ -88,10 +87,10 @@ export default function ExploreScreen() {
   const pendingQuery = search.trim() !== settledQuery;
   const showLoading = !refreshing && (loading || (pendingQuery && (products.length === 0 || !!error)));
   const visibleProducts = showLoading || error ? EMPTY_PRODUCTS : products;
-  const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
-    <View style={styles.card}>
+  const renderProduct = useCallback<ListRenderItem<Product>>(({ item, index }) => (
+    <StaggeredItem index={index} style={styles.card}>
       <ProductCard product={item} />
-    </View>
+    </StaggeredItem>
   ), []);
 
   return (
@@ -146,7 +145,7 @@ export default function ExploreScreen() {
               <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
             ) : (
               <ClayCard outlined style={styles.emptyCard}>
-                <RemyArt size={82} />
+                <MagnifierRemy size={86} paused={!focused} />
                 <ClayText variant="bodyBold" align="center">
                   {Copy.empty.searchTitle}
                 </ClayText>

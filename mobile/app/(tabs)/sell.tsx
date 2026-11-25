@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
@@ -27,9 +28,13 @@ import {
   ClayInput,
   ClayButton,
   CelebrationOverlay,
+  ExpandReveal,
+  ShimmerSweep,
+  useShakeAnimation,
   useToast,
 } from '@components/index';
 import type { IconName } from '@constants/icons';
+import { Durations } from '@constants/motion';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
@@ -61,6 +66,7 @@ const CONDITIONS: { label: string; value: ProductCondition; icon: IconName }[] =
 export default function SellScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   const { getToken } = useAuth();
 
   const [title, setTitle] = useState('');
@@ -233,6 +239,7 @@ export default function SellScreen() {
   };
 
   const feedback = useRemyFormFeedback(error, handleSubmit);
+  const errorShake = useShakeAnimation(feedback.attempt + (error ? 1 : 0));
 
   return (
     <KeyboardAvoidingView
@@ -398,39 +405,44 @@ export default function SellScreen() {
             />
 
             {/* AI Assistant Action */}
-            <ClayButton
-              label={aiLoading ? 'Generating AI Suggestions...' : 'AI Assist & Quality Check'}
-              leftIcon="aiAssist"
-              variant="secondary"
-              onPress={handleAIAssist}
-              loading={aiLoading}
-              style={{ marginTop: Spacing.sm }}
-            />
+            <View style={styles.aiButtonWrap}>
+              <ClayButton
+                label={aiLoading ? 'Generating AI Suggestions...' : 'AI Assist & Quality Check'}
+                leftIcon="aiAssist"
+                variant="secondary"
+                onPress={handleAIAssist}
+                loading={aiLoading}
+                style={{ marginTop: Spacing.sm }}
+              />
+              {aiLoading && !reduced ? <ShimmerSweep width={280} /> : null}
+            </View>
 
-            {aiQualityScore !== null && (
-              <ClayCard variant="mint" style={{ marginTop: Spacing.sm, padding: Spacing.sm, gap: 4 }}>
-                <View style={styles.inlineHeader}>
-                  <AppIcon name="score" size={18} tint="successText" />
-                  <Text style={Typography.bodyBold}>Listing Score: {aiQualityScore}/100</Text>
-                </View>
-                {aiFeedback.map((fb, idx) => (
-                  <View key={`fb-${idx}`} style={styles.inlineRow}>
-                    <AppIcon name="check" size={14} tint="successText" />
-                    <Text style={[Typography.caption, { color: Colors.successText, flex: 1 }]}>
-                      {fb}
-                    </Text>
+            <ExpandReveal visible={aiQualityScore !== null}>
+              {aiQualityScore !== null ? (
+                <ClayCard variant="mint" style={{ marginTop: Spacing.sm, padding: Spacing.sm, gap: 4 }}>
+                  <View style={styles.inlineHeader}>
+                    <AppIcon name="score" size={18} tint="successText" />
+                    <Text style={Typography.bodyBold}>Listing Score: {aiQualityScore}/100</Text>
                   </View>
-                ))}
-                {aiTips.map((tip, idx) => (
-                  <View key={`tip-${idx}`} style={styles.inlineRow}>
-                    <AppIcon name="tip" size={14} tint="textSecondary" />
-                    <Text style={[Typography.caption, { color: Colors.textSecondary, flex: 1 }]}>
-                      {tip}
-                    </Text>
-                  </View>
-                ))}
-              </ClayCard>
-            )}
+                  {aiFeedback.map((fb, idx) => (
+                    <View key={`fb-${idx}`} style={styles.inlineRow}>
+                      <AppIcon name="check" size={14} tint="successText" />
+                      <Text style={[Typography.caption, { color: Colors.successText, flex: 1 }]}>
+                        {fb}
+                      </Text>
+                    </View>
+                  ))}
+                  {aiTips.map((tip, idx) => (
+                    <View key={`tip-${idx}`} style={styles.inlineRow}>
+                      <AppIcon name="tip" size={14} tint="textSecondary" />
+                      <Text style={[Typography.caption, { color: Colors.textSecondary, flex: 1 }]}>
+                        {tip}
+                      </Text>
+                    </View>
+                  ))}
+                </ClayCard>
+              ) : null}
+            </ExpandReveal>
           </ClayCard>
 
           {/* Image Picker Card */}
@@ -459,7 +471,11 @@ export default function SellScreen() {
             ) : (
               <View style={styles.thumbnailGrid}>
                 {images.map((uri, idx) => (
-                  <View key={uri} style={styles.thumbnailWrapper}>
+                  <Animated.View
+                    key={uri}
+                    entering={reduced ? undefined : ZoomIn.duration(Durations.micro)}
+                    style={styles.thumbnailWrapper}
+                  >
                     <Image source={{ uri }} style={styles.thumbnail} />
                     <Pressable
                       onPress={() => handleRemoveImage(idx)}
@@ -470,7 +486,7 @@ export default function SellScreen() {
                     >
                       <AppIcon name="close" size={12} tint="surface" />
                     </Pressable>
-                  </View>
+                  </Animated.View>
                 ))}
               </View>
             )}
@@ -492,7 +508,9 @@ export default function SellScreen() {
             <RemyMascot state="loading" nibble size={50} status={statusMessage} />
           ) : null}
 
-          <RemyFormError message={feedback.message} attempt={feedback.attempt} />
+          <Animated.View style={errorShake}>
+            <RemyFormError message={feedback.message} attempt={feedback.attempt} />
+          </Animated.View>
           <ClayButton
             label={submitting ? Copy.sell.submitting : feedback.message ? Copy.error.retry : Copy.sell.submit}
             onPress={feedback.onSubmit}
@@ -574,6 +592,7 @@ const styles = StyleSheet.create({
   },
   inlineHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   inlineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 2 },
+  aiButtonWrap: { overflow: 'hidden', borderRadius: Radius.card },
   multiline: { height: 90, textAlignVertical: 'top' },
   imageHeader: {
     flexDirection: 'row',

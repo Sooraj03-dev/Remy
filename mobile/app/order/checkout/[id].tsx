@@ -13,6 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
@@ -25,8 +26,10 @@ import {
   ClayInput,
   ClayButton,
   ClayText,
+  ExpandReveal,
   StatusBadge,
   CelebrationOverlay,
+  useShakeAnimation,
 } from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
@@ -57,6 +60,7 @@ export default function CheckoutScreen() {
   const [error, setError] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
 
   const loadProductAndLocations = useCallback(async () => {
     if (!id) return;
@@ -139,6 +143,7 @@ export default function CheckoutScreen() {
   };
 
   const feedback = useRemyFormFeedback(error, handlePlaceOrder);
+  const errorShake = useShakeAnimation(feedback.attempt + (error ? 1 : 0));
 
   if (loading) {
     return (
@@ -173,20 +178,38 @@ export default function CheckoutScreen() {
       >
         <ClayHeader title="Checkout" subtitle="Confirm campus pickup & meetup details" />
 
-        {/* Product summary card */}
+        {/* Collapsible Product summary card */}
         {product && (
-          <ClayCard style={styles.summaryCard}>
-            <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-            <View style={styles.summaryInfo}>
-              <Text style={Typography.bodyBold} numberOfLines={2}>
-                {product.title}
-              </Text>
-              <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
-              <Text style={Typography.caption}>Seller: {product.sellerName}</Text>
-              <View style={{ marginTop: Spacing.xs }}>
-                <StatusBadge status={product.status} />
+          <ClayCard style={styles.summaryCardWrap}>
+            <Pressable
+              onPress={() => setSummaryExpanded((v) => !v)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: summaryExpanded }}
+              accessibilityLabel="Toggle order summary"
+              style={styles.summaryToggle}
+            >
+              <ClayText variant="bodyBold" color="text">Order Summary</ClayText>
+              <View style={styles.summaryToggleRight}>
+                <ClayText variant="bodyBold" color="primary">
+                  ₹{product.price.toLocaleString('en-IN')}
+                </ClayText>
+                <AppIcon name="chevronRight" size={16} tint="textSecondary" />
               </View>
-            </View>
+            </Pressable>
+            <ExpandReveal visible={summaryExpanded}>
+              <View style={styles.summaryCard}>
+                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                <View style={styles.summaryInfo}>
+                  <Text style={Typography.bodyBold} numberOfLines={2}>
+                    {product.title}
+                  </Text>
+                  <Text style={Typography.caption}>Seller: {product.sellerName}</Text>
+                  <View style={{ marginTop: Spacing.xs }}>
+                    <StatusBadge status={product.status} />
+                  </View>
+                </View>
+              </View>
+            </ExpandReveal>
           </ClayCard>
         )}
 
@@ -355,7 +378,9 @@ export default function CheckoutScreen() {
             </Text>
           </ClayCard>
 
-          <RemyFormError message={feedback.message} attempt={feedback.attempt} />
+          <Animated.View style={errorShake}>
+            <RemyFormError message={feedback.message} attempt={feedback.attempt} />
+          </Animated.View>
           <View style={styles.buttonRow}>
             <ClayButton
               label={submitting ? 'Placing Order...' : feedback.message ? Copy.error.retry : `Confirm Order (₹${product?.price.toLocaleString('en-IN')})`}
@@ -394,7 +419,10 @@ const styles = StyleSheet.create({
   errorCard: { padding: Spacing.lg, alignItems: 'center', width: '100%' },
   errorIcon: { marginBottom: Spacing.sm },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
-  summaryCard: { flexDirection: 'row', padding: Spacing.md, marginBottom: Spacing.md, alignItems: 'center' },
+  summaryCardWrap: { padding: Spacing.md, marginBottom: Spacing.md, gap: Spacing.sm },
+  summaryToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
+  summaryToggleRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  summaryCard: { flexDirection: 'row', alignItems: 'center', paddingTop: Spacing.xs },
   thumbnail: { width: 84, height: 84, borderRadius: Radius.md, marginRight: Spacing.md },
   summaryInfo: { flex: 1 },
   price: { fontSize: FontSize.h3, fontFamily: FontFamily.bodyBold, color: Colors.text, marginVertical: Spacing.xs },

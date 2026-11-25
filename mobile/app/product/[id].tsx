@@ -6,7 +6,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Alert,
   Modal,
   Pressable,
@@ -15,6 +14,12 @@ import { ProductGallery } from '@components/product/ProductGallery';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
+import Animated, {
+  FadeInDown,
+  useAnimatedScrollHandler,
+  useReducedMotion,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import {
@@ -23,10 +28,12 @@ import {
   ClayCard,
   ClayInput,
   StatusBadge,
+  StaggeredItem,
   HeartBurst,
   VerifiedBadge,
   useToast,
 } from '@components/index';
+import { Durations, Easings } from '@constants/motion';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography, FontFamily } from '@constants/theme';
@@ -54,7 +61,13 @@ export default function ProductDetailsScreen() {
   const { getToken, userId } = useAuth();
   const focused = useIsFocused();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const scrollY = useSharedValue(0);
   const { showToast } = useToast();
+
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   const [product, setProduct] = useState<Product | null>(null);
   const [inWishlist, setInWishlist] = useState(false);
@@ -198,18 +211,26 @@ export default function ProductDetailsScreen() {
     <View style={styles.container}>
       {focused ? <StatusBar style="light" translucent backgroundColor="transparent" /> : null}
 
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: Spacing.xxxl + insets.bottom }]}>
-        {/* Edge-to-edge Hero Image */}
+      <Animated.ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: (isOwner ? Spacing.xxxl : 112) + insets.bottom },
+        ]}
+      >
+        {/* Edge-to-edge Parallax Hero Image */}
         <ProductGallery
           key={product.id}
           title={product.title}
           images={product.images ?? []}
           topInset={insets.top}
+          scrollY={scrollY}
         />
 
         <View style={styles.content}>
           {/* Status & verification badges */}
-          <View style={styles.badgeRow}>
+          <StaggeredItem index={0} style={styles.badgeRow}>
             <StatusBadge status={product.status} />
             {product.aiVerified ? <VerifiedBadge label="AI Verified" /> : null}
             {product.status === 'verified' ? <VerifiedBadge label="Verified listing" /> : null}
@@ -221,7 +242,7 @@ export default function ProductDetailsScreen() {
                 </View>
               </ClayCard>
             )}
-          </View>
+          </StaggeredItem>
 
           {/* Rejection Reason if applicable */}
           {product.status === 'rejected' && product.rejectionReason && (
@@ -232,60 +253,64 @@ export default function ProductDetailsScreen() {
           )}
 
           {/* Title & Price */}
-          <View style={styles.titleRow}>
-            <Text style={[Typography.h2, styles.titleText]}>{product.title}</Text>
-            <HeartBurst
-              active={inWishlist}
-              onPress={handleToggleWishlist}
-              size={26}
-              disabled={wishlistLoading}
-            />
-          </View>
-          <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
+          <StaggeredItem index={1}>
+            <View style={styles.titleRow}>
+              <Text style={[Typography.h2, styles.titleText]}>{product.title}</Text>
+              <HeartBurst
+                active={inWishlist}
+                onPress={handleToggleWishlist}
+                size={26}
+                disabled={wishlistLoading}
+              />
+            </View>
+            <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
+          </StaggeredItem>
 
           {/* Metadata Card */}
-          <ClayCard variant="lavender" style={styles.metaCard}>
-            <View style={styles.metaRow}>
-              <Text style={Typography.captionBold}>Condition</Text>
-              <Text style={Typography.caption}>
-                {conditionLabel[product.condition] || product.condition}
-              </Text>
-            </View>
-            <View style={styles.metaRow}>
-              <Text style={Typography.captionBold}>Category</Text>
-              <Text style={Typography.caption}>
-                {product.category.toUpperCase()}
-              </Text>
-            </View>
-            {product.campusLocation ? (
+          <StaggeredItem index={2}>
+            <ClayCard variant="lavender" style={styles.metaCard}>
               <View style={styles.metaRow}>
-                <Text style={Typography.captionBold}>Meetup Point</Text>
-                <View style={styles.inlineIconRow}>
-                  <AppIcon name="location" size={14} tint="textSecondary" />
-                  <Text style={Typography.caption}>{product.campusLocation}</Text>
-                </View>
+                <Text style={Typography.captionBold}>Condition</Text>
+                <Text style={Typography.caption}>
+                  {conditionLabel[product.condition] || product.condition}
+                </Text>
               </View>
-            ) : null}
-            <View style={styles.metaRow}>
-              <Text style={Typography.captionBold}>Listed On</Text>
-              <Text style={Typography.caption}>
-                {new Date(product.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-          </ClayCard>
+              <View style={styles.metaRow}>
+                <Text style={Typography.captionBold}>Category</Text>
+                <Text style={Typography.caption}>
+                  {product.category.toUpperCase()}
+                </Text>
+              </View>
+              {product.campusLocation ? (
+                <View style={styles.metaRow}>
+                  <Text style={Typography.captionBold}>Meetup Point</Text>
+                  <View style={styles.inlineIconRow}>
+                    <AppIcon name="location" size={14} tint="textSecondary" />
+                    <Text style={Typography.caption}>{product.campusLocation}</Text>
+                  </View>
+                </View>
+              ) : null}
+              <View style={styles.metaRow}>
+                <Text style={Typography.captionBold}>Listed On</Text>
+                <Text style={Typography.caption}>
+                  {new Date(product.createdAt).toLocaleDateString()}
+                </Text>
+              </View>
+            </ClayCard>
+          </StaggeredItem>
 
           {/* Description */}
           {product.description ? (
-            <View style={styles.descBlock}>
+            <StaggeredItem index={3} style={styles.descBlock}>
               <Text style={[Typography.h3, styles.sectionTitle]}>
                 Description
               </Text>
               <Text style={Typography.body}>{product.description}</Text>
-            </View>
+            </StaggeredItem>
           ) : null}
 
           {/* Seller Card */}
-          <View style={styles.descBlock}>
+          <StaggeredItem index={4} style={styles.descBlock}>
             <Text style={[Typography.h3, styles.sectionTitle]}>
               Seller Information
             </Text>
@@ -302,9 +327,9 @@ export default function ProductDetailsScreen() {
                 )}
               </View>
             </ClayCard>
-          </View>
+          </StaggeredItem>
 
-          {/* Actions */}
+          {/* Secondary / Owner Actions */}
           <View style={styles.actions}>
             {isOwner ? (
               <ClayButton
@@ -314,42 +339,49 @@ export default function ProductDetailsScreen() {
                 style={styles.actionButton}
               />
             ) : (
-              <>
-                {product.status === 'available' || product.status === 'verified' ? (
-                  <ClayButton
-                    label="Buy Now (Campus Meetup)"
-                    variant="primary"
-                    onPress={() => router.push(`/order/checkout/${product.id}`)}
-                    style={styles.actionButton}
-                  />
-                ) : (
-                  <ClayButton
-                    label={`Product ${product.status.replace('_', ' ').toUpperCase()}`}
-                    variant="secondary"
-                    disabled
-                    style={styles.actionButton}
-                  />
-                )}
-                <ClayButton
-                  label="Chat with Seller"
-                  leftIcon="chats"
-                  variant="secondary"
-                  loading={chatStarting}
-                  onPress={handleStartChat}
-                  style={styles.actionButton}
-                />
-                <ClayButton
-                  label="Report Listing"
-                  leftIcon="flag"
-                  variant="ghost"
-                  onPress={() => setReportModalVisible(true)}
-                  style={styles.actionButton}
-                />
-              </>
+              <ClayButton
+                label="Report Listing"
+                leftIcon="flag"
+                variant="ghost"
+                onPress={() => setReportModalVisible(true)}
+                style={styles.actionButton}
+              />
             )}
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+
+      {/* Sticky Bottom Action Bar for Buyers */}
+      {!isOwner ? (
+        <Animated.View
+          entering={reduced ? undefined : FadeInDown.duration(Durations.standard).easing(Easings.enter)}
+          style={[styles.stickyBar, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
+        >
+          <ClayButton
+            label="Chat"
+            leftIcon="chats"
+            variant="secondary"
+            loading={chatStarting}
+            onPress={handleStartChat}
+            style={styles.stickyChatBtn}
+          />
+          {product.status === 'available' || product.status === 'verified' ? (
+            <ClayButton
+              label="Buy Now"
+              variant="primary"
+              onPress={() => router.push(`/order/checkout/${product.id}`)}
+              style={styles.stickyBuyBtn}
+            />
+          ) : (
+            <ClayButton
+              label={product.status.replace('_', ' ').toUpperCase()}
+              variant="secondary"
+              disabled
+              style={styles.stickyBuyBtn}
+            />
+          )}
+        </Animated.View>
+      ) : null}
 
       {/* Floating edge-to-edge Back button over top scrim */}
       <Pressable
@@ -500,8 +532,28 @@ const styles = StyleSheet.create({
   },
   sellerAvatarText: { color: Colors.white, fontFamily: FontFamily.bodyBold, fontSize: 18 },
   sellerMeta: { flex: 1, gap: 2 },
-  actions: { gap: Spacing.sm, marginTop: Spacing.sm },
+  actions: { gap: Spacing.sm, marginTop: Spacing.xs },
   actionButton: { width: '100%' },
+  stickyBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  stickyChatBtn: { minWidth: 112 },
+  stickyBuyBtn: { flex: 1 },
   errorCard: { alignItems: 'center', padding: Spacing.xl, gap: Spacing.sm },
   errorEmoji: { fontSize: 40 },
   errorText: { color: Colors.error, textAlign: 'center' },

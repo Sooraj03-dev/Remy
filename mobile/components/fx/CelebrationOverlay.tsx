@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { AnimatedCheckDraw } from '@components/fx/MotionPrimitives';
 import { CelebratingRemy, NibblingRemy } from '@components/ui/RemyReactions';
 import { ClayText } from '@components/ui/ClayText';
 import { Colors, Radius, Spacing } from '@constants/theme';
@@ -79,6 +80,7 @@ export function CelebrationOverlay({
 
       <Animated.View style={[styles.card, cardStyle]}>
         {pendingApproval ? <NibblingRemy size={130} /> : <CelebratingRemy size={145} />}
+        {!pendingApproval ? <AnimatedCheckDraw visible={visible} size={44} /> : null}
         <ClayText variant="h2" align="center" style={styles.title}>
           {title}
         </ClayText>
