@@ -11,9 +11,17 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-import { runOnUI, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  interpolateColor,
+  runOnUI,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { ClayText } from '@components/ui/ClayText';
 import { RemyMascot } from '@components/ui/RemyMascot';
+import { Durations, Easings } from '@constants/motion';
 import { Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
 
 interface ClayInputProps extends TextInputProps {
@@ -38,6 +46,22 @@ export function ClayInput({
   const [peekMounted, setPeekMounted] = useState(false);
   const [peekVisible, setPeekVisible] = useState(false);
   const keystrokes = useSharedValue(0);
+  const focusProgress = useSharedValue(0);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const target = focused ? 1 : 0;
+    focusProgress.value = reduced
+      ? target
+      : withTiming(target, { duration: Durations.micro, easing: Easings.enter });
+  }, [focusProgress, focused, reduced]);
+
+  const inputMotion = useAnimatedStyle(() => ({
+    transform: [{ translateY: reduced ? 0 : -1 * focusProgress.value }],
+    borderColor: error
+      ? Colors.errorText
+      : interpolateColor(focusProgress.value, [0, 1], [Colors.border, Colors.accent]),
+  }));
 
   useEffect(() => {
     if (!showMascotOnFocus || !focused) return;
@@ -89,21 +113,18 @@ export function ClayInput({
   }, [keystrokes, onChangeText, peekVisible]);
 
   const input = (
-    <TextInput
-      style={[
-        styles.input,
-        focused && styles.focused,
-        error ? styles.errored : null,
-        style,
-      ]}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onChangeText={showMascotOnFocus ? handleChangeText : onChangeText}
-      placeholderTextColor={Colors.textSecondary}
-      underlineColorAndroid="transparent"
-      accessibilityLabel={label}
-      {...rest}
-    />
+    <Animated.View style={[styles.inputShell, focused && styles.focusedShell, inputMotion]}>
+      <TextInput
+        style={[styles.input, style]}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onChangeText={showMascotOnFocus ? handleChangeText : onChangeText}
+        placeholderTextColor={Colors.textSecondary}
+        underlineColorAndroid="transparent"
+        accessibilityLabel={label}
+        {...rest}
+      />
+    </Animated.View>
   );
 
   return (
@@ -137,24 +158,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSize.caption,
   },
-  input: {
+  inputShell: {
     backgroundColor: Colors.input,
     borderRadius: Radius.md,
     borderWidth: 1.5,
     borderColor: Colors.border,
+  },
+  focusedShell: {
+    backgroundColor: Colors.surface,
+  },
+  input: {
     minHeight: 48,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.base,
     fontSize: FontSize.body,
     fontFamily: FontFamily.body,
     color: Colors.text,
-  },
-  focused: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.surface,
-  },
-  errored: {
-    borderColor: Colors.errorText,
   },
 });
 

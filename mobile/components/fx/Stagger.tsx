@@ -1,5 +1,5 @@
 // mobile/components/fx/Stagger.tsx
-// Static header entrances and shimmer skeletons.
+// Staggered entrances (fade + 12dp rise, 40ms steps, max 8 items) and shimmer skeletons.
 
 import React, { useEffect } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -14,17 +14,19 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Colors, Radius, Spacing } from '@constants/theme';
-import { Stagger } from '@constants/motion';
+import { Durations, Easings, Stagger } from '@constants/motion';
 
-/** Entrance animation for static content. */
-export function useStaggeredEntrance(index: number): FadeInDown | undefined {
+/** Entrance animation for static/staggered content (fade + 12dp rise, 40ms step, capped at 8). */
+export function useStaggeredEntrance(index: number) {
   const reduced = useReducedMotion();
   if (reduced || index >= Stagger.maxAnimatedItems) return undefined;
   return FadeInDown.delay(index * Stagger.step)
-    .duration(320)
-    .springify()
-    .damping(18)
-    .stiffness(180);
+    .duration(Durations.standard)
+    .easing(Easings.enter)
+    .withInitialValues({
+      opacity: 0,
+      transform: [{ translateY: Stagger.riseDistance }],
+    });
 }
 
 export function StaggeredItem({
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
     padding: 0,
     shadowColor: Colors.shadowColor,
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
   },

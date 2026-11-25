@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Springs } from '@constants/motion';
 import { Spacing } from '@constants/theme';
+import { AppIcon } from './AppIcon';
 import { REMY_FACE, RemyArt, RemyLayer } from './RemyArt';
 
 export function NibblingRemy({ size, paused }: { size: number; paused?: boolean }) {
@@ -179,6 +180,66 @@ export function RefreshingRemy({
   );
 }
 
+export function SleepyRemy({ size = 84, paused = false }: { size?: number; paused?: boolean }) {
+  const reduced = useReducedMotion();
+  const breath = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduced || paused) {
+      cancelAnimation(breath);
+      breath.value = 0;
+      return;
+    }
+    breath.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }), -1, true);
+    return () => cancelAnimation(breath);
+  }, [breath, paused, reduced]);
+
+  const chest = useAnimatedStyle(() => ({
+    transform: [{ scaleY: 1 + breath.value * 0.04 }, { translateY: -breath.value * 1.5 }],
+  }));
+
+  return (
+    <View pointerEvents="none">
+      <Animated.View style={chest}>
+        <RemyArt size={size} parts={['curledTail', 'feet', 'leftEar', 'rightEar', 'body', 'paws', ...REMY_FACE]} />
+        <RemyLayer size={size} parts={['eyes']} style={{ transform: [{ scaleY: 0.16 }], transformOrigin: '49% 47%' }} />
+      </Animated.View>
+    </View>
+  );
+}
+
+export function MagnifierRemy({ size = 84, paused = false }: { size?: number; paused?: boolean }) {
+  const reduced = useReducedMotion();
+  const scan = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduced || paused) {
+      cancelAnimation(scan);
+      scan.value = 0;
+      return;
+    }
+    scan.value = withRepeat(withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.sin) }), -1, true);
+    return () => cancelAnimation(scan);
+  }, [paused, reduced, scan]);
+
+  const glassMotion = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: -3 + scan.value * 6 },
+      { translateY: -2 + Math.sin(scan.value * Math.PI) * 3 },
+      { rotate: `${-8 + scan.value * 16}deg` },
+    ],
+  }));
+
+  return (
+    <View style={{ alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+      <RemyArt size={size} />
+      <Animated.View style={[styles.magnifierBadge, glassMotion]}>
+        <AppIcon name="search" size={20} tint="primary" />
+      </Animated.View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   refreshWindow: {
     position: 'absolute',
@@ -188,5 +249,21 @@ const styles = StyleSheet.create({
     height: REFRESH_SIZE,
     overflow: 'hidden',
     zIndex: 1,
+  },
+  magnifierBadge: {
+    position: 'absolute',
+    right: -6,
+    bottom: 2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4A2E1B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
   },
 });

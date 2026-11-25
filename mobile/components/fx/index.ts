@@ -11,3 +11,10 @@ export { OrderStepper } from './OrderStepper';
 export { CelebrationOverlay } from './CelebrationOverlay';
 export { ToastProvider, useToast, type ToastType } from './Toast';
 export { OwlArt, OwlBodyOnly, OWL_GEOMETRY } from './OwlArt';
+export {
+  useShakeAnimation,
+  AnimatedCheckDraw,
+  PulseDot,
+  TypingDots,
+  ExpandReveal,
+} from './MotionPrimitives';
