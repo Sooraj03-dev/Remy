@@ -24,11 +24,11 @@ export interface AnimatedSplashProps {
   onFinish?: () => void;
 }
 
-const MIN_VISIBLE_MS = 900;
-const MAX_VISIBLE_MS = 1800;
+const MIN_VISIBLE_MS = 350;
+const MAX_VISIBLE_MS = 900;
 const badgeEntrance = ZoomIn.springify().damping(18);
-const nameEntrance = FadeInDown.delay(120).springify().damping(18);
-const taglineEntrance = FadeInDown.delay(220).springify().damping(18);
+const nameEntrance = FadeInDown.delay(80).springify().damping(18);
+const taglineEntrance = FadeInDown.delay(140).springify().damping(18);
 
 export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const reduced = useReducedMotion();
@@ -49,7 +49,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const exit = () => {
     if (exiting.current) return;
     exiting.current = true;
-    opacity.value = withTiming(0, { duration: reduced ? 120 : 280, easing: Easing.out(Easing.quad) }, (ok) => {
+    opacity.value = withTiming(0, { duration: reduced ? 100 : 200, easing: Easing.out(Easing.quad) }, (ok) => {
       if (ok) runOnJS(finish)();
     });
   };
