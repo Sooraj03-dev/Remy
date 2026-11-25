@@ -1,19 +1,21 @@
 // mobile/app/(tabs)/explore.tsx
 // Explore — live search with a skeleton grid and empty/error states.
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
+  ActivityIndicator,
   StyleSheet,
   RefreshControl,
   type ListRenderItem,
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useDerivedValue, useReducedMotion, withTiming } from 'react-native-reanimated';
 import {
   ClayHeader,
   ClayInput,
+  ClayPressable,
   ClayCard,
   ProductCard,
   ClayText,
@@ -27,6 +29,7 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { RefreshingRemy } from '@components/ui/RemyReactions';
 import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Spacing } from '@constants/theme';
+import { Durations } from '@constants/motion';
 import { Copy } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product } from '../../../shared/types';
@@ -37,23 +40,41 @@ const productKey = (product: Product) => product.id;
 export default function ExploreScreen() {
   const focused = useIsFocused();
   const [search, setSearch] = useState('');
+  const [settledQuery, setSettledQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentRequest = useRef(0);
+  const hasSearch = search.length > 0;
+  const reduced = useReducedMotion();
+  const clearProgress = useDerivedValue(() => {
+    const target = hasSearch ? 1 : 0;
+    return reduced ? target : withTiming(target, { duration: Durations.fast });
+  });
+  const clearMotion = useAnimatedStyle(() => ({
+    opacity: clearProgress.value,
+    transform: [{ scale: 0.9 + 0.1 * clearProgress.value }],
+  }));
   const { gesture, onFeedScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
 
   const performSearch = useCallback(async (query: string) => {
+    const request = ++currentRequest.current;
     try {
       const data = await fetchProducts({ search: query.trim() || undefined });
+      if (request !== currentRequest.current) return;
       setError(null);
       setProducts(data);
     } catch (err) {
+      if (request !== currentRequest.current) return;
       const msg = err instanceof Error ? err.message : 'Failed to search products.';
       setError(msg);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === currentRequest.current) {
+        setSettledQuery(query.trim());
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
@@ -61,7 +82,10 @@ export default function ExploreScreen() {
     const timer = setTimeout(() => {
       performSearch(search);
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      currentRequest.current += 1;
+    };
   }, [search, performSearch]);
 
   const onRefresh = useCallback(() => {
@@ -69,7 +93,8 @@ export default function ExploreScreen() {
     performSearch(search);
   }, [performSearch, search]);
 
-  const showLoading = loading && !refreshing;
+  const pendingQuery = search.trim() !== settledQuery;
+  const showLoading = !refreshing && (loading || (pendingQuery && (products.length === 0 || !!error)));
   const visibleProducts = showLoading || error ? EMPTY_PRODUCTS : products;
   const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
     <View style={styles.card}>
@@ -94,8 +119,27 @@ export default function ExploreScreen() {
           style={styles.searchInput}
         />
         <View style={styles.searchIcon} pointerEvents="none">
-          <Icon name="MagnifyingGlass" size={20} color="textSecondary" />
+          {focused && pendingQuery && !reduced ? (
+            <ActivityIndicator size="small" color={Colors.primary} accessibilityLabel="Searching" />
+          ) : (
+            <Icon name="MagnifyingGlass" size={20} color="textSecondary" />
+          )}
         </View>
+        <Animated.View
+          pointerEvents={hasSearch ? 'auto' : 'none'}
+          accessibilityElementsHidden={!hasSearch}
+          importantForAccessibility={hasSearch ? 'auto' : 'no-hide-descendants'}
+          style={[styles.clearSlot, clearMotion]}
+        >
+          <ClayPressable
+            accessibilityLabel="Clear search"
+            disabled={!hasSearch}
+            onPress={() => setSearch('')}
+            style={styles.clearButton}
+          >
+            <Icon name="XCircle" size={20} color="primary" />
+          </ClayPressable>
+        </Animated.View>
       </View>
 
       <View style={styles.results}>
@@ -113,6 +157,8 @@ export default function ExploreScreen() {
             onScroll={onFeedScroll}
             scrollEventThrottle={16}
             alwaysBounceVertical
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             renderItem={renderProduct}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -154,8 +200,10 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   searchBar: { paddingHorizontal: Spacing.base, marginTop: Spacing.xs, zIndex: 1 },
-  searchInput: { paddingLeft: 44 },
+  searchInput: { paddingLeft: 44, paddingRight: 48 },
   searchIcon: { position: 'absolute', left: Spacing.base + Spacing.md, top: 0, bottom: 0, justifyContent: 'center' },
+  clearSlot: { position: 'absolute', right: Spacing.base, top: 0, bottom: 0, justifyContent: 'center' },
+  clearButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   results: { flex: 1 },
   list: { padding: Spacing.base, gap: Spacing.sm },
   emptyList: { flexGrow: 1 },

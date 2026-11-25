@@ -13,8 +13,9 @@ import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplash, ToastProvider } from '@components/index';
 import { Colors } from '@constants/theme';
@@ -47,6 +48,7 @@ const tokenCache = {
 /** Redirect authenticated/unauthenticated users to the right stack */
 function AuthGate() {
   const { isLoaded, isSignedIn } = useAuth();
+  const reducedMotion = useReducedMotion();
   const segments = useSegments();
   const router = useRouter();
 
@@ -65,13 +67,13 @@ function AuthGate() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: Colors.background },
-        animation: 'slide_from_right',
+        animation: reducedMotion ? 'none' : Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
       }}
     >
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="chat/[orderId]" options={{ presentation: 'modal', animation: 'fade_from_bottom' }} />
-      <Stack.Screen name="order/checkout/[id]" options={{ presentation: 'modal', animation: 'fade_from_bottom' }} />
+      <Stack.Screen name="(tabs)" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+      <Stack.Screen name="(auth)" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+      <Stack.Screen name="chat/[orderId]" options={{ presentation: 'modal', animation: reducedMotion ? 'none' : 'slide_from_bottom' }} />
+      <Stack.Screen name="order/checkout/[id]" options={{ presentation: 'modal', animation: reducedMotion ? 'none' : 'slide_from_bottom' }} />
     </Stack>
   );
 }

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { I18nManager, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withSpring,
@@ -11,23 +12,45 @@ import { ClayCard } from '@components/clay/ClayCard';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { ClayText } from '@components/ui/ClayText';
 import { Icon } from '@components/ui/Icon';
-import { TabIcons } from '@constants/icons';
+import { TabIcons, type IconName } from '@constants/icons';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { Springs } from '@constants/motion';
 
+const dockSpring = { ...Springs.snappy, overshootClamping: true };
+
+function TabGlyph({ name, focused, isSell }: { name: IconName; focused: boolean; isSell: boolean }) {
+  const reduced = useReducedMotion();
+  const emphasis = useDerivedValue(() => {
+    const target = focused ? 1 : 0;
+    return reduced ? target : withSpring(target, dockSpring);
+  });
+  const glyphStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -2 * emphasis.value }, { scale: 1 + 0.06 * emphasis.value }],
+  }));
+  return (
+    <Animated.View pointerEvents="none" style={glyphStyle}>
+      <Icon name={name} size={isSell ? 24 : 21} color={isSell ? 'background' : focused ? 'primary' : 'textSecondary'} />
+    </Animated.View>
+  );
+}
+
 export function AnimatedTabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
   const reduced = useReducedMotion();
-  const [width, setWidth] = useState(0);
+  const rowWidth = useSharedValue(0);
   const indicator = useSharedValue(state.index);
-  const itemWidth = width / state.routes.length;
-  const pillWidth = Math.max(0, itemWidth - Spacing.sm);
+  const slotCount = state.routes.length;
+  const direction = I18nManager.isRTL ? -1 : 1;
+  const measureRow = useCallback((event: LayoutChangeEvent) => {
+    rowWidth.value = event.nativeEvent.layout.width;
+  }, [rowWidth]);
 
   useEffect(() => {
-    indicator.value = reduced ? state.index : withSpring(state.index, Springs.snappy);
+    indicator.value = reduced ? state.index : withSpring(state.index, dockSpring);
   }, [indicator, reduced, state.index]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: (indicator.value + 0.5) * itemWidth - pillWidth / 2 }],
+    opacity: rowWidth.value > 0 ? 1 : 0,
+    transform: [{ translateX: direction * indicator.value * rowWidth.value / slotCount }],
   }));
 
   return (
@@ -35,13 +58,15 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: Botto
       <ClayCard style={styles.dock} outlined>
         <View
           accessibilityRole="tablist"
-          onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+          onLayout={measureRow}
           style={styles.row}
         >
           <Animated.View
-            style={[styles.pill, { width: pillWidth }, indicatorStyle]}
+            style={[styles.indicatorSlot, { width: `${100 / slotCount}%` }, indicatorStyle]}
             pointerEvents="none"
-          />
+          >
+            <View style={styles.pill} />
+          </Animated.View>
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
             const label = typeof options.tabBarLabel === 'string'
@@ -61,13 +86,14 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: Botto
                   onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: focused }}
-                  accessibilityLabel={label}
+                  accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
+                  testID={options.tabBarTestID}
                   haptic={isSell || !focused}
                   tone={isSell ? 'espresso' : undefined}
                   pressScale={0.95}
                   style={[styles.item, isSell && styles.sell]}
                 >
-                  <Icon name={TabIcons[route.name] ?? 'Package'} size={isSell ? 24 : 21} color={ink} />
+                  <TabGlyph name={TabIcons[route.name] ?? 'Package'} focused={focused} isSell={isSell} />
                   <ClayText variant="captionBold" color={ink} style={styles.label} numberOfLines={1}>
                     {label}
                   </ClayText>
@@ -90,12 +116,17 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   row: { flexDirection: 'row', alignItems: 'center' },
-  pill: {
+  indicatorSlot: {
     position: 'absolute',
+    start: 0,
     top: Spacing.xs,
     bottom: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
+  pill: {
+    flex: 1,
     borderRadius: Radius.card,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: Colors.accentSoft,
   },
   slot: { flex: 1, minWidth: 0 },
   item: {

@@ -2,15 +2,17 @@
 // Auth stack layout — login and signup screens
 
 import { Stack } from 'expo-router';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Colors } from '@constants/theme';
 
 export default function AuthLayout() {
+  const reducedMotion = useReducedMotion();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: Colors.background },
-        animation: 'slide_from_right',
+        animation: reducedMotion ? 'none' : 'default',
       }}
     />
   );

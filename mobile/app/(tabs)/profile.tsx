@@ -7,7 +7,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -15,7 +14,10 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
-import { Colors, Spacing, Typography } from '@constants/theme';
+import { ClayPressable } from '@components/fx/ClayPressable';
+import { Icon } from '@components/ui/Icon';
+import type { IconName } from '@constants/icons';
+import { Colors, Radius, Spacing, Typography } from '@constants/theme';
 import { fetchMyProfile } from '../../services/api';
 import type { UserProfile } from '../../../shared/types';
 
@@ -69,9 +71,9 @@ export default function ProfileScreen() {
   const userRole = profile?.role || ((user?.publicMetadata as any)?.role as string) || 'student';
   const isAdminOrVerifier = userRole === 'admin' || userRole === 'verifier';
 
-  const menuItems = [
+  const menuItems: { icon: IconName; label: string; subtitle: string; onPress: () => void }[] = [
     {
-      emoji: '🏪',
+      icon: 'ShoppingBag',
       label: 'Seller Dashboard',
       subtitle: 'Manage your active & sold items',
       onPress: () => router.push('/seller/dashboard'),
@@ -79,7 +81,7 @@ export default function ProfileScreen() {
     ...(isAdminOrVerifier
       ? [
           {
-            emoji: '🛡️',
+            icon: 'ShieldCheck' as const,
             label: 'Admin Verification Queue',
             subtitle: 'Review & approve student listings',
             onPress: () => router.push('/admin/dashboard'),
@@ -87,19 +89,19 @@ export default function ProfileScreen() {
         ]
       : []),
     {
-      emoji: '📦',
+      icon: 'Package',
       label: 'My Orders',
       subtitle: 'Campus purchases & sale requests',
       onPress: () => router.push('/orders'),
     },
     {
-      emoji: '❤️',
+      icon: 'Heart',
       label: 'Saved Wishlist',
       subtitle: 'View and manage your saved items',
       onPress: () => router.push('/wishlist'),
     },
     {
-      emoji: '🔔',
+      icon: 'Bell',
       label: 'Notifications',
       subtitle: 'Activity, order updates & reviews',
       onPress: () => router.push('/notifications'),
@@ -190,25 +192,30 @@ export default function ProfileScreen() {
         </ClayCard>
 
         {/* Menu Items */}
-        <View style={styles.menu}>
-          {menuItems.map((item) => (
-            <Pressable
+        <ClayCard style={styles.menu}>
+          {menuItems.map((item, index) => (
+            <ClayPressable
               key={item.label}
               onPress={item.onPress}
-              accessibilityRole="button"
               accessibilityLabel={item.label}
+              accessibilityHint={item.subtitle}
+              haptic={false}
+              pressScale={0.985}
+              style={styles.menuItem}
             >
-              <ClayCard style={styles.menuItem}>
-                <Text style={styles.menuEmoji}>{item.emoji}</Text>
-                <View style={{ flex: 1 }}>
+              <View style={styles.menuIcon}>
+                <Icon name={item.icon} size={24} color="primary" />
+              </View>
+              <View style={[styles.menuDetail, index > 0 && styles.menuDivider]}>
+                <View style={styles.menuCopy}>
                   <Text style={Typography.bodyBold}>{item.label}</Text>
                   <Text style={Typography.caption}>{item.subtitle}</Text>
                 </View>
-                <Text style={styles.arrow}>›</Text>
-              </ClayCard>
-            </Pressable>
+                <Text accessible={false} style={styles.arrow}>›</Text>
+              </View>
+            </ClayPressable>
           ))}
-        </View>
+        </ClayCard>
 
         <ClayButton
           label="Sign Out"
@@ -267,14 +274,23 @@ const styles = StyleSheet.create({
   },
   stat: { alignItems: 'center', flex: 1 },
   divider: { width: 1, backgroundColor: Colors.border },
-  menu: { gap: Spacing.sm, marginTop: Spacing.xs },
+  menu: { marginTop: Spacing.xs, paddingHorizontal: Spacing.base, paddingVertical: Spacing.xs },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
+    minHeight: 66,
+    gap: Spacing.md,
   },
-  menuEmoji: { fontSize: 24 },
+  menuIcon: {
+    width: 40, height: 40, borderRadius: Radius.sm,
+    backgroundColor: Colors.primarySoft, alignItems: 'center', justifyContent: 'center',
+  },
+  menuDetail: {
+    flex: 1, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center',
+    paddingVertical: Spacing.sm, gap: Spacing.sm,
+  },
+  menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border },
+  menuCopy: { flex: 1, gap: 2 },
   arrow: { fontSize: 24, color: Colors.textSecondary },
   signOut: { marginTop: Spacing.sm },
 });
