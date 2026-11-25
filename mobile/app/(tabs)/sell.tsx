@@ -14,6 +14,8 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useAuth } from '@clerk/clerk-expo';
@@ -58,6 +60,7 @@ const CONDITIONS: { label: string; value: ProductCondition; icon: IconName }[] =
 
 export default function SellScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { getToken } = useAuth();
 
   const [title, setTitle] = useState('');
@@ -241,7 +244,7 @@ export default function SellScreen() {
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: Spacing.xxxl + insets.bottom + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
           {/* Item details */}
@@ -277,93 +280,101 @@ export default function SellScreen() {
             <Text style={[styles.fieldLabel, { marginTop: Spacing.sm }]}>
               Category *
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.pillScroll}
-            >
-              <View style={styles.pillRow}>
+            <View style={styles.chipTrack}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.pillRow}
+              >
                 {CATEGORIES.map((cat) => {
                   const isSelected = category === cat.value;
                   return (
                     <Pressable
                       key={cat.value}
                       onPress={() => setCategory(cat.value)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
+                      style={({ pressed }) => [
+                        styles.pill,
+                        isSelected && styles.pillSelected,
+                        pressed && styles.pillPressed,
+                      ]}
                     >
-                      <ClayCard
-                        variant={isSelected ? 'mint' : 'default'}
+                      <AppIcon
+                        name={cat.icon}
+                        size={16}
+                        tint={isSelected ? 'white' : 'textSecondary'}
+                      />
+                      <Text
                         style={[
-                          styles.pill,
-                          isSelected && styles.pillSelected,
+                          Typography.captionBold,
+                          { color: isSelected ? Colors.white : Colors.text },
                         ]}
                       >
-                        <View style={styles.pillInner}>
-                          <AppIcon
-                            name={cat.icon}
-                            size={16}
-                            tint={isSelected ? 'successText' : 'textSecondary'}
-                          />
-                          <Text
-                            style={[
-                              Typography.captionBold,
-                              isSelected && { color: Colors.successText },
-                            ]}
-                          >
-                            {cat.label}
-                          </Text>
-                        </View>
-                      </ClayCard>
+                        {cat.label}
+                      </Text>
                     </Pressable>
                   );
                 })}
-              </View>
-            </ScrollView>
+              </ScrollView>
+              <LinearGradient
+                colors={['rgba(250,246,241,0)', 'rgba(250,246,241,0.92)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.chipFadeRight}
+                pointerEvents="none"
+              />
+            </View>
 
             {/* Condition selection */}
             <Text style={[styles.fieldLabel, { marginTop: Spacing.sm }]}>
               Condition *
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.pillScroll}
-            >
-              <View style={styles.pillRow}>
+            <View style={styles.chipTrack}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.pillRow}
+              >
                 {CONDITIONS.map((cond) => {
                   const isSelected = condition === cond.value;
                   return (
                     <Pressable
                       key={cond.value}
                       onPress={() => setCondition(cond.value)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
+                      style={({ pressed }) => [
+                        styles.pill,
+                        isSelected && styles.pillSelected,
+                        pressed && styles.pillPressed,
+                      ]}
                     >
-                      <ClayCard
-                        variant={isSelected ? 'mint' : 'default'}
+                      <AppIcon
+                        name={cond.icon}
+                        size={16}
+                        tint={isSelected ? 'white' : 'textSecondary'}
+                      />
+                      <Text
                         style={[
-                          styles.pill,
-                          isSelected && styles.pillSelected,
+                          Typography.captionBold,
+                          { color: isSelected ? Colors.white : Colors.text },
                         ]}
                       >
-                        <View style={styles.pillInner}>
-                          <AppIcon
-                            name={cond.icon}
-                            size={16}
-                            tint={isSelected ? 'successText' : 'textSecondary'}
-                          />
-                          <Text
-                            style={[
-                              Typography.captionBold,
-                              isSelected && { color: Colors.successText },
-                            ]}
-                          >
-                            {cond.label}
-                          </Text>
-                        </View>
-                      </ClayCard>
+                        {cond.label}
+                      </Text>
                     </Pressable>
                   );
                 })}
-              </View>
-            </ScrollView>
+              </ScrollView>
+              <LinearGradient
+                colors={['rgba(250,246,241,0)', 'rgba(250,246,241,0.92)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.chipFadeRight}
+                pointerEvents="none"
+              />
+            </View>
 
             <ClayInput
               showMascotOnFocus
@@ -522,22 +533,47 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 4,
   },
-  pillScroll: { marginVertical: 4 },
-  pillRow: { flexDirection: 'row', gap: Spacing.xs, paddingVertical: 2 },
+  chipTrack: {
+    marginHorizontal: -Spacing.base,
+    marginVertical: 4,
+    position: 'relative',
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    paddingRight: Spacing.xxl,
+    paddingVertical: 4,
+  },
   pill: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: Radius.full,
-    borderWidth: 1,
+    backgroundColor: Colors.input,
+    borderWidth: 1.5,
     borderColor: Colors.border,
   },
-  pillInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pillSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  pillPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }],
+  },
+  chipFadeRight: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 28,
+  },
   inlineHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   inlineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 2 },
-  pillSelected: {
-    borderColor: Colors.successText,
-    borderWidth: 1.5,
-  },
   multiline: { height: 90, textAlignVertical: 'top' },
   imageHeader: {
     flexDirection: 'row',
@@ -545,7 +581,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  addPhotoBtn: { minHeight: 34, paddingVertical: 6, paddingHorizontal: 12 },
+  addPhotoBtn: { minHeight: 40, paddingVertical: 6, paddingHorizontal: 14 },
   uploadPrompt: {
     borderWidth: 2,
     borderColor: Colors.border,
@@ -555,7 +591,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  uploadEmoji: { fontSize: 32 },
   thumbnailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   thumbnailWrapper: { position: 'relative' },
   thumbnail: { width: 72, height: 72, borderRadius: Radius.sm },

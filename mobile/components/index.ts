@@ -16,6 +16,7 @@ export { CategoryChip } from './product/CategoryChip';
 export { AppIcon } from './ui/AppIcon';
 export { ClayText } from './ui/ClayText';
 export { Icon } from './ui/Icon';
+export { SearchBar } from './ui/SearchBar';
 
 // Motion system
 export * from './fx';

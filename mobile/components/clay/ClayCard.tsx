@@ -1,9 +1,9 @@
 // mobile/components/clay/ClayCard.tsx
-// Claymorphism card surface
+// Claymorphism card surface with clean uniform border and layered shadow.
 
 import React from 'react';
 import { View, StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
-import { ClayGradients, Colors, Spacing, clayElevation, type ClayTone } from '@constants/theme';
+import { ClayGradients, Spacing, clayElevation, type ClayTone } from '@constants/theme';
 import { ClayFinish, resolveClayRadius } from './ClayFinish';
 
 export type ClayCardVariant = 'default' | 'muted' | 'success' | 'error' | 'mint' | 'peach' | 'lavender';
@@ -41,14 +41,16 @@ export function ClayCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: ClayGradients[tone][gradient ? 0 : 1], elevation: gradient ? clayElevation.elevation : 3 },
+        {
+          backgroundColor: ClayGradients[tone][gradient ? 0 : 1],
+          elevation: gradient ? clayElevation.elevation : 3,
+        },
         style,
         { borderRadius: radius },
-        outlined && styles.outlined,
       ]}
       {...rest}
     >
-      <ClayFinish tone={tone} radius={radius} gradient={gradient} />
+      <ClayFinish tone={tone} radius={radius} gradient={gradient} outlined={outlined} />
       {children}
     </View>
   );
@@ -59,6 +61,4 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     ...clayElevation,
   },
-  outlined: { borderWidth: 1, borderColor: Colors.border },
 });
-

@@ -11,6 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import { AppIcon, ClayHeader, ClayCard, ClayButton, ClayText } from '@components/index';
 import { RemyMascot } from '@components/ui/RemyMascot';
@@ -21,6 +22,7 @@ import type { Conversation } from '../../../shared/types';
 
 export default function ChatsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { getToken } = useAuth();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -82,7 +84,7 @@ export default function ChatsScreen() {
       <ClayHeader title="Chats" subtitle="Coordinate campus meetups & pickups" />
 
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Spacing.xxxl + insets.bottom }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -141,7 +143,7 @@ export default function ChatsScreen() {
                 >
                   {/* User Avatar Circle */}
                   <View style={[styles.avatar, hasUnread && styles.avatarUnread]}>
-                    <Text style={styles.avatarText}>
+                    <Text style={[styles.avatarText, hasUnread && styles.avatarTextUnread]}>
                       {conv.otherUserName ? conv.otherUserName[0].toUpperCase() : 'U'}
                     </Text>
                   </View>
@@ -243,6 +245,9 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 18,
     fontFamily: FontFamily.bodyBold,
+  },
+  avatarTextUnread: {
+    color: Colors.white,
   },
   convInfo: { flex: 1 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

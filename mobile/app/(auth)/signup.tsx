@@ -14,7 +14,6 @@ import { Link, useRouter } from 'expo-router';
 import { useSignUp, useAuth } from '@clerk/clerk-expo';
 import { ClayCard, ClayInput, ClayButton } from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
-import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
@@ -142,9 +141,8 @@ export default function SignupScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.branding}>
-          <View style={[styles.brandRow, { minHeight: pendingVerification ? 140 : 150 }]}>
+          <View style={styles.brandRow}>
             <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked />
-            {pendingVerification ? <RemyMascot state="loading" size={50} busy={loading} /> : null}
           </View>
           <Text style={Typography.h2}>
             {pendingVerification ? 'Verify Email' : Copy.auth.signupTitle}
@@ -276,8 +274,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
   branding: { alignItems: 'center', gap: Spacing.xs },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.base },
-  emoji: { fontSize: 48, marginBottom: Spacing.sm },
+  brandRow: { alignItems: 'center', justifyContent: 'center' },
   tagline: { textAlign: 'center', marginTop: Spacing.xs },
   card: { gap: Spacing.sm },
   field: { marginVertical: Spacing.xs },

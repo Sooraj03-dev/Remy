@@ -10,7 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,6 +24,7 @@ import {
   ClayCard,
   ClayInput,
   ClayButton,
+  ClayText,
   StatusBadge,
   CelebrationOverlay,
 } from '@components/index';
@@ -40,6 +44,7 @@ const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/EADFD5/4A2E1B?tex
 export default function CheckoutScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { getToken, userId } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -162,7 +167,10 @@ export default function CheckoutScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Spacing.xxxl + insets.bottom }]}
+      >
         <ClayHeader title="Checkout" subtitle="Confirm campus pickup & meetup details" />
 
         {/* Product summary card */}
@@ -201,22 +209,51 @@ export default function CheckoutScreen() {
                   Certified Safe Campus Meetup Zones
                 </Text>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: Spacing.xs }}>
-                <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+              <View style={styles.zoneTrack}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.zoneRow}
+                >
                   {certifiedLocations.map((loc) => {
                     const isSelected = meetupLocation === loc.name;
                     return (
-                      <ClayButton
+                      <Pressable
                         key={loc.id}
-                        label={loc.name}
-                        variant={isSelected ? 'primary' : 'ghost'}
                         onPress={() => setMeetupLocation(loc.name)}
-                        style={{ paddingHorizontal: Spacing.sm }}
-                      />
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isSelected }}
+                        accessibilityLabel={loc.name}
+                        style={({ pressed }) => [
+                          styles.zoneChip,
+                          isSelected && styles.zoneChipSelected,
+                          pressed && styles.zoneChipPressed,
+                        ]}
+                      >
+                        <AppIcon
+                          name="location"
+                          size={15}
+                          tint={isSelected ? 'white' : 'primary'}
+                        />
+                        <ClayText
+                          variant="captionBold"
+                          color={isSelected ? 'white' : 'text'}
+                          maxFontSizeMultiplier={1.3}
+                        >
+                          {loc.name}
+                        </ClayText>
+                      </Pressable>
                     );
                   })}
-                </View>
-              </ScrollView>
+                </ScrollView>
+                <LinearGradient
+                  colors={['rgba(242,234,225,0)', 'rgba(242,234,225,0.92)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.zoneFadeRight}
+                  pointerEvents="none"
+                />
+              </View>
             </View>
           )}
 
@@ -241,19 +278,66 @@ export default function CheckoutScreen() {
               Select Payment Method
             </Text>
           </View>
-          <View style={{ gap: Spacing.xs, marginBottom: Spacing.md }}>
-            <ClayButton
-              label="UPI Digital (Verified Campus Sandbox)"
-              leftIcon={paymentMethod === 'upi_demo' ? 'checkCircle' : 'upi'}
-              variant={paymentMethod === 'upi_demo' ? 'primary' : 'ghost'}
-              onPress={() => setPaymentMethod('upi_demo')}
-            />
-            <ClayButton
-              label="Cash on Campus Meetup"
-              leftIcon={paymentMethod === 'cash_on_meetup' ? 'checkCircle' : 'cash'}
-              variant={paymentMethod === 'cash_on_meetup' ? 'primary' : 'ghost'}
-              onPress={() => setPaymentMethod('cash_on_meetup')}
-            />
+          <View style={styles.paymentList}>
+            {(
+              [
+                {
+                  id: 'upi_demo' as const,
+                  icon: 'upi' as const,
+                  title: 'UPI Digital',
+                  subtitle: 'Verified campus sandbox',
+                },
+                {
+                  id: 'cash_on_meetup' as const,
+                  icon: 'cash' as const,
+                  title: 'Cash on Meetup',
+                  subtitle: 'Pay after inspecting in person',
+                },
+              ] as const
+            ).map((option) => {
+              const selected = paymentMethod === option.id;
+              return (
+                <Pressable
+                  key={option.id}
+                  onPress={() => setPaymentMethod(option.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={`${option.title}, ${option.subtitle}`}
+                  style={({ pressed }) => [
+                    styles.paymentCard,
+                    selected && styles.paymentCardSelected,
+                    pressed && styles.paymentCardPressed,
+                  ]}
+                >
+                  <View style={[styles.paymentIconWell, selected && styles.paymentIconWellSelected]}>
+                    <AppIcon
+                      name={option.icon}
+                      size={20}
+                      tint={selected ? 'white' : 'primary'}
+                    />
+                  </View>
+                  <View style={styles.paymentCopy}>
+                    <ClayText
+                      variant="bodyBold"
+                      color="text"
+                      maxFontSizeMultiplier={1.3}
+                    >
+                      {option.title}
+                    </ClayText>
+                    <ClayText
+                      variant="caption"
+                      color="textSecondary"
+                      maxFontSizeMultiplier={1.3}
+                    >
+                      {option.subtitle}
+                    </ClayText>
+                  </View>
+                  <View style={[styles.radioRing, selected && styles.radioRingSelected]}>
+                    {selected ? <AppIcon name="check" size={14} tint="white" /> : null}
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
 
           {/* Payment Note */}
@@ -318,7 +402,76 @@ const styles = StyleSheet.create({
   sectionTitle: { marginBottom: Spacing.xs },
   inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   fieldLabel: { color: Colors.text, marginTop: Spacing.sm, marginBottom: Spacing.xs },
-  paymentNoteCard: { padding: Spacing.sm, marginTop: Spacing.md, marginBottom: Spacing.md },
+  zoneTrack: { marginHorizontal: -Spacing.md, marginVertical: Spacing.xs, position: 'relative' },
+  zoneRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingRight: Spacing.xxl, paddingVertical: 2 },
+  zoneChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 48,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  zoneChipSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  zoneChipPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }],
+  },
+  zoneFadeRight: { position: 'absolute', top: 0, bottom: 0, right: 0, width: 24 },
+  paymentList: { gap: Spacing.sm, marginBottom: Spacing.md },
+  paymentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    minHeight: 68,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  paymentCardSelected: {
+    backgroundColor: Colors.accentSoft,
+    borderColor: Colors.primary,
+  },
+  paymentCardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.985 }],
+  },
+  paymentIconWell: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.input,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentIconWellSelected: {
+    backgroundColor: Colors.primary,
+  },
+  paymentCopy: { flex: 1, gap: 2 },
+  radioRing: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioRingSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  paymentNoteCard: { padding: Spacing.sm, marginTop: Spacing.xs, marginBottom: Spacing.md, gap: 4 },
   buttonRow: { gap: Spacing.sm },
   confirmBtn: { width: '100%' },
   cancelBtn: { width: '100%' },

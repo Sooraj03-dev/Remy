@@ -14,6 +14,8 @@ import {
 import { ProductGallery } from '@components/product/ProductGallery';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import {
   AppIcon,
@@ -51,6 +53,7 @@ export default function ProductDetailsScreen() {
   const router = useRouter();
   const { getToken, userId } = useAuth();
   const focused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -193,21 +196,16 @@ export default function ProductDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <ClayButton
-          label="Back"
-          leftIcon="back"
-          iconTint="text"
-          variant="ghost"
-          onPress={() => router.back()}
-          textStyle={{ color: Colors.text }}
-        />
-      </View>
+      {focused ? <StatusBar style="light" translucent backgroundColor="transparent" /> : null}
 
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Main Product Image */}
-        <ProductGallery key={product.id} title={product.title} images={product.images ?? []} />
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: Spacing.xxxl + insets.bottom }]}>
+        {/* Edge-to-edge Hero Image */}
+        <ProductGallery
+          key={product.id}
+          title={product.title}
+          images={product.images ?? []}
+          topInset={insets.top}
+        />
 
         <View style={styles.content}>
           {/* Status & verification badges */}
@@ -353,6 +351,21 @@ export default function ProductDetailsScreen() {
         </View>
       </ScrollView>
 
+      {/* Floating edge-to-edge Back button over top scrim */}
+      <Pressable
+        onPress={() => router.back()}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.floatingBack,
+          { top: insets.top + Spacing.xs },
+          pressed && styles.floatingBackPressed,
+        ]}
+      >
+        <AppIcon name="back" size={22} tint="textPrimary" />
+      </Pressable>
+
       {/* Community Report Modal */}
       <Modal
         visible={reportModalVisible}
@@ -440,7 +453,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.base,
   },
-  header: { paddingHorizontal: Spacing.sm, paddingTop: Spacing.xxl },
+  floatingBack: {
+    position: 'absolute',
+    left: Spacing.base,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(250,246,241,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  floatingBackPressed: {
+    transform: [{ scale: 0.94 }],
+    opacity: 0.9,
+  },
   scroll: { paddingBottom: Spacing.xxxl },
   content: { padding: Spacing.base, gap: Spacing.base },
   badgeRow: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', flexWrap: 'wrap' },

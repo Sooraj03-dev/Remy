@@ -15,6 +15,7 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import {
+  AppIcon,
   ClayHeader,
   ClayCard,
   ProductCard,
@@ -22,9 +23,9 @@ import {
   ClayPressable,
   ClayText,
   CategoryChip,
+  SearchBar,
   SkeletonCard,
   StaggeredItem,
-  Icon,
 } from '@components/index';
 import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
@@ -111,13 +112,21 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StaggeredItem index={0} style={styles.headerWrap}>
+      <StaggeredItem index={0}>
         <ClayHeader
           eyebrow="Welcome back,"
           title={firstName}
           rightAccessory={<RemyLogo size="sm" badgeOnly style={styles.logo} />}
         />
       </StaggeredItem>
+
+      <View style={styles.searchWrap}>
+        <SearchBar
+          onPressTrigger={() => router.navigate('/(tabs)/explore')}
+          placeholder="Search textbooks, electronics, cycles..."
+          accessibilityLabel="Search campus listings"
+        />
+      </View>
 
       <View style={styles.scroll}>
         <GestureDetector gesture={gesture}>
@@ -163,7 +172,7 @@ export default function HomeScreen() {
                   onPress={() => router.navigate('/(tabs)/explore')}
                   style={styles.exploreLink}
                 >
-                  <Icon name="Compass" size={17} color="primary" />
+                  <AppIcon name="explore" size={17} tint="primary" />
                   <ClayText variant="captionBold" color="primary">Explore all</ClayText>
                 </ClayPressable>
               </View>
@@ -223,7 +232,7 @@ export default function HomeScreen() {
             <View style={styles.section}>
               <ClayCard variant="success" gradient style={styles.guideCard}>
                 <View style={styles.guideIcon}>
-                  <Icon name="ShieldCheck" size={22} color="successText" />
+                  <AppIcon name="safeZone" size={22} tint="successText" />
                 </View>
                 <View style={styles.guideText}>
                   <ClayText variant="bodyBold" color="successText">Safe Campus Meetups</ClayText>
@@ -237,17 +246,22 @@ export default function HomeScreen() {
         </GestureDetector>
         <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
       </View>
-      {!showSkeleton ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
+      {!showSkeleton ? (
+        <View style={styles.mascotDock} pointerEvents="box-none">
+          <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} />
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerWrap: { paddingTop: Spacing.base },
   logo: { marginLeft: Spacing.sm },
+  searchWrap: { paddingHorizontal: Spacing.base, marginTop: Spacing.xs, marginBottom: Spacing.xs },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: Spacing.base },
+  scrollContent: { paddingBottom: 76 },
+  mascotDock: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   section: { paddingHorizontal: Spacing.base, marginTop: Spacing.xl },
   sectionHeaderRow: {
     flexDirection: 'row',

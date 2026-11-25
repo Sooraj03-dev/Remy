@@ -16,6 +16,8 @@ import {
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import { AppIcon, ClayHeader, ClayCard, ClayInput, ClayButton, StatusBadge } from '@components/index';
@@ -45,6 +47,7 @@ const CONDITIONS: { label: string; value: ProductCondition; icon: IconName }[] =
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { getToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -203,7 +206,7 @@ export default function EditProductScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.scrollContent, { paddingBottom: Spacing.xxxl + insets.bottom }]}>
         <ClayHeader title="Edit Listing" subtitle="Update your item details or price" />
 
         {/* Current status display */}
@@ -250,43 +253,61 @@ export default function EditProductScreen() {
 
           {/* Category Chips */}
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Category *</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {CATEGORIES.map((cat) => {
-              const selected = category === cat.value;
-              return (
-                <Pressable
-                  key={cat.value}
-                  style={[styles.chip, selected && styles.chipActive]}
-                  onPress={() => setCategory(cat.value)}
-                >
-                  <AppIcon name={cat.icon} size={14} tint={selected ? 'white' : 'textSecondary'} />
-                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                    {cat.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.chipTrack}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              {CATEGORIES.map((cat) => {
+                const selected = category === cat.value;
+                return (
+                  <Pressable
+                    key={cat.value}
+                    style={[styles.chip, selected && styles.chipActive]}
+                    onPress={() => setCategory(cat.value)}
+                  >
+                    <AppIcon name={cat.icon} size={15} tint={selected ? 'white' : 'textSecondary'} />
+                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <LinearGradient
+              colors={['rgba(250,246,241,0)', 'rgba(250,246,241,0.92)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.chipFadeRight}
+              pointerEvents="none"
+            />
+          </View>
 
           {/* Condition Chips */}
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Condition *</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {CONDITIONS.map((cond) => {
-              const selected = condition === cond.value;
-              return (
-                <Pressable
-                  key={cond.value}
-                  style={[styles.chip, selected && styles.chipActive]}
-                  onPress={() => setCondition(cond.value)}
-                >
-                  <AppIcon name={cond.icon} size={14} tint={selected ? 'white' : 'textSecondary'} />
-                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                    {cond.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.chipTrack}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              {CONDITIONS.map((cond) => {
+                const selected = condition === cond.value;
+                return (
+                  <Pressable
+                    key={cond.value}
+                    style={[styles.chip, selected && styles.chipActive]}
+                    onPress={() => setCondition(cond.value)}
+                  >
+                    <AppIcon name={cond.icon} size={15} tint={selected ? 'white' : 'textSecondary'} />
+                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                      {cond.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <LinearGradient
+              colors={['rgba(250,246,241,0)', 'rgba(250,246,241,0.92)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.chipFadeRight}
+              pointerEvents="none"
+            />
+          </View>
 
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Campus Meetup Location</Text>
           <ClayInput
@@ -369,24 +390,26 @@ const styles = StyleSheet.create({
   rejectedBanner: { marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
   card: { padding: Spacing.md },
   fieldLabel: { color: Colors.text, marginTop: Spacing.sm, marginBottom: Spacing.xs },
-  chipsRow: { flexDirection: 'row', marginBottom: Spacing.xs },
+  chipTrack: { marginHorizontal: -Spacing.md, marginBottom: Spacing.xs, position: 'relative' },
+  chipsRow: { flexDirection: 'row', gap: Spacing.xs, paddingHorizontal: Spacing.md, paddingRight: Spacing.xxl, paddingVertical: 4 },
+  chipFadeRight: { position: 'absolute', top: 0, bottom: 0, right: 0, width: 24 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
+    minHeight: 48,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.full,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
+    backgroundColor: Colors.input,
+    borderWidth: 1.5,
     borderColor: Colors.border,
-    marginRight: Spacing.xs,
   },
   chipActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  chipText: { fontSize: FontSize.caption, fontFamily: FontFamily.body, color: Colors.textSecondary },
+  chipText: { fontSize: FontSize.caption, fontFamily: FontFamily.label, color: Colors.text },
   chipTextActive: { color: Colors.white, fontFamily: FontFamily.bodyBold },
   textArea: { minHeight: 90, textAlignVertical: 'top' },
   imagesRow: { flexDirection: 'row', marginTop: Spacing.xs, marginBottom: Spacing.md },

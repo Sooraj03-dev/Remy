@@ -14,7 +14,7 @@ import {
 import { runOnUI, useSharedValue } from 'react-native-reanimated';
 import { ClayText } from '@components/ui/ClayText';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { ClayEdges, Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
+import { Colors, Radius, Spacing, FontSize, FontFamily } from '@constants/theme';
 
 interface ClayInputProps extends TextInputProps {
   label?: string;
@@ -140,11 +140,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: Colors.input,
     borderRadius: Radius.md,
-    borderTopWidth: 2,
-    borderLeftWidth: 1.5,
-    borderRightWidth: 1.5,
-    borderBottomWidth: 2,
-    ...ClayEdges.inset,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
     minHeight: 48,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.base,
@@ -153,12 +150,11 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   focused: {
-    borderTopColor: Colors.accent,
-    borderLeftColor: Colors.accent,
+    borderColor: Colors.accent,
+    backgroundColor: Colors.surface,
   },
   errored: {
-    borderTopColor: Colors.errorText,
-    borderLeftColor: Colors.errorText,
+    borderColor: Colors.errorText,
   },
 });
 

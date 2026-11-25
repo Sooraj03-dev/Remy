@@ -14,7 +14,6 @@ import { Link, useRouter } from 'expo-router';
 import { useSignIn, useAuth } from '@clerk/clerk-expo';
 import { ClayCard, ClayInput, ClayButton } from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
-import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
@@ -170,7 +169,6 @@ export default function LoginScreen() {
         <View style={styles.branding}>
           <View style={styles.brandRow}>
             <RemyLogo size={pendingVerification ? 'md' : 'lg'} stacked />
-            {pendingVerification ? <RemyMascot state="loading" size={50} busy={loading} /> : null}
           </View>
           <Text style={[Typography.caption, styles.tagline]}>{Copy.app.tagline}</Text>
         </View>
@@ -283,11 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
   },
-  emoji: {
-    fontSize: 48,
-    marginBottom: Spacing.sm,
-  },
-  brandRow: { minHeight: 163, flexDirection: 'row', alignItems: 'center', gap: Spacing.base },
+  brandRow: { alignItems: 'center', justifyContent: 'center' },
   tagline: {
     width: '100%',
     textAlign: 'center',

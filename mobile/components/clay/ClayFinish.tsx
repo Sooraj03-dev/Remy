@@ -1,50 +1,59 @@
+// mobile/components/clay/ClayFinish.tsx
+// Clean uniform surface gradient and hairline border (no asymmetric corner-notch bevels).
+
 import React from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ClayEdges, ClayGradients, Radius, type ClayTone } from '@constants/theme';
+import { ClayGradients, Colors, Radius, type ClayTone } from '@constants/theme';
 
 interface ClayFinishProps {
   tone?: ClayTone;
   radius?: number;
   gradient?: boolean;
+  outlined?: boolean;
 }
 
 export function resolveClayRadius(radius: ViewStyle['borderRadius']) {
-  return typeof radius === 'number' ? Math.min(Radius.lg, Math.max(22, radius)) : Radius.card;
+  return typeof radius === 'number' ? Math.min(Radius.lg, Math.max(16, radius)) : Radius.card;
 }
 
-/** Decorative face and bevel. The parent supplies the shape and casts its shadow. */
-export const ClayFinish = React.memo(function ClayFinish({ tone = 'oat', radius = Radius.card, gradient = false }: ClayFinishProps) {
-  const shape = { borderRadius: radius };
-  const edges = tone === 'espresso' || tone === 'terracotta' ? ClayEdges.dark : ClayEdges.light;
+/** Decorative face and uniform border. Parent supplies shape and shadow. */
+export const ClayFinish = React.memo(function ClayFinish({
+  tone = 'oat',
+  radius = Radius.card,
+  gradient = false,
+  outlined = false,
+}: ClayFinishProps) {
+  const isDark = tone === 'espresso' || tone === 'terracotta';
+  const borderColor = isDark
+    ? 'rgba(255,235,215,0.18)'
+    : outlined
+    ? Colors.border
+    : 'rgba(74,46,27,0.08)';
 
   return (
-    <>
+    <View
+      style={[styles.clip, { borderRadius: radius, borderColor }]}
+      pointerEvents="none"
+      importantForAccessibility="no-hide-descendants"
+    >
       {gradient ? (
         <LinearGradient
           colors={ClayGradients[tone]}
-          locations={[0, 0.38, 1]}
+          locations={[0, 0.42, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[StyleSheet.absoluteFillObject, shape]}
-          pointerEvents="none"
+          style={StyleSheet.absoluteFillObject}
         />
       ) : null}
-      <View
-        style={[styles.bevel, shape, edges]}
-        pointerEvents="none"
-        importantForAccessibility="no-hide-descendants"
-      />
-    </>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  bevel: {
+  clip: {
     ...StyleSheet.absoluteFillObject,
-    borderTopWidth: 2,
-    borderLeftWidth: 1.5,
-    borderBottomWidth: 3,
-    borderRightWidth: 1.5,
+    overflow: 'hidden',
+    borderWidth: 1,
   },
 });

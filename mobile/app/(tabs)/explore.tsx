@@ -4,24 +4,22 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
-  ActivityIndicator,
   StyleSheet,
   RefreshControl,
   type ListRenderItem,
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useDerivedValue, useReducedMotion, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import {
   ClayHeader,
-  ClayInput,
-  ClayPressable,
   ClayCard,
   ProductCard,
   ClayText,
+  SearchBar,
   SkeletonCard,
   StaggeredItem,
-  Icon,
 } from '@components/index';
 import { MarketplaceError } from '@components/product/MarketplaceError';
 import { RemyArt } from '@components/ui/RemyArt';
@@ -29,7 +27,6 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { RefreshingRemy } from '@components/ui/RemyReactions';
 import { useFeedMascot } from '@hooks/useFeedMascot';
 import { Colors, Spacing } from '@constants/theme';
-import { Durations } from '@constants/motion';
 import { Copy } from '@constants/copy';
 import { fetchProducts } from '../../services/api';
 import type { Product } from '../../../shared/types';
@@ -38,25 +35,20 @@ const EMPTY_PRODUCTS: Product[] = [];
 const productKey = (product: Product) => product.id;
 
 export default function ExploreScreen() {
+  const { q } = useLocalSearchParams<{ q?: string }>();
   const focused = useIsFocused();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(typeof q === 'string' ? q : '');
   const [settledQuery, setSettledQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const currentRequest = useRef(0);
-  const hasSearch = search.length > 0;
-  const reduced = useReducedMotion();
-  const clearProgress = useDerivedValue(() => {
-    const target = hasSearch ? 1 : 0;
-    return reduced ? target : withTiming(target, { duration: Durations.fast });
-  });
-  const clearMotion = useAnimatedStyle(() => ({
-    opacity: clearProgress.value,
-    transform: [{ scale: 0.9 + 0.1 * clearProgress.value }],
-  }));
   const { gesture, onFeedScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
+
+  useEffect(() => {
+    if (typeof q === 'string') setSearch(q);
+  }, [q]);
 
   const performSearch = useCallback(async (query: string) => {
     const request = ++currentRequest.current;
@@ -109,37 +101,14 @@ export default function ExploreScreen() {
       </StaggeredItem>
 
       <View style={styles.searchBar}>
-        <ClayInput
-          showMascotOnFocus
+        <SearchBar
           value={search}
           onChangeText={setSearch}
+          onClear={() => setSearch('')}
+          loading={focused && pendingQuery}
           placeholder="Search by title, brand, or course..."
-          returnKeyType="search"
           accessibilityLabel="Search products"
-          style={styles.searchInput}
         />
-        <View style={styles.searchIcon} pointerEvents="none">
-          {focused && pendingQuery && !reduced ? (
-            <ActivityIndicator size="small" color={Colors.primary} accessibilityLabel="Searching" />
-          ) : (
-            <Icon name="MagnifyingGlass" size={20} color="textSecondary" />
-          )}
-        </View>
-        <Animated.View
-          pointerEvents={hasSearch ? 'auto' : 'none'}
-          accessibilityElementsHidden={!hasSearch}
-          importantForAccessibility={hasSearch ? 'auto' : 'no-hide-descendants'}
-          style={[styles.clearSlot, clearMotion]}
-        >
-          <ClayPressable
-            accessibilityLabel="Clear search"
-            disabled={!hasSearch}
-            onPress={() => setSearch('')}
-            style={styles.clearButton}
-          >
-            <Icon name="XCircle" size={20} color="primary" />
-          </ClayPressable>
-        </Animated.View>
       </View>
 
       <View style={styles.results}>
@@ -192,21 +161,22 @@ export default function ExploreScreen() {
         </GestureDetector>
         <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
       </View>
-      {!loading ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
+      {!loading ? (
+        <View style={styles.mascotDock} pointerEvents="box-none">
+          <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} />
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  searchBar: { paddingHorizontal: Spacing.base, marginTop: Spacing.xs, zIndex: 1 },
-  searchInput: { paddingLeft: 44, paddingRight: 48 },
-  searchIcon: { position: 'absolute', left: Spacing.base + Spacing.md, top: 0, bottom: 0, justifyContent: 'center' },
-  clearSlot: { position: 'absolute', right: Spacing.base, top: 0, bottom: 0, justifyContent: 'center' },
-  clearButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  searchBar: { paddingHorizontal: Spacing.base, marginTop: Spacing.xs, marginBottom: Spacing.xs, zIndex: 1 },
   results: { flex: 1 },
-  list: { padding: Spacing.base, gap: Spacing.sm },
-  emptyList: { flexGrow: 1 },
+  list: { padding: Spacing.base, paddingBottom: 76, gap: Spacing.sm },
+  emptyList: { flexGrow: 1, paddingBottom: 76 },
+  mascotDock: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   row: { gap: Spacing.sm },
   card: { flex: 1 },
   skeletonGrid: {
