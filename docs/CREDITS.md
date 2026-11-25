@@ -7,7 +7,6 @@ Everything listed is permissively licensed (MIT / Apache-2.0 / OFL / Unlicense).
 
 | Package | Version | Licence | Used for |
 | --- | --- | --- | --- |
-| `phosphor-react-native` | 3.0.6 | MIT | Icon system (`constants/icons.ts`, `components/ui/Icon.tsx`) |
 | `react-native-svg` | 15.2.0 | MIT | Owl mascot, brand mark, icon rendering |
 | `react-native-reanimated` | 3.10.1 | MIT | All motion, shared values, entering animations |
 | `react-native-gesture-handler` | 2.16.1 | MIT | Toast swipe-to-dismiss, gesture root |
@@ -16,6 +15,15 @@ Everything listed is permissively licensed (MIT / Apache-2.0 / OFL / Unlicense).
 | `expo-linear-gradient` | 13.0.2 | MIT | Skeleton shimmer, verification shine |
 | `expo-font` | 12.0.10 | MIT | Custom font loading |
 | `expo-splash-screen` | 0.27.5 | MIT | Native splash handoff |
+
+## Interface icons
+
+Remy uses 30 glyphs from [Kubai Icons](https://icons.kubai.design/), distributed
+in `kubai-icons-static` 0.15.0. The bundled paths adapt the official static
+artwork to two theme-colored regions per glyph. The bicycle, checked shield and
+offline Wi-Fi glyphs use the layered originals. The others use the two-tone set.
+The [upstream MIT license](../mobile/assets/icons/LICENSE-Kubai.txt) accompanies
+the artwork.
 
 ## Fonts
 

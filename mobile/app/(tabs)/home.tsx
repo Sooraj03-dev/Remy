@@ -1,7 +1,7 @@
 // mobile/app/(tabs)/home.tsx
 // Home feed with a virtualized product carousel.
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -12,13 +12,14 @@ import {
 import { useUser } from '@clerk/clerk-expo';
 import { useIsFocused } from '@react-navigation/native';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import {
   ClayHeader,
   ClayCard,
   ProductCard,
   ClayButton,
+  ClayPressable,
   ClayText,
   CategoryChip,
   SkeletonCard,
@@ -47,18 +48,26 @@ const CATEGORIES: { label: string; key: ProductCategory | 'all' }[] = [
 ];
 
 const productKey = (product: Product) => product.id;
+const CARD_WIDTH = 180;
 
 export default function HomeScreen() {
   const { user } = useUser();
   const router = useRouter();
   const focused = useIsFocused();
+  const reduced = useReducedMotion();
   const firstName = user?.firstName ?? 'there';
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [shelf, setShelf] = useState<{ category: ProductCategory | 'all'; products: Product[] }>({
+    category: 'all',
+    products: [],
+  });
+  const { products } = shelf;
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentRequest = useRef(0);
+  const showSkeleton = loading && products.length === 0;
   const { gesture, onFeedScroll, onProductScroll, pull, browsingTime } = useFeedMascot(refreshing, focused);
   const categoryActions = useMemo(() => CATEGORIES.map(({ key }) => () => setSelectedCategory(key)), []);
   const renderProduct = useCallback<ListRenderItem<Product>>(({ item }) => (
@@ -68,24 +77,31 @@ export default function HomeScreen() {
   ), []);
 
   const loadProducts = useCallback(async () => {
+    const request = ++currentRequest.current;
     try {
       const params =
         selectedCategory === 'all' ? {} : { category: selectedCategory as ProductCategory };
       const data = await fetchProducts(params);
+      if (request !== currentRequest.current) return;
       setError(null);
-      setProducts(data);
+      setShelf({ category: selectedCategory, products: data });
     } catch (err) {
+      if (request !== currentRequest.current) return;
       const msg = err instanceof Error ? err.message : 'Could not load products.';
       setError(msg);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === currentRequest.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [selectedCategory]);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     loadProducts();
+    return () => { currentRequest.current += 1; };
   }, [loadProducts]);
 
   const onRefresh = useCallback(() => {
@@ -134,15 +150,25 @@ export default function HomeScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
-                <ClayText variant="h3">Available on Campus</ClayText>
-                {products.length > 0 ? (
-                  <ClayText variant="caption">
-                    {products.length} item{products.length === 1 ? '' : 's'}
-                  </ClayText>
-                ) : null}
+                <View style={styles.shelfTitle}>
+                  <ClayText variant="h3">Available on Campus</ClayText>
+                  {!error && products.length > 0 ? (
+                    <ClayText variant="caption" accessibilityLiveRegion="polite">
+                      {loading ? 'Updating listings…' : `${products.length} item${products.length === 1 ? '' : 's'}`}
+                    </ClayText>
+                  ) : null}
+                </View>
+                <ClayPressable
+                  accessibilityLabel="Explore all listings"
+                  onPress={() => router.navigate('/(tabs)/explore')}
+                  style={styles.exploreLink}
+                >
+                  <Icon name="Compass" size={17} color="primary" />
+                  <ClayText variant="captionBold" color="primary">Explore all</ClayText>
+                </ClayPressable>
               </View>
 
-              {loading ? (
+              {showSkeleton ? (
                 <View>
                   <View style={styles.skeletonRow}>
                     {[0, 1, 2].map((index) => (
@@ -174,6 +200,8 @@ export default function HomeScreen() {
                 </ClayCard>
               ) : (
                 <Animated.FlatList
+                  key={shelf.category}
+                  accessibilityState={{ busy: loading }}
                   data={products}
                   keyExtractor={productKey}
                   removeClippedSubviews={true}
@@ -181,6 +209,8 @@ export default function HomeScreen() {
                   maxToRenderPerBatch={6}
                   windowSize={5}
                   horizontal
+                  snapToInterval={reduced ? undefined : CARD_WIDTH + Spacing.md}
+                  decelerationRate={reduced ? 'normal' : 'fast'}
                   onScroll={onProductScroll}
                   scrollEventThrottle={32}
                   showsHorizontalScrollIndicator={false}
@@ -207,7 +237,7 @@ export default function HomeScreen() {
         </GestureDetector>
         <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
       </View>
-      {!loading ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
+      {!showSkeleton ? <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} /> : null}
     </View>
   );
 }
@@ -224,13 +254,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  shelfTitle: { flex: 1, gap: 2 },
+  exploreLink: {
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.accentSoft,
   },
   sectionTitle: { marginBottom: Spacing.xs },
   chips: { flexDirection: 'row', gap: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
   skeletonRow: { flexDirection: 'row', gap: Spacing.sm, overflow: 'hidden' },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', padding: Spacing.base },
   productList: { gap: Spacing.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
-  productCard: { width: 180 },
+  productCard: { width: CARD_WIDTH },
   statusCard: {
     alignItems: 'center',
     padding: Spacing.lg,

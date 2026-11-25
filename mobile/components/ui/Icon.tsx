@@ -1,7 +1,8 @@
 // mobile/components/ui/Icon.tsx
-// Typed wrapper for the shared Lucide stroke and sizes.
+// Native renderer for the bundled Kubai icon artwork.
 
 import React from 'react';
+import Svg, { Path } from 'react-native-svg';
 import { IconRegistry, type IconName } from '@constants/icons';
 import { Colors } from '@constants/theme';
 
@@ -26,7 +27,7 @@ export function resolveColor(color: IconProps['color']): string {
   return color in Colors ? Colors[color as keyof typeof Colors] : color;
 }
 
-export function Icon({
+export const Icon = React.memo(function Icon({
   name,
   size = 'md',
   weight = 'regular',
@@ -34,20 +35,23 @@ export function Icon({
   decorative = true,
   accessibilityLabel,
 }: IconProps) {
-  const GlyphComponent = IconRegistry[name];
+  const { body, accent } = IconRegistry[name];
   const px = typeof size === 'number' ? size : SIZES[size];
   const ink = resolveColor(color);
+  const filledHeart = name === 'Heart' && weight === 'fill';
 
   return (
-    <GlyphComponent
-      size={px}
-      color={ink}
-      strokeWidth={1.75}
-      fill={name === 'Heart' && weight === 'fill' ? ink : 'none'}
+    <Svg
+      width={px}
+      height={px}
+      viewBox="0 0 16 16"
       accessible={!decorative}
       accessibilityLabel={accessibilityLabel}
       accessibilityElementsHidden={decorative}
       importantForAccessibility={decorative ? 'no-hide-descendants' : 'auto'}
-    />
+    >
+      {body ? <Path d={body} fill={ink} fillOpacity={filledHeart ? 1 : 0.52} /> : null}
+      {accent ? <Path d={accent} fill={ink} fillOpacity={filledHeart ? 0.52 : 1} /> : null}
+    </Svg>
   );
-}
+});

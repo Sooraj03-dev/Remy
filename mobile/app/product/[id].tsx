@@ -11,7 +11,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { Image } from 'expo-image';
+import { ProductGallery } from '@components/product/ProductGallery';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
@@ -37,9 +37,6 @@ import {
   startConversationWithSeller,
 } from '../../services/api';
 import type { Product, ReportReason } from '../../../shared/types';
-
-const PLACEHOLDER_IMAGE =
-  'https://via.placeholder.com/400x300/EADFD5/4A2E1B?text=Remy';
 
 const conditionLabel: Record<string, string> = {
   new: 'Brand New',
@@ -191,10 +188,6 @@ export default function ProductDetailsScreen() {
   }
 
   const isOwner = product.sellerEmail && product.sellerId === userId;
-  const imageSource =
-    product.images && product.images.length > 0
-      ? { uri: product.images[0] }
-      : { uri: PLACEHOLDER_IMAGE };
 
   return (
     <View style={styles.container}>
@@ -210,13 +203,7 @@ export default function ProductDetailsScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Main Product Image */}
-        <Image
-          source={imageSource}
-          style={styles.image}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          accessibilityIgnoresInvertColors
-        />
+        <ProductGallery key={product.id} title={product.title} images={product.images ?? []} />
 
         <View style={styles.content}>
           {/* Status & verification badges */}
@@ -440,7 +427,6 @@ const styles = StyleSheet.create({
   },
   header: { paddingHorizontal: Spacing.sm, paddingTop: Spacing.xxl },
   scroll: { paddingBottom: Spacing.xxxl },
-  image: { width: '100%', height: 260 },
   content: { padding: Spacing.base, gap: Spacing.base },
   badgeRow: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', flexWrap: 'wrap' },
   verifiedBadge: { paddingVertical: 4, paddingHorizontal: 10 },
@@ -449,7 +435,7 @@ const styles = StyleSheet.create({
   rejectionCard: { padding: Spacing.sm, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   titleText: { flex: 1 },
-  price: { fontSize: 28, fontFamily: 'Fredoka_700Bold', color: Colors.primary },
+  price: { ...Typography.h1, color: Colors.primary },
   metaCard: { gap: Spacing.sm },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
   descBlock: { gap: Spacing.xs },
