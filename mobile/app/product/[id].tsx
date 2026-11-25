@@ -16,6 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
 import {
+  AppIcon,
   ClayButton,
   ClayCard,
   ClayInput,
@@ -99,7 +100,7 @@ export default function ProductDetailsScreen() {
 
       setReportModalVisible(false);
       Alert.alert(
-        'Report Submitted 🛡️',
+        'Report Submitted',
         'Thank you for keeping our campus community safe. A moderator has queued this listing for review.',
       );
     } catch (err) {
@@ -177,7 +178,8 @@ export default function ProductDetailsScreen() {
             {error || 'This listing may have been removed or is pending approval.'}
           </Text>
           <ClayButton
-            label="← Go Back"
+            label="Go Back"
+            leftIcon="back"
             variant="secondary"
             onPress={() => router.back()}
             style={{ marginTop: Spacing.sm }}
@@ -194,7 +196,9 @@ export default function ProductDetailsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <ClayButton
-          label="← Back"
+          label="Back"
+          leftIcon="back"
+          iconTint="text"
           variant="ghost"
           onPress={() => router.back()}
           textStyle={{ color: Colors.text }}
@@ -213,7 +217,10 @@ export default function ProductDetailsScreen() {
             {product.status === 'verified' ? <VerifiedBadge label="Verified listing" /> : null}
             {product.status === 'pending_review' && (
               <ClayCard variant="lavender" style={styles.verifiedBadge}>
-                <Text style={styles.pendingText}>⏳ In Verification Queue</Text>
+                <View style={styles.inlineIconRow}>
+                  <AppIcon name="time" size={13} tint="primary" />
+                  <Text style={styles.pendingText}>In Verification Queue</Text>
+                </View>
               </ClayCard>
             )}
           </View>
@@ -255,7 +262,10 @@ export default function ProductDetailsScreen() {
             {product.campusLocation ? (
               <View style={styles.metaRow}>
                 <Text style={Typography.captionBold}>Meetup Point</Text>
-                <Text style={Typography.caption}>📍 {product.campusLocation}</Text>
+                <View style={styles.inlineIconRow}>
+                  <AppIcon name="location" size={14} tint="textSecondary" />
+                  <Text style={Typography.caption}>{product.campusLocation}</Text>
+                </View>
               </View>
             ) : null}
             <View style={styles.metaRow}>
@@ -323,14 +333,16 @@ export default function ProductDetailsScreen() {
                   />
                 )}
                 <ClayButton
-                  label="💬 Chat with Seller"
+                  label="Chat with Seller"
+                  leftIcon="chats"
                   variant="secondary"
                   loading={chatStarting}
                   onPress={handleStartChat}
                   style={styles.actionButton}
                 />
                 <ClayButton
-                  label="🚩 Report Listing"
+                  label="Report Listing"
+                  leftIcon="flag"
                   variant="ghost"
                   onPress={() => setReportModalVisible(true)}
                   style={styles.actionButton}
@@ -350,7 +362,10 @@ export default function ProductDetailsScreen() {
       >
         <View style={styles.modalOverlay}>
           <ClayCard variant="peach" style={styles.modalCard}>
-            <Text style={Typography.h3}>Report Listing 🛡️</Text>
+            <View style={styles.inlineIconRow}>
+              <AppIcon name="safeZone" size={18} tint="primary" />
+              <Text style={Typography.h3}>Report Listing</Text>
+            </View>
             <Text style={[Typography.caption, { marginVertical: Spacing.xs }]}>
               Help keep the campus marketplace safe. Select reason for reporting this listing:
             </Text>
@@ -429,6 +444,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: Spacing.xxxl },
   content: { padding: Spacing.base, gap: Spacing.base },
   badgeRow: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', flexWrap: 'wrap' },
+  inlineIconRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   verifiedBadge: { paddingVertical: 4, paddingHorizontal: 10 },
   verifiedText: { fontSize: 12, fontFamily: FontFamily.label, color: Colors.successText },
   pendingText: { fontSize: 12, fontFamily: FontFamily.label, color: Colors.primary },

@@ -14,9 +14,8 @@ import * as SecureStore from 'expo-secure-store';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useUser, useAuth, useClerk } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { ClayHeader, ClayCard, ClayButton } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayButton } from '@components/index';
 import { ClayPressable } from '@components/fx/ClayPressable';
-import { Icon } from '@components/ui/Icon';
 import type { IconName } from '@constants/icons';
 import { Colors, Radius, Spacing, Typography, FontFamily } from '@constants/theme';
 import { fetchMyProfile } from '../../services/api';
@@ -172,6 +171,11 @@ export default function ProfileScreen() {
                 : styles.studentPill,
             ]}
           >
+            <AppIcon
+              name={userRole === 'admin' ? 'safeZone' : userRole === 'verifier' ? 'search' : 'student'}
+              size={14}
+              tint={userRole === 'admin' ? 'errorText' : userRole === 'verifier' ? 'successText' : 'primary'}
+            />
             <Text
               style={[
                 styles.roleText,
@@ -183,10 +187,10 @@ export default function ProfileScreen() {
               ]}
             >
               {userRole === 'admin'
-                ? '🛡️ Administrator'
+                ? 'Administrator'
                 : userRole === 'verifier'
-                ? '🔍 Campus Verifier'
-                : '🎓 Verified Student'}
+                ? 'Campus Verifier'
+                : 'Verified Student'}
             </Text>
           </View>
 
@@ -206,9 +210,12 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.divider} />
               <View style={styles.stat}>
-                <Text style={Typography.h3}>
-                  {profile?.rating ? profile.rating.toFixed(1) : '5.0'} ⭐
-                </Text>
+                <View style={styles.ratingRow}>
+                  <Text style={Typography.h3}>
+                    {profile?.rating ? profile.rating.toFixed(1) : '5.0'}
+                  </Text>
+                  <AppIcon name="star" size={16} tint="accent" variant="fill" />
+                </View>
                 <Text style={Typography.caption}>Rating</Text>
               </View>
             </View>
@@ -228,14 +235,14 @@ export default function ProfileScreen() {
               style={styles.menuItem}
             >
               <View style={styles.menuIcon}>
-                <Icon name={item.icon} size={24} color="primary" />
+                <AppIcon name={item.icon} size={22} tint="primary" />
               </View>
               <View style={[styles.menuDetail, index > 0 && styles.menuDivider]}>
                 <View style={styles.menuCopy}>
                   <Text style={Typography.bodyBold}>{item.label}</Text>
                   <Text style={Typography.caption}>{item.subtitle}</Text>
                 </View>
-                <Text accessible={false} style={styles.arrow}>›</Text>
+                <AppIcon name="chevronRight" size={18} tint="textSecondary" />
               </View>
             </ClayPressable>
           ))}
@@ -274,6 +281,9 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 32, fontFamily: FontFamily.displayBold, color: Colors.white },
   name: { textAlign: 'center' },
   rolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 999,
@@ -299,6 +309,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   stat: { alignItems: 'center', flex: 1 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   divider: { width: 1, backgroundColor: Colors.border },
   menu: { marginTop: Spacing.xs, paddingHorizontal: Spacing.base, paddingVertical: Spacing.xs },
   menuItem: {
@@ -317,6 +328,5 @@ const styles = StyleSheet.create({
   },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border },
   menuCopy: { flex: 1, gap: 2 },
-  arrow: { fontSize: 24, fontFamily: FontFamily.body, color: Colors.textSecondary },
   signOut: { marginTop: Spacing.sm },
 });

@@ -13,6 +13,7 @@ export { StatusBadge } from './product/StatusBadge';
 export { CategoryChip } from './product/CategoryChip';
 
 // UI primitives
+export { AppIcon } from './ui/AppIcon';
 export { ClayText } from './ui/ClayText';
 export { Icon } from './ui/Icon';
 

@@ -11,7 +11,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { ClayCard } from '@components/clay/ClayCard';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { ClayText } from '@components/ui/ClayText';
-import { Icon } from '@components/ui/Icon';
+import { AppIcon } from '@components/ui/AppIcon';
 import { TabIcons, type IconName } from '@constants/icons';
 import { Colors, Radius, Spacing } from '@constants/theme';
 import { Springs } from '@constants/motion';
@@ -29,7 +29,12 @@ function TabGlyph({ name, focused, isSell }: { name: IconName; focused: boolean;
   }));
   return (
     <Animated.View pointerEvents="none" style={glyphStyle}>
-      <Icon name={name} size={isSell ? 24 : 21} color={isSell ? 'background' : focused ? 'primary' : 'textSecondary'} />
+      <AppIcon
+        name={name}
+        size={isSell ? 24 : 22}
+        variant={focused && !isSell ? 'duotone' : 'line'}
+        tint={isSell ? 'background' : focused ? 'primary' : 'textSecondary'}
+      />
     </Animated.View>
   );
 }

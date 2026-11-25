@@ -13,7 +13,8 @@ import {
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayButton } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayButton } from '@components/index';
+import type { IconName } from '@constants/icons';
 import { CelebrationOverlay } from '@components/fx';
 import { Copy } from '@constants/copy';
 import { Colors, Spacing, Typography, FontSize, FontFamily } from '@constants/theme';
@@ -105,20 +106,20 @@ export default function NotificationsScreen() {
     }
   };
 
-  const getEmojiForType = (type: string) => {
+  const getIconForType = (type: string): IconName => {
     switch (type) {
       case 'new_order':
-        return '🛍️';
+        return 'bag';
       case 'order_status':
-        return '📦';
+        return 'package';
       case 'product_approved':
-        return '🚀';
+        return 'rocket';
       case 'product_rejected':
-        return '⚠️';
+        return 'warning';
       case 'new_message':
-        return '💬';
+        return 'chats';
       default:
-        return '🔔';
+        return 'notifications';
     }
   };
 
@@ -128,8 +129,9 @@ export default function NotificationsScreen() {
 
       {notifications.some((n) => !n.read) && (
         <View style={styles.topActions}>
-          <Pressable onPress={handleMarkAllRead}>
-            <Text style={styles.markAllText}>✓ Mark all as read</Text>
+          <Pressable onPress={handleMarkAllRead} style={styles.markAllBtn} hitSlop={8}>
+            <AppIcon name="check" size={14} tint="primary" />
+            <Text style={styles.markAllText}>Mark all as read</Text>
           </Pressable>
         </View>
       )}
@@ -144,14 +146,18 @@ export default function NotificationsScreen() {
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>⚠️</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="warning" size={40} tint="errorText" />
+            </View>
             <Text style={Typography.bodyBold}>Could not load notifications</Text>
             <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
             <ClayButton label="Retry" variant="secondary" onPress={loadNotifications} style={{ marginTop: Spacing.sm }} />
           </ClayCard>
         ) : notifications.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>🔔</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="notifications" size={40} tint="primary" />
+            </View>
             <Text style={Typography.bodyBold}>No notifications yet</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
               Updates about your orders, product reviews, and messages will show up here.
@@ -164,7 +170,9 @@ export default function NotificationsScreen() {
                 variant={!item.read ? 'lavender' : undefined}
                 style={[styles.notifCard, !item.read && styles.unreadCard]}
               >
-                <Text style={styles.notifEmoji}>{getEmojiForType(item.type)}</Text>
+                <View style={styles.notifIconWrap}>
+                  <AppIcon name={getIconForType(item.type)} size={22} tint={item.type === 'product_rejected' ? 'errorText' : 'primary'} />
+                </View>
                 <View style={styles.notifInfo}>
                   <View style={styles.notifHeader}>
                     <Text style={[Typography.bodyBold, styles.notifTitle]} numberOfLines={1}>
@@ -198,11 +206,12 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   topActions: { alignItems: 'flex-end', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xs },
+  markAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36 },
   markAllText: { color: Colors.primary, fontSize: FontSize.caption, fontFamily: FontFamily.bodyBold },
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
-  emptyEmoji: { fontSize: 44, marginBottom: Spacing.sm },
+  emptyIconWrap: { marginBottom: Spacing.sm },
   emptyText: { textAlign: 'center', color: Colors.textSecondary, marginTop: Spacing.xs },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   notifCard: {
@@ -215,7 +224,15 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: Colors.primary,
   },
-  notifEmoji: { fontSize: 26, marginRight: Spacing.md },
+  notifIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
   notifInfo: { flex: 1 },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   notifTitle: { flex: 1, marginRight: Spacing.xs },

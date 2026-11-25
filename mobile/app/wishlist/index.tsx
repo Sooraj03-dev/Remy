@@ -14,7 +14,7 @@ import {
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index';
 import { Colors, Spacing, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchWishlist, removeFromWishlist } from '../../services/api';
 import type { Product } from '../../../shared/types';
@@ -70,7 +70,8 @@ export default function WishlistScreen() {
     <View style={styles.cardContainer}>
       <ProductCard product={item} />
       <Pressable style={styles.removeBtn} onPress={() => handleRemove(item.id)}>
-        <Text style={styles.removeBtnText}>✕ Remove</Text>
+        <AppIcon name="close" size={13} tint="errorText" />
+        <Text style={styles.removeBtnText}>Remove</Text>
       </Pressable>
     </View>
   ), [handleRemove]);
@@ -86,7 +87,9 @@ export default function WishlistScreen() {
       ) : error ? (
         <View style={styles.content}>
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>⚠️</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="warning" size={40} tint="errorText" />
+            </View>
             <Text style={Typography.bodyBold}>Could not load wishlist</Text>
             <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
             <ClayButton label="Retry" variant="secondary" onPress={loadWishlist} style={{ marginTop: Spacing.sm }} />
@@ -95,7 +98,9 @@ export default function WishlistScreen() {
       ) : products.length === 0 ? (
         <View style={styles.content}>
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>❤️</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="favorite" size={40} tint="errorText" variant="duotone" />
+            </View>
             <Text style={Typography.bodyBold}>Your wishlist is empty</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
               Tap the heart icon on any product to save it here for later.
@@ -131,16 +136,20 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.md },
   centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
-  emptyEmoji: { fontSize: 44, marginBottom: Spacing.sm },
+  emptyIconWrap: { marginBottom: Spacing.sm },
   emptyText: { textAlign: 'center', color: Colors.textSecondary, marginTop: Spacing.xs },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   listContent: { padding: Spacing.sm, paddingBottom: Spacing.xxxl },
   columnWrapper: { justifyContent: 'space-between', marginBottom: Spacing.sm },
   cardContainer: { width: '48%' },
   removeBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    minHeight: 40,
     paddingVertical: Spacing.xs,
-    marginTop: 2,
+    marginTop: 4,
     backgroundColor: Colors.white,
     borderRadius: Spacing.xs,
     borderWidth: 1,

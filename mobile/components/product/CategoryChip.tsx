@@ -6,7 +6,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, withSpring } from 'react-native-reanimated';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { ClayText } from '@components/ui/ClayText';
-import { Icon } from '@components/ui/Icon';
+import { AppIcon } from '@components/ui/AppIcon';
 import { CategoryIcons, type IconName } from '@constants/icons';
 import { Springs } from '@constants/motion';
 import { Colors, Radius, Spacing } from '@constants/theme';
@@ -48,7 +48,7 @@ export const CategoryChip = React.memo(function CategoryChip({
     >
       <View style={styles.content} pointerEvents="none">
         <Animated.View style={[styles.iconWell, selected && styles.activeIconWell, iconMotion]}>
-          <Icon name={iconName} size={17} color="primary" />
+          <AppIcon name={iconName} size={17} tint="primary" variant={selected ? 'duotone' : 'line'} />
         </Animated.View>
         <ClayText variant="captionBold" color={color} numberOfLines={1}>{label}</ClayText>
       </View>

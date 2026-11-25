@@ -9,13 +9,13 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayButton } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayButton, ClayText } from '@components/index';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
+import { RemyArt } from '@components/ui/RemyArt';
+import { Colors, Spacing, Radius, Typography, FontFamily } from '@constants/theme';
 import { fetchConversations } from '../../services/api';
 import type { Conversation } from '../../../shared/types';
 
@@ -98,7 +98,9 @@ export default function ChatsScreen() {
           </View>
         ) : error && conversations.length === 0 ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>⚠️</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="warning" size={40} tint="errorText" />
+            </View>
             <Text style={Typography.bodyBold}>Could not load chats</Text>
             <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
             <ClayButton
@@ -110,10 +112,10 @@ export default function ChatsScreen() {
           </ClayCard>
         ) : conversations.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>💬</Text>
-            <Text style={Typography.bodyBold}>No conversations yet</Text>
+            <RemyArt size={96} />
+            <Text style={[Typography.bodyBold, { marginTop: Spacing.xs }]}>No conversations yet</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
-              Tap "Chat with Seller" on any item or place an order to coordinate with fellow campus students!
+              Tap &quot;Chat with Seller&quot; on any item or place an order to coordinate with fellow campus students!
             </Text>
             <ClayButton
               label="Explore Marketplace"
@@ -162,9 +164,12 @@ export default function ChatsScreen() {
                       </Text>
                     </View>
 
-                    <Text style={[Typography.caption, styles.productTag]} numberOfLines={1}>
-                      📦 {conv.productTitle}
-                    </Text>
+                    <View style={styles.productTagRow}>
+                      <AppIcon name="package" size={14} tint="primary" />
+                      <ClayText variant="label" color="primary" style={styles.productTagText} numberOfLines={1}>
+                        {conv.productTitle}
+                      </ClayText>
+                    </View>
 
                     <View style={styles.msgBottomRow}>
                       <Text
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
-  emptyEmoji: { fontSize: 44, marginBottom: Spacing.sm },
+  emptyIconWrap: { marginBottom: Spacing.sm },
   emptyText: { textAlign: 'center', color: Colors.textSecondary, marginTop: Spacing.xs, lineHeight: 18 },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   cardPressable: {
@@ -245,11 +250,14 @@ const styles = StyleSheet.create({
   nameUnread: { color: Colors.textPrimary, fontFamily: FontFamily.bodyBold },
   timeText: { fontSize: 11, fontFamily: FontFamily.body, color: Colors.textSecondary },
   timeTextUnread: { color: Colors.primary, fontFamily: FontFamily.bodyBold },
-  productTag: {
-    color: Colors.primary,
+  productTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     marginTop: 2,
-    fontFamily: FontFamily.label,
-    fontSize: FontSize.caption,
+  },
+  productTagText: {
+    flex: 1,
   },
   msgBottomRow: {
     flexDirection: 'row',

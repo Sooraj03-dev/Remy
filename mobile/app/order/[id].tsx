@@ -15,7 +15,7 @@ import {
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge, OrderStepper } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge, OrderStepper } from '@components/index';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchOrderById, updateOrderStatus, submitReturnRequest } from '../../services/api';
 import type { Order, ReturnReason } from '../../../shared/types';
@@ -96,7 +96,7 @@ export default function OrderDetailsScreen() {
 
       setReturnModalVisible(false);
       Alert.alert(
-        'Return Request Submitted 🔄',
+        'Return Request Submitted',
         'Your return/refund request was recorded and sent to the seller for review.',
       );
     } catch (err) {
@@ -118,10 +118,12 @@ export default function OrderDetailsScreen() {
     return (
       <View style={[styles.container, styles.centerBox]}>
         <ClayCard variant="peach" style={styles.errorCard}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
+          <View style={styles.errorIcon}>
+            <AppIcon name="warning" size={36} tint="errorText" />
+          </View>
           <Text style={Typography.bodyBold}>Order Not Available</Text>
           <Text style={[Typography.caption, styles.errorText]}>{error || 'Order record not found.'}</Text>
-          <ClayButton label="← Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: Spacing.sm }} />
+          <ClayButton label="Go Back" leftIcon="back" variant="secondary" onPress={() => router.back()} style={{ marginTop: Spacing.sm }} />
         </ClayCard>
       </View>
     );
@@ -154,7 +156,7 @@ export default function OrderDetailsScreen() {
               : order.status === 'meetup_arranged'
               ? 'Meetup arranged! Meet the student to exchange goods.'
               : order.status === 'completed'
-              ? 'Order completed successfully! 🎉'
+              ? 'Order completed successfully!'
               : 'Order was cancelled.'}
           </Text>
         </ClayCard>
@@ -178,19 +180,28 @@ export default function OrderDetailsScreen() {
 
         {/* Meetup Information */}
         <ClayCard variant="mint" style={styles.card}>
-          <Text style={[Typography.h3, styles.sectionTitle]}>📍 Meetup Location</Text>
+          <View style={[styles.inlineRow, styles.sectionTitle]}>
+            <AppIcon name="location" size={18} tint="primary" />
+            <Text style={Typography.h3}>Meetup Location</Text>
+          </View>
           <Text style={Typography.bodyBold}>{order.meetupLocation || 'Campus Center'}</Text>
           {order.meetupTime ? (
-            <Text style={[Typography.caption, { marginTop: Spacing.xs }]}>
-              ⏰ Preferred Time: {new Date(order.meetupTime).toLocaleString()}
-            </Text>
+            <View style={[styles.inlineRow, { marginTop: Spacing.xs }]}>
+              <AppIcon name="time" size={14} tint="textSecondary" />
+              <Text style={Typography.caption}>
+                Preferred Time: {new Date(order.meetupTime).toLocaleString()}
+              </Text>
+            </View>
           ) : null}
         </ClayCard>
 
         {/* Digital Payment Reference if verified */}
         {order.paymentRef && (
           <ClayCard variant="lavender" style={styles.card}>
-            <Text style={Typography.captionBold}>💳 Verified Digital Payment</Text>
+            <View style={styles.inlineRow}>
+              <AppIcon name="card" size={16} tint="primary" />
+              <Text style={Typography.captionBold}>Verified Digital Payment</Text>
+            </View>
             <Text style={[Typography.caption, { color: Colors.textSecondary, marginTop: Spacing.xs }]}>
               Transaction Reference: {order.paymentRef}
             </Text>
@@ -214,7 +225,8 @@ export default function OrderDetailsScreen() {
         <View style={styles.actionSection}>
           {/* Chat with other student */}
           <ClayButton
-            label="💬 Chat with Student"
+            label="Chat with Student"
+            leftIcon="chats"
             variant="primary"
             onPress={() => router.push(`/chat/${order.id}`)}
             style={styles.actionBtn}
@@ -265,7 +277,8 @@ export default function OrderDetailsScreen() {
           {/* Buyer requesting return/refund on completed order */}
           {isBuyer && order.status === 'completed' && (
             <ClayButton
-              label="🔄 Request Return / Refund"
+              label="Request Return / Refund"
+              leftIcon="refund"
               variant="secondary"
               onPress={() => setReturnModalVisible(true)}
               style={styles.actionBtn}
@@ -274,7 +287,8 @@ export default function OrderDetailsScreen() {
 
           {/* Back button */}
           <ClayButton
-            label="← Back to Orders"
+            label="Back to Orders"
+            leftIcon="back"
             variant="ghost"
             onPress={() => router.push('/orders')}
             style={styles.actionBtn}
@@ -291,7 +305,10 @@ export default function OrderDetailsScreen() {
       >
         <View style={styles.modalOverlay}>
           <ClayCard variant="lavender" style={styles.modalCard}>
-            <Text style={Typography.h3}>Request Return / Refund 🔄</Text>
+            <View style={styles.inlineRow}>
+              <AppIcon name="refund" size={18} tint="primary" />
+              <Text style={Typography.h3}>Request Return / Refund</Text>
+            </View>
             <Text style={[Typography.caption, { marginVertical: Spacing.xs }]}>
               Campus transactions are backed by mutual verification. Select the reason for your refund request:
             </Text>
@@ -362,7 +379,8 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   errorCard: { padding: Spacing.lg, alignItems: 'center', width: '100%' },
-  errorEmoji: { fontSize: 36, marginBottom: Spacing.sm },
+  errorIcon: { marginBottom: Spacing.sm },
+  inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   card: { padding: Spacing.md, marginBottom: Spacing.md },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

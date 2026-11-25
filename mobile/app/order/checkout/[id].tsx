@@ -16,6 +16,7 @@ import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import {
+  AppIcon,
   ClayHeader,
   ClayCard,
   ClayInput,
@@ -146,7 +147,9 @@ export default function CheckoutScreen() {
     return (
       <View style={[styles.container, styles.centerBox]}>
         <ClayCard variant="peach" style={styles.errorCard}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
+          <View style={styles.errorIcon}>
+            <AppIcon name="warning" size={36} tint="errorText" />
+          </View>
           <Text style={Typography.bodyBold}>Cannot Checkout</Text>
           <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
           <ClayButton label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: Spacing.sm }} />
@@ -182,16 +185,22 @@ export default function CheckoutScreen() {
         {/* Meetup Coordination Form */}
         <ClayCard variant="lavender" style={styles.formCard}>
           <Text style={[Typography.h3, styles.sectionTitle]}>Campus Meetup Details</Text>
-          <Text style={[Typography.caption, styles.infoNote]}>
-            🤝 Remy transactions happen in person on campus. Coordinate where and when to meet the seller.
-          </Text>
+          <View style={[styles.inlineRow, { marginBottom: Spacing.md }]}>
+            <AppIcon name="meetup" size={16} tint="textSecondary" />
+            <Text style={[Typography.caption, { color: Colors.textSecondary, flex: 1 }]}>
+              Remy transactions happen in person on campus. Coordinate where and when to meet the seller.
+            </Text>
+          </View>
 
           {/* Certified Campus Safe Meetup Points */}
           {certifiedLocations.length > 0 && (
             <View style={{ marginBottom: Spacing.sm }}>
-              <Text style={[Typography.captionBold, styles.fieldLabel]}>
-                🛡️ Certified Safe Campus Meetup Zones:
-              </Text>
+              <View style={[styles.inlineRow, styles.fieldLabel]}>
+                <AppIcon name="safeZone" size={15} tint="primary" />
+                <Text style={[Typography.captionBold, { color: Colors.text }]}>
+                  Certified Safe Campus Meetup Zones
+                </Text>
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: Spacing.xs }}>
                 <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
                   {certifiedLocations.map((loc) => {
@@ -226,25 +235,22 @@ export default function CheckoutScreen() {
           />
 
           {/* Payment Method Selector */}
-          <Text style={[Typography.captionBold, styles.fieldLabel, { marginTop: Spacing.md }]}>
-            💳 Select Payment Method:
-          </Text>
+          <View style={[styles.inlineRow, styles.fieldLabel, { marginTop: Spacing.md }]}>
+            <AppIcon name="card" size={15} tint="primary" />
+            <Text style={[Typography.captionBold, { color: Colors.text }]}>
+              Select Payment Method
+            </Text>
+          </View>
           <View style={{ gap: Spacing.xs, marginBottom: Spacing.md }}>
             <ClayButton
-              label={
-                paymentMethod === 'upi_demo'
-                  ? '✓ ⚡ UPI Digital (Verified Campus Sandbox)'
-                  : '⚡ UPI Digital (Verified Campus Sandbox)'
-              }
+              label="UPI Digital (Verified Campus Sandbox)"
+              leftIcon={paymentMethod === 'upi_demo' ? 'checkCircle' : 'upi'}
               variant={paymentMethod === 'upi_demo' ? 'primary' : 'ghost'}
               onPress={() => setPaymentMethod('upi_demo')}
             />
             <ClayButton
-              label={
-                paymentMethod === 'cash_on_meetup'
-                  ? '✓ 💵 Cash on Campus Meetup'
-                  : '💵 Cash on Campus Meetup'
-              }
+              label="Cash on Campus Meetup"
+              leftIcon={paymentMethod === 'cash_on_meetup' ? 'checkCircle' : 'cash'}
               variant={paymentMethod === 'cash_on_meetup' ? 'primary' : 'ghost'}
               onPress={() => setPaymentMethod('cash_on_meetup')}
             />
@@ -252,9 +258,12 @@ export default function CheckoutScreen() {
 
           {/* Payment Note */}
           <ClayCard variant="mint" style={styles.paymentNoteCard}>
-            <Text style={Typography.captionBold}>
-              {paymentMethod === 'upi_demo' ? '⚡ UPI Sandbox Demonstration' : '💵 Cash on Exchange'}
-            </Text>
+            <View style={styles.inlineRow}>
+              <AppIcon name={paymentMethod === 'upi_demo' ? 'upi' : 'cash'} size={16} tint="successText" />
+              <Text style={Typography.captionBold}>
+                {paymentMethod === 'upi_demo' ? 'UPI Sandbox Demonstration' : 'Cash on Exchange'}
+              </Text>
+            </View>
             <Text style={Typography.caption}>
               {paymentMethod === 'upi_demo'
                 ? 'Backend-verified UPI simulation. No real money will be deducted from your bank.'
@@ -299,7 +308,7 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   errorCard: { padding: Spacing.lg, alignItems: 'center', width: '100%' },
-  errorEmoji: { fontSize: 36, marginBottom: Spacing.sm },
+  errorIcon: { marginBottom: Spacing.sm },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   summaryCard: { flexDirection: 'row', padding: Spacing.md, marginBottom: Spacing.md, alignItems: 'center' },
   thumbnail: { width: 84, height: 84, borderRadius: Radius.md, marginRight: Spacing.md },
@@ -307,7 +316,7 @@ const styles = StyleSheet.create({
   price: { fontSize: FontSize.h3, fontFamily: FontFamily.bodyBold, color: Colors.text, marginVertical: Spacing.xs },
   formCard: { padding: Spacing.md },
   sectionTitle: { marginBottom: Spacing.xs },
-  infoNote: { color: Colors.textSecondary, marginBottom: Spacing.md },
+  inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   fieldLabel: { color: Colors.text, marginTop: Spacing.sm, marginBottom: Spacing.xs },
   paymentNoteCard: { padding: Spacing.sm, marginTop: Spacing.md, marginBottom: Spacing.md },
   buttonRow: { gap: Spacing.sm },

@@ -15,7 +15,7 @@ import {
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useUser, useAuth } from '@clerk/clerk-expo';
-import { ClayButton, ClayCard, StatusBadge, ClayInput } from '@components/index';
+import { AppIcon, ClayButton, ClayCard, StatusBadge, ClayInput } from '@components/index';
 import { Colors, Spacing, Radius, Typography } from '@constants/theme';
 import {
   fetchPendingApprovals,
@@ -255,10 +255,12 @@ export default function AdminDashboard() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <ClayButton label="← Back" variant="ghost" onPress={() => router.back()} textStyle={{ color: Colors.text }} />
+          <ClayButton label="Back" leftIcon="back" iconTint="text" variant="ghost" onPress={() => router.back()} textStyle={{ color: Colors.text }} />
         </View>
         <ClayCard variant="peach" style={styles.blocked}>
-          <Text style={styles.blockedIcon}>🚫</Text>
+          <View style={styles.blockedIcon}>
+            <AppIcon name="restricted" size={44} tint="errorText" />
+          </View>
           <Text style={Typography.h3}>Restricted Access</Text>
           <Text style={[Typography.caption, { textAlign: 'center', marginVertical: Spacing.sm }]}>
             This portal is restricted to authorized campus moderators and administrators.
@@ -272,7 +274,7 @@ export default function AdminDashboard() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <ClayButton label="← Back" variant="ghost" onPress={() => router.back()} textStyle={{ color: Colors.text }} />
+        <ClayButton label="Back" leftIcon="back" iconTint="text" variant="ghost" onPress={() => router.back()} textStyle={{ color: Colors.text }} />
         <Text style={[Typography.h2, styles.title]}>Campus Moderation</Text>
       </View>
 
@@ -312,7 +314,10 @@ export default function AdminDashboard() {
         >
           {error && (
             <ClayCard variant="peach" style={{ marginBottom: Spacing.sm }}>
-              <Text style={[Typography.captionBold, { color: Colors.error }]}>⚠️ {error}</Text>
+              <View style={styles.inlineRow}>
+                <AppIcon name="warning" size={16} tint="errorText" />
+                <Text style={[Typography.captionBold, { color: Colors.error, flex: 1 }]}>{error}</Text>
+              </View>
             </ClayCard>
           )}
 
@@ -321,7 +326,9 @@ export default function AdminDashboard() {
             <>
               {pendingProducts.length === 0 ? (
                 <ClayCard variant="mint" style={styles.emptyCard}>
-                  <Text style={styles.emptyEmoji}>🎉</Text>
+                  <View style={styles.emptyIconWrap}>
+                    <AppIcon name="checkCircle" size={40} tint="successText" />
+                  </View>
                   <Text style={Typography.bodyBold}>Verification Queue Clear</Text>
                   <Text style={[Typography.caption, { textAlign: 'center', marginTop: 4 }]}>
                     All student listings have been reviewed.
@@ -345,9 +352,12 @@ export default function AdminDashboard() {
                     ) : null}
 
                     {p.campusLocation ? (
-                      <Text style={[Typography.caption, { color: Colors.textSecondary }]}>
-                        📍 Meetup: {p.campusLocation}
-                      </Text>
+                      <View style={styles.inlineRow}>
+                        <AppIcon name="location" size={14} tint="textSecondary" />
+                        <Text style={[Typography.caption, { color: Colors.textSecondary }]}>
+                          Meetup: {p.campusLocation}
+                        </Text>
+                      </View>
                     ) : null}
 
                     <Text style={[Typography.caption, { color: Colors.textSecondary, marginTop: Spacing.xs }]}>
@@ -388,7 +398,9 @@ export default function AdminDashboard() {
             <>
               {reportsList.length === 0 ? (
                 <ClayCard variant="mint" style={styles.emptyCard}>
-                  <Text style={styles.emptyEmoji}>🛡️</Text>
+                  <View style={styles.emptyIconWrap}>
+                    <AppIcon name="safeZone" size={40} tint="successText" />
+                  </View>
                   <Text style={Typography.bodyBold}>No Active Reports</Text>
                   <Text style={[Typography.caption, { textAlign: 'center', marginTop: 4 }]}>
                     No community flags or scam reports currently pending.
@@ -530,7 +542,10 @@ export default function AdminDashboard() {
       <Modal visible={changesModalVisible} animationType="slide" transparent onRequestClose={() => setChangesModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <ClayCard variant="lavender" style={styles.modalCard}>
-            <Text style={Typography.h3}>Request Changes ✏️</Text>
+            <View style={styles.inlineRow}>
+              <AppIcon name="stationery" size={18} tint="primary" />
+              <Text style={Typography.h3}>Request Changes</Text>
+            </View>
             <Text style={[Typography.caption, { marginVertical: Spacing.xs }]}>
               Instruct the seller what needs adjustment before approval:
             </Text>
@@ -583,9 +598,10 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   blocked: { margin: Spacing.lg, padding: Spacing.xl, alignItems: 'center' },
-  blockedIcon: { fontSize: 48, marginBottom: Spacing.sm },
+  blockedIcon: { marginBottom: Spacing.sm },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
-  emptyEmoji: { fontSize: 40, marginBottom: Spacing.sm },
+  emptyIconWrap: { marginBottom: Spacing.sm },
+  inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   productCard: { padding: Spacing.md, marginBottom: Spacing.sm },
   productHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   actionRow: { flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.sm },

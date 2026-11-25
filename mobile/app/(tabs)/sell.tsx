@@ -19,14 +19,15 @@ import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import {
+  AppIcon,
   ClayHeader,
   ClayCard,
   ClayInput,
   ClayButton,
   CelebrationOverlay,
   useToast,
-  Icon,
 } from '@components/index';
+import type { IconName } from '@constants/icons';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
@@ -37,22 +38,22 @@ import {
 } from '../../services/api';
 import type { ProductCategory, ProductCondition } from '../../../shared/types';
 
-const CATEGORIES: { label: string; value: ProductCategory }[] = [
-  { label: '📚 Books', value: 'books' },
-  { label: '📱 Electronics', value: 'electronics' },
-  { label: '👕 Clothing', value: 'clothing' },
-  { label: '✏️ Stationery', value: 'stationery' },
-  { label: '⚽ Sports', value: 'sports' },
-  { label: '🪑 Furniture', value: 'furniture' },
-  { label: '🍔 Food', value: 'food' },
-  { label: '📦 Other', value: 'other' },
+const CATEGORIES: { label: string; value: ProductCategory; icon: IconName }[] = [
+  { label: 'Books', value: 'books', icon: 'textbooks' },
+  { label: 'Electronics', value: 'electronics', icon: 'electronics' },
+  { label: 'Clothing', value: 'clothing', icon: 'clothing' },
+  { label: 'Stationery', value: 'stationery', icon: 'stationery' },
+  { label: 'Sports', value: 'sports', icon: 'basketball' },
+  { label: 'Furniture', value: 'furniture', icon: 'furniture' },
+  { label: 'Food', value: 'food', icon: 'food' },
+  { label: 'Other', value: 'other', icon: 'package' },
 ];
 
-const CONDITIONS: { label: string; value: ProductCondition }[] = [
-  { label: '✨ Brand New', value: 'new' },
-  { label: '👍 Like New', value: 'like_new' },
-  { label: '👌 Good', value: 'good' },
-  { label: '📦 Fair', value: 'fair' },
+const CONDITIONS: { label: string; value: ProductCondition; icon: IconName }[] = [
+  { label: 'Brand New', value: 'new', icon: 'aiAssist' },
+  { label: 'Like New', value: 'like_new', icon: 'thumbsUp' },
+  { label: 'Good', value: 'good', icon: 'checkCircle' },
+  { label: 'Fair', value: 'fair', icon: 'package' },
 ];
 
 export default function SellScreen() {
@@ -296,14 +297,21 @@ export default function SellScreen() {
                           isSelected && styles.pillSelected,
                         ]}
                       >
-                        <Text
-                          style={[
-                            Typography.captionBold,
-                            isSelected && { color: Colors.successText },
-                          ]}
-                        >
-                          {cat.label}
-                        </Text>
+                        <View style={styles.pillInner}>
+                          <AppIcon
+                            name={cat.icon}
+                            size={16}
+                            tint={isSelected ? 'successText' : 'textSecondary'}
+                          />
+                          <Text
+                            style={[
+                              Typography.captionBold,
+                              isSelected && { color: Colors.successText },
+                            ]}
+                          >
+                            {cat.label}
+                          </Text>
+                        </View>
                       </ClayCard>
                     </Pressable>
                   );
@@ -335,14 +343,21 @@ export default function SellScreen() {
                           isSelected && styles.pillSelected,
                         ]}
                       >
-                        <Text
-                          style={[
-                            Typography.captionBold,
-                            isSelected && { color: Colors.successText },
-                          ]}
-                        >
-                          {cond.label}
-                        </Text>
+                        <View style={styles.pillInner}>
+                          <AppIcon
+                            name={cond.icon}
+                            size={16}
+                            tint={isSelected ? 'successText' : 'textSecondary'}
+                          />
+                          <Text
+                            style={[
+                              Typography.captionBold,
+                              isSelected && { color: Colors.successText },
+                            ]}
+                          >
+                            {cond.label}
+                          </Text>
+                        </View>
                       </ClayCard>
                     </Pressable>
                   );
@@ -373,7 +388,8 @@ export default function SellScreen() {
 
             {/* AI Assistant Action */}
             <ClayButton
-              label={aiLoading ? 'Generating AI Suggestions...' : '✨ AI Assist & Quality Check'}
+              label={aiLoading ? 'Generating AI Suggestions...' : 'AI Assist & Quality Check'}
+              leftIcon="aiAssist"
               variant="secondary"
               onPress={handleAIAssist}
               loading={aiLoading}
@@ -381,17 +397,26 @@ export default function SellScreen() {
             />
 
             {aiQualityScore !== null && (
-              <ClayCard variant="mint" style={{ marginTop: Spacing.sm, padding: Spacing.sm }}>
-                <Text style={Typography.bodyBold}>📊 Listing Score: {aiQualityScore}/100</Text>
+              <ClayCard variant="mint" style={{ marginTop: Spacing.sm, padding: Spacing.sm, gap: 4 }}>
+                <View style={styles.inlineHeader}>
+                  <AppIcon name="score" size={18} tint="successText" />
+                  <Text style={Typography.bodyBold}>Listing Score: {aiQualityScore}/100</Text>
+                </View>
                 {aiFeedback.map((fb, idx) => (
-                  <Text key={`fb-${idx}`} style={[Typography.caption, { color: Colors.successText, marginTop: 2 }]}>
-                    ✓ {fb}
-                  </Text>
+                  <View key={`fb-${idx}`} style={styles.inlineRow}>
+                    <AppIcon name="check" size={14} tint="successText" />
+                    <Text style={[Typography.caption, { color: Colors.successText, flex: 1 }]}>
+                      {fb}
+                    </Text>
+                  </View>
                 ))}
                 {aiTips.map((tip, idx) => (
-                  <Text key={`tip-${idx}`} style={[Typography.caption, { color: Colors.textSecondary, marginTop: 2 }]}>
-                    💡 {tip}
-                  </Text>
+                  <View key={`tip-${idx}`} style={styles.inlineRow}>
+                    <AppIcon name="tip" size={14} tint="textSecondary" />
+                    <Text style={[Typography.caption, { color: Colors.textSecondary, flex: 1 }]}>
+                      {tip}
+                    </Text>
+                  </View>
                 ))}
               </ClayCard>
             )}
@@ -403,7 +428,8 @@ export default function SellScreen() {
               <Text style={Typography.h3}>Photos ({images.length}/5)</Text>
               {images.length < 5 && (
                 <ClayButton
-                  label="+ Add Photo"
+                  label="Add Photo"
+                  leftIcon="sell"
                   variant="secondary"
                   onPress={handlePickImages}
                   style={styles.addPhotoBtn}
@@ -413,7 +439,7 @@ export default function SellScreen() {
 
             {images.length === 0 ? (
               <Pressable onPress={handlePickImages} style={styles.uploadPrompt}>
-                <Icon name="Camera" size="lg" weight="duotone" color="primary" />
+                <AppIcon name="camera" size="lg" variant="duotone" tint="primary" />
                 <Text style={Typography.bodyBold}>Upload Item Photos</Text>
                 <Text style={Typography.caption}>
                   Add up to 5 clear photos of your product.
@@ -427,9 +453,11 @@ export default function SellScreen() {
                     <Pressable
                       onPress={() => handleRemoveImage(idx)}
                       style={styles.deletePhotoBtn}
-                      hitSlop={8}
+                      hitSlop={12}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove photo ${idx + 1}`}
                     >
-                      <Text style={styles.deletePhotoText}>✕</Text>
+                      <AppIcon name="close" size={12} tint="surface" />
                     </Pressable>
                   </View>
                 ))}
@@ -439,7 +467,10 @@ export default function SellScreen() {
 
           {/* Verification Notice */}
           <ClayCard variant="lavender" style={styles.noticeCard}>
-            <Text style={Typography.bodyBold}>🛡️ Verification Guarantee</Text>
+            <View style={styles.inlineHeader}>
+              <AppIcon name="safeZone" size={18} tint="primary" />
+              <Text style={Typography.bodyBold}>Verification Guarantee</Text>
+            </View>
             <Text style={[Typography.caption, { marginTop: 4 }]}>
               All campus listings are reviewed by verified student moderators to
               prevent spam, counterfeits, and prohibited items.
@@ -500,6 +531,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  pillInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  inlineHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  inlineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 2 },
   pillSelected: {
     borderColor: Colors.successText,
     borderWidth: 1.5,
@@ -536,7 +570,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deletePhotoText: { color: Colors.white, fontSize: 12, fontFamily: FontFamily.bodyBold },
   noticeCard: { padding: Spacing.base },
   submitBtn: { marginTop: Spacing.xs },
 });

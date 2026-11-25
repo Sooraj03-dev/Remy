@@ -18,27 +18,28 @@ import { RemyFormError, useRemyFormFeedback } from '@components/ui/RemyFormError
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
-import { ClayHeader, ClayCard, ClayInput, ClayButton, StatusBadge } from '@components/index';
+import { AppIcon, ClayHeader, ClayCard, ClayInput, ClayButton, StatusBadge } from '@components/index';
+import type { IconName } from '@constants/icons';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchProductById, updateProduct, uploadProductImages } from '../../../services/api';
 import type { Product, ProductCategory, ProductCondition } from '../../../../shared/types';
 
-const CATEGORIES: { label: string; value: ProductCategory }[] = [
-  { label: '📚 Books', value: 'books' },
-  { label: '📱 Electronics', value: 'electronics' },
-  { label: '👕 Clothing', value: 'clothing' },
-  { label: '✏️ Stationery', value: 'stationery' },
-  { label: '⚽ Sports', value: 'sports' },
-  { label: '🪑 Furniture', value: 'furniture' },
-  { label: '🍔 Food', value: 'food' },
-  { label: '📦 Other', value: 'other' },
+const CATEGORIES: { label: string; value: ProductCategory; icon: IconName }[] = [
+  { label: 'Books', value: 'books', icon: 'textbooks' },
+  { label: 'Electronics', value: 'electronics', icon: 'electronics' },
+  { label: 'Clothing', value: 'clothing', icon: 'clothing' },
+  { label: 'Stationery', value: 'stationery', icon: 'stationery' },
+  { label: 'Sports', value: 'sports', icon: 'basketball' },
+  { label: 'Furniture', value: 'furniture', icon: 'furniture' },
+  { label: 'Food', value: 'food', icon: 'food' },
+  { label: 'Other', value: 'other', icon: 'package' },
 ];
 
-const CONDITIONS: { label: string; value: ProductCondition }[] = [
-  { label: '✨ Brand New', value: 'new' },
-  { label: '👍 Like New', value: 'like_new' },
-  { label: '👌 Good', value: 'good' },
-  { label: '📦 Fair', value: 'fair' },
+const CONDITIONS: { label: string; value: ProductCondition; icon: IconName }[] = [
+  { label: 'Brand New', value: 'new', icon: 'aiAssist' },
+  { label: 'Like New', value: 'like_new', icon: 'thumbsUp' },
+  { label: 'Good', value: 'good', icon: 'checkCircle' },
+  { label: 'Fair', value: 'fair', icon: 'package' },
 ];
 
 export default function EditProductScreen() {
@@ -186,7 +187,9 @@ export default function EditProductScreen() {
     return (
       <View style={[styles.container, styles.centerBox]}>
         <ClayCard variant="peach" style={styles.errorCard}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
+          <View style={styles.errorIcon}>
+            <AppIcon name="warning" size={36} tint="errorText" />
+          </View>
           <Text style={Typography.bodyBold}>Cannot Edit Listing</Text>
           <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
           <ClayButton label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: Spacing.sm }} />
@@ -214,9 +217,12 @@ export default function EditProductScreen() {
               <View style={styles.rejectedBanner}>
                 <Text style={Typography.captionBold}>Rejection Note:</Text>
                 <Text style={Typography.caption}>{product.rejectionReason}</Text>
-                <Text style={[Typography.caption, { color: Colors.primary, marginTop: Spacing.xs }]}>
-                  💡 Updating and saving will resubmit this item for review.
-                </Text>
+                <View style={styles.inlineRow}>
+                  <AppIcon name="tip" size={14} tint="primary" />
+                  <Text style={[Typography.caption, { color: Colors.primary, flex: 1 }]}>
+                    Updating and saving will resubmit this item for review.
+                  </Text>
+                </View>
               </View>
             ) : null}
           </ClayCard>
@@ -245,33 +251,41 @@ export default function EditProductScreen() {
           {/* Category Chips */}
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Category *</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {CATEGORIES.map((cat) => (
-              <Pressable
-                key={cat.value}
-                style={[styles.chip, category === cat.value && styles.chipActive]}
-                onPress={() => setCategory(cat.value)}
-              >
-                <Text style={[styles.chipText, category === cat.value && styles.chipTextActive]}>
-                  {cat.label}
-                </Text>
-              </Pressable>
-            ))}
+            {CATEGORIES.map((cat) => {
+              const selected = category === cat.value;
+              return (
+                <Pressable
+                  key={cat.value}
+                  style={[styles.chip, selected && styles.chipActive]}
+                  onPress={() => setCategory(cat.value)}
+                >
+                  <AppIcon name={cat.icon} size={14} tint={selected ? 'white' : 'textSecondary'} />
+                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                    {cat.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
 
           {/* Condition Chips */}
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Condition *</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {CONDITIONS.map((cond) => (
-              <Pressable
-                key={cond.value}
-                style={[styles.chip, condition === cond.value && styles.chipActive]}
-                onPress={() => setCondition(cond.value)}
-              >
-                <Text style={[styles.chipText, condition === cond.value && styles.chipTextActive]}>
-                  {cond.label}
-                </Text>
-              </Pressable>
-            ))}
+            {CONDITIONS.map((cond) => {
+              const selected = condition === cond.value;
+              return (
+                <Pressable
+                  key={cond.value}
+                  style={[styles.chip, selected && styles.chipActive]}
+                  onPress={() => setCondition(cond.value)}
+                >
+                  <AppIcon name={cond.icon} size={14} tint={selected ? 'white' : 'textSecondary'} />
+                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                    {cond.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
 
           <Text style={[Typography.captionBold, styles.fieldLabel]}>Campus Meetup Location</Text>
@@ -304,14 +318,17 @@ export default function EditProductScreen() {
                 <Pressable
                   style={styles.removeBadge}
                   onPress={() => handleRemoveImage(index)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove photo ${index + 1}`}
                 >
-                  <Text style={styles.removeBadgeText}>✕</Text>
+                  <AppIcon name="close" size={11} tint="surface" />
                 </Pressable>
               </View>
             ))}
             {images.length < 5 && (
               <Pressable style={styles.addPhotoSlot} onPress={handlePickImages}>
-                <Text style={styles.addPhotoIcon}>📷</Text>
+                <AppIcon name="camera" size={20} tint="primary" />
                 <Text style={styles.addPhotoText}>Add Photo</Text>
               </Pressable>
             )}
@@ -344,7 +361,8 @@ const styles = StyleSheet.create({
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   errorCard: { padding: Spacing.lg, alignItems: 'center', width: '100%' },
-  errorEmoji: { fontSize: 36, marginBottom: Spacing.sm },
+  errorIcon: { marginBottom: Spacing.sm },
+  inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: Spacing.xs },
   errorText: { color: Colors.error, textAlign: 'center', marginTop: Spacing.xs },
   statusCard: { marginBottom: Spacing.md, padding: Spacing.md },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -353,6 +371,9 @@ const styles = StyleSheet.create({
   fieldLabel: { color: Colors.text, marginTop: Spacing.sm, marginBottom: Spacing.xs },
   chipsRow: { flexDirection: 'row', marginBottom: Spacing.xs },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.full,
@@ -376,13 +397,12 @@ const styles = StyleSheet.create({
     top: -6,
     right: -6,
     backgroundColor: Colors.error,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeBadgeText: { color: Colors.white, fontSize: 10, fontFamily: FontFamily.bodyBold },
   addPhotoSlot: {
     width: 72,
     height: 72,
@@ -394,8 +414,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.successBg,
   },
-  addPhotoIcon: { fontSize: 20 },
-  addPhotoText: { fontSize: 9, fontFamily: FontFamily.bodyBold, color: Colors.text, marginTop: 2 },
+  addPhotoText: { fontSize: 10, fontFamily: FontFamily.bodyBold, color: Colors.text, marginTop: 2 },
   actionRow: { marginTop: Spacing.md, gap: Spacing.sm },
   saveBtn: { width: '100%' },
   cancelBtn: { width: '100%' },

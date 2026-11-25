@@ -1,13 +1,12 @@
 // mobile/components/ui/Icon.tsx
-// Native renderer for the bundled Kubai icon artwork.
+// Compatibility wrapper delegating to AppIcon so all icons come from Kubai Line.
 
 import React from 'react';
-import Svg, { Path } from 'react-native-svg';
-import { IconRegistry, type IconName } from '@constants/icons';
 import { Colors } from '@constants/theme';
+import { AppIcon, type AppIconVariant, type IconSize, type ThemeColorToken } from './AppIcon';
+import type { IconName } from '@constants/icons';
 
-const SIZES = { sm: 20, md: 24, lg: 28 } as const;
-export type IconSize = keyof typeof SIZES;
+export type { IconSize };
 
 type IconWeight = 'regular' | 'bold' | 'duotone' | 'fill';
 
@@ -15,16 +14,21 @@ export interface IconProps {
   name: IconName;
   size?: IconSize | number;
   weight?: IconWeight;
-  /** Token key from Colors, or a raw colour string. */
-  color?: keyof typeof Colors | string;
+  /** Token key from Colors (or legacy fallback). */
+  color?: ThemeColorToken | (string & {});
   /** Decorative icons are hidden from screen readers. */
   decorative?: boolean;
   accessibilityLabel?: string;
 }
 
-export function resolveColor(color: IconProps['color']): string {
-  if (!color) return Colors.text;
-  return color in Colors ? Colors[color as keyof typeof Colors] : color;
+const HEX_TO_TOKEN = new Map<string, ThemeColorToken>(
+  (Object.entries(Colors) as [ThemeColorToken, string][]).map(([k, v]) => [v.toLowerCase(), k]),
+);
+
+function toThemeToken(color?: string): ThemeColorToken {
+  if (!color) return 'textPrimary';
+  if (color in Colors) return color as ThemeColorToken;
+  return HEX_TO_TOKEN.get(color.toLowerCase()) ?? 'textPrimary';
 }
 
 export const Icon = React.memo(function Icon({
@@ -35,23 +39,18 @@ export const Icon = React.memo(function Icon({
   decorative = true,
   accessibilityLabel,
 }: IconProps) {
-  const { body, accent } = IconRegistry[name];
-  const px = typeof size === 'number' ? size : SIZES[size];
-  const ink = resolveColor(color);
-  const filledHeart = name === 'Heart' && weight === 'fill';
+  const variant: AppIconVariant =
+    weight === 'fill' ? 'fill' : weight === 'duotone' ? 'duotone' : 'line';
+  const strokeWidth = weight === 'bold' ? 2.15 : 1.85;
 
   return (
-    <Svg
-      width={px}
-      height={px}
-      viewBox="0 0 16 16"
-      accessible={!decorative}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityElementsHidden={decorative}
-      importantForAccessibility={decorative ? 'no-hide-descendants' : 'auto'}
-    >
-      {body ? <Path d={body} fill={ink} fillOpacity={filledHeart ? 1 : 0.52} /> : null}
-      {accent ? <Path d={accent} fill={ink} fillOpacity={filledHeart ? 0.52 : 1} /> : null}
-    </Svg>
+    <AppIcon
+      name={name}
+      size={size}
+      tint={toThemeToken(color)}
+      variant={variant}
+      strokeWidth={strokeWidth}
+      contentDescription={decorative ? undefined : accessibilityLabel}
+    />
   );
 });

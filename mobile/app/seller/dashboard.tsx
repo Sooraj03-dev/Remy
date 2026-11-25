@@ -16,7 +16,7 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
-import { ClayButton, ClayCard, StatusBadge } from '@components/index';
+import { AppIcon, ClayButton, ClayCard, StatusBadge } from '@components/index';
 import { Colors, Spacing, Typography, FontFamily } from '@constants/theme';
 import {
   fetchMyListings,
@@ -220,7 +220,9 @@ export default function SellerDashboard() {
       {/* Header */}
       <View style={styles.header}>
         <ClayButton
-          label="← Back"
+          label="Back"
+          leftIcon="back"
+          iconTint="text"
           variant="ghost"
           onPress={() => router.back()}
           textStyle={{ color: Colors.text }}
@@ -279,7 +281,9 @@ export default function SellerDashboard() {
           </View>
         ) : error ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>⚠️</Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="warning" size={36} tint="errorText" />
+            </View>
             <Text style={Typography.bodyBold}>Could not load listings</Text>
             <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
             <ClayButton
@@ -291,15 +295,21 @@ export default function SellerDashboard() {
           </ClayCard>
         ) : currentTabListings.length === 0 ? (
           <ClayCard variant="lavender" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>
-              {activeTab === 'active'
-                ? '🏪'
-                : activeTab === 'pending'
-                ? '⏳'
-                : activeTab === 'sold'
-                ? '🎉'
-                : '📋'}
-            </Text>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon
+                name={
+                  activeTab === 'active'
+                    ? 'store'
+                    : activeTab === 'pending'
+                    ? 'time'
+                    : activeTab === 'sold'
+                    ? 'checkCircle'
+                    : 'clipboard'
+                }
+                size={36}
+                tint="primary"
+              />
+            </View>
             <Text style={Typography.bodyBold}>No {activeTab} listings</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
               {activeTab === 'pending'
@@ -358,7 +368,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxl,
   },
   emptyCard: { alignItems: 'center', padding: Spacing.xl, gap: 4 },
-  emptyEmoji: { fontSize: 36, marginBottom: 4 },
+  emptyIconWrap: { marginBottom: 4 },
   emptyText: { textAlign: 'center', color: Colors.textSecondary },
   errorText: { color: Colors.error, textAlign: 'center' },
   listingCard: { gap: Spacing.sm },

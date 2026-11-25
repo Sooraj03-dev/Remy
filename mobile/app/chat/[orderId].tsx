@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
+import { AppIcon } from '@components/index';
+import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import {
@@ -27,12 +29,12 @@ import {
 import type { Message, Order, UserProfile } from '../../../shared/types';
 
 const QUICK_PROMPTS = [
-  '📍 Meet at the Library?',
-  '⏰ Are you free today?',
-  '📦 Is this still available?',
-  '💸 Can you do a student discount?',
-  '👋 Hi! Interested in picking this up',
-  '👍 Sounds great, see you there!',
+  'Meet at the Library?',
+  'Are you free today?',
+  'Is this still available?',
+  'Can you do a student discount?',
+  'Hi! Interested in picking this up',
+  'Sounds great, see you there!',
 ];
 
 export default function ChatScreen() {
@@ -142,12 +144,27 @@ export default function ChatScreen() {
   const getStatusBadge = () => {
     if (!order) return null;
     if (order.status === 'inquiry') {
-      return <View style={[styles.badge, styles.inquiryBadge]}><Text style={styles.inquiryBadgeText}>💬 Inquiry</Text></View>;
+      return (
+        <View style={[styles.badge, styles.inquiryBadge]}>
+          <AppIcon name="chats" size={12} tint="primary" />
+          <Text style={styles.inquiryBadgeText}>Inquiry</Text>
+        </View>
+      );
     }
     if (order.status === 'completed') {
-      return <View style={[styles.badge, styles.completedBadge]}><Text style={styles.completedBadgeText}>✅ Picked Up</Text></View>;
+      return (
+        <View style={[styles.badge, styles.completedBadge]}>
+          <AppIcon name="checkCircle" size={12} tint="successText" />
+          <Text style={styles.completedBadgeText}>Picked Up</Text>
+        </View>
+      );
     }
-    return <View style={[styles.badge, styles.pendingBadge]}><Text style={styles.pendingBadgeText}>⏳ {order.status}</Text></View>;
+    return (
+      <View style={[styles.badge, styles.pendingBadge]}>
+        <AppIcon name="time" size={12} tint="warningText" />
+        <Text style={styles.pendingBadgeText}>{order.status}</Text>
+      </View>
+    );
   };
 
   return (
@@ -162,9 +179,12 @@ export default function ChatScreen() {
           <Pressable
             style={styles.backBtn}
             onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <AppIcon name="back" size={20} tint="primary" />
+            <Text style={styles.backText}>Back</Text>
           </Pressable>
 
           <View style={styles.headerInfo}>
@@ -174,9 +194,12 @@ export default function ChatScreen() {
               </Text>
               <Text style={styles.roleTag}>• {otherPersonRole}</Text>
             </View>
-            <Text style={[Typography.caption, styles.productSub]} numberOfLines={1}>
-              {order ? `📦 ${order.productTitle} · ₹${order.amount}` : 'Campus Marketplace'}
-            </Text>
+            <View style={styles.subRow}>
+              <AppIcon name="package" size={13} tint="primary" />
+              <Text style={[Typography.caption, styles.productSub]} numberOfLines={1}>
+                {order ? `${order.productTitle} · ₹${order.amount}` : 'Campus Marketplace'}
+              </Text>
+            </View>
           </View>
 
           {getStatusBadge()}
@@ -189,7 +212,9 @@ export default function ChatScreen() {
           </View>
         ) : messages.length === 0 ? (
           <View style={styles.centerBox}>
-            <Text style={styles.emptyIcon}>🦉</Text>
+            <View style={styles.emptyIcon}>
+              <RemyArt size={76} />
+            </View>
             <Text style={[Typography.h3, styles.emptyTitle]}>Say Hello to {otherPersonName}!</Text>
             <Text style={[Typography.caption, styles.emptyText]}>
               Coordinate campus meetup spot (e.g. library, cafe) or ask any questions about the item.
@@ -205,7 +230,7 @@ export default function ChatScreen() {
                   onPress={() => handleSendText(prompt)}
                 >
                   <Text style={styles.emptyPromptText}>{prompt}</Text>
-                  <Text style={styles.sendChipArrow}>➔</Text>
+                  <AppIcon name="send" size={14} tint="primary" />
                 </Pressable>
               ))}
             </View>
@@ -305,6 +330,8 @@ export default function ChatScreen() {
           <Pressable
             onPress={handleSend}
             disabled={!inputText.trim() || sending}
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
             style={({ pressed }) => [
               styles.sendButton,
               inputText.trim() ? styles.sendButtonActive : styles.sendButtonDisabled,
@@ -314,14 +341,21 @@ export default function ChatScreen() {
             {sending ? (
               <ActivityIndicator size="small" color={Colors.white} />
             ) : (
-              <Text
-                style={[
-                  styles.sendButtonText,
-                  inputText.trim() ? styles.sendButtonTextActive : styles.sendButtonTextInactive,
-                ]}
-              >
-                Send ➔
-              </Text>
+              <View style={styles.sendInner}>
+                <Text
+                  style={[
+                    styles.sendButtonText,
+                    inputText.trim() ? styles.sendButtonTextActive : styles.sendButtonTextInactive,
+                  ]}
+                >
+                  Send
+                </Text>
+                <AppIcon
+                  name="send"
+                  size={15}
+                  tint={inputText.trim() ? 'white' : 'textSecondary'}
+                />
+              </View>
             )}
           </Pressable>
         </View>
@@ -349,8 +383,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingRight: Spacing.sm,
     paddingVertical: Spacing.xs,
+    minHeight: 48,
   },
   backText: {
     color: Colors.primary,
@@ -375,12 +413,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: FontFamily.label,
   },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 1,
+  },
   productSub: {
     fontSize: FontSize.caption,
     color: Colors.primary,
-    marginTop: 1,
+    flex: 1,
   },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: Radius.full,
@@ -417,8 +464,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   emptyTitle: {
     color: Colors.text,
@@ -465,11 +511,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.caption,
     color: Colors.text,
     fontFamily: FontFamily.label,
-  },
-  sendChipArrow: {
-    color: Colors.primary,
-    fontFamily: FontFamily.bodyBold,
-    fontSize: FontSize.caption,
   },
   messagesList: {
     padding: Spacing.md,
@@ -590,12 +631,17 @@ const styles = StyleSheet.create({
     maxHeight: 90,
   },
   sendButton: {
-    height: 42,
+    height: 44,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 78,
+    minWidth: 82,
+  },
+  sendInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   sendButtonActive: {
     backgroundColor: Colors.primary,
