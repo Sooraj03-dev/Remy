@@ -16,7 +16,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
 import { CelebrationOverlay } from '@components/fx';
 import { Copy } from '@constants/copy';
-import { Colors, Spacing, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Typography, FontSize, FontFamily } from '@constants/theme';
 import {
   fetchNotifications,
   markNotificationAsRead,
@@ -198,7 +198,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   topActions: { alignItems: 'flex-end', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xs },
-  markAllText: { color: Colors.primary, fontSize: FontSize.caption, fontWeight: FontWeight.bold },
+  markAllText: { color: Colors.primary, fontSize: FontSize.caption, fontFamily: FontFamily.bodyBold },
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   emptyCard: { padding: Spacing.xl, alignItems: 'center' },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   notifInfo: { flex: 1 },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   notifTitle: { flex: 1, marginRight: Spacing.xs },
-  timeText: { fontSize: 10, color: Colors.textSecondary },
+  timeText: { fontSize: 10, fontFamily: FontFamily.body, color: Colors.textSecondary },
   notifMsg: { color: Colors.text, marginTop: 2 },
   unreadDot: {
     width: 8,

@@ -18,7 +18,7 @@ import { ClayHeader, ClayCard, ClayButton } from '@components/index';
 import { ClayPressable } from '@components/fx/ClayPressable';
 import { Icon } from '@components/ui/Icon';
 import type { IconName } from '@constants/icons';
-import { Colors, Radius, Spacing, Typography } from '@constants/theme';
+import { Colors, Radius, Spacing, Typography, FontFamily } from '@constants/theme';
 import { fetchMyProfile } from '../../services/api';
 import type { UserProfile } from '../../../shared/types';
 
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  avatarText: { fontSize: 32, color: Colors.white, fontWeight: '700' },
+  avatarText: { fontSize: 32, fontFamily: FontFamily.displayBold, color: Colors.white },
   name: { textAlign: 'center' },
   rolePill: {
     paddingVertical: 4,
@@ -280,15 +280,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   roleText: {
-    fontWeight: '600',
+    fontFamily: FontFamily.label,
     fontSize: 12,
   },
   studentPill: { backgroundColor: Colors.primarySoft },
-  studentText: { color: Colors.primary, fontWeight: '600', fontSize: 12 },
+  studentText: { color: Colors.primary, fontFamily: FontFamily.label, fontSize: 12 },
   verifierPill: { backgroundColor: Colors.successBg },
-  verifierText: { color: Colors.successText, fontWeight: '600', fontSize: 12 },
+  verifierText: { color: Colors.successText, fontFamily: FontFamily.label, fontSize: 12 },
   adminPill: { backgroundColor: Colors.errorBg },
-  adminText: { color: Colors.errorText, fontWeight: '700', fontSize: 12 },
+  adminText: { color: Colors.errorText, fontFamily: FontFamily.bodyBold, fontSize: 12 },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -317,6 +317,6 @@ const styles = StyleSheet.create({
   },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border },
   menuCopy: { flex: 1, gap: 2 },
-  arrow: { fontSize: 24, color: Colors.textSecondary },
+  arrow: { fontSize: 24, fontFamily: FontFamily.body, color: Colors.textSecondary },
   signOut: { marginTop: Spacing.sm },
 });

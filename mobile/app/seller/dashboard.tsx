@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayButton, ClayCard, StatusBadge } from '@components/index';
-import { Colors, Spacing, Typography } from '@constants/theme';
+import { Colors, Spacing, Typography, FontFamily } from '@constants/theme';
 import {
   fetchMyListings,
   updateProduct,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   activeTab: { backgroundColor: Colors.primary },
   activeTabText: { color: Colors.white },
-  inactiveTabText: { color: Colors.textSecondary, fontSize: 11 },
+  inactiveTabText: { color: Colors.textSecondary, fontFamily: FontFamily.label, fontSize: 11 },
   scroll: {
     padding: Spacing.base,
     gap: Spacing.sm,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   listingInfo: { flex: 1, marginRight: Spacing.sm, gap: 2 },
-  price: { color: Colors.primary, fontWeight: '700', fontSize: 16 },
+  price: { color: Colors.primary, fontFamily: FontFamily.bodyBold, fontSize: 16 },
   rejectionNotice: { padding: Spacing.sm, gap: 2 },
   listingActions: {
     flexDirection: 'row',

@@ -19,7 +19,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import { ClayHeader, ClayCard, ClayInput, ClayButton, StatusBadge } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchProductById, updateProduct, uploadProductImages } from '../../../services/api';
 import type { Product, ProductCategory, ProductCondition } from '../../../../shared/types';
 
@@ -365,8 +365,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  chipText: { fontSize: FontSize.caption, color: Colors.textSecondary },
-  chipTextActive: { color: Colors.white, fontWeight: FontWeight.bold },
+  chipText: { fontSize: FontSize.caption, fontFamily: FontFamily.body, color: Colors.textSecondary },
+  chipTextActive: { color: Colors.white, fontFamily: FontFamily.bodyBold },
   textArea: { minHeight: 90, textAlignVertical: 'top' },
   imagesRow: { flexDirection: 'row', marginTop: Spacing.xs, marginBottom: Spacing.md },
   imageWrapper: { position: 'relative', marginRight: Spacing.sm },
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeBadgeText: { color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold },
+  removeBadgeText: { color: Colors.white, fontSize: 10, fontFamily: FontFamily.bodyBold },
   addPhotoSlot: {
     width: 72,
     height: 72,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.successBg,
   },
   addPhotoIcon: { fontSize: 20 },
-  addPhotoText: { fontSize: 9, color: Colors.text, marginTop: 2, fontWeight: FontWeight.bold },
+  addPhotoText: { fontSize: 9, fontFamily: FontFamily.bodyBold, color: Colors.text, marginTop: 2 },
   actionRow: { marginTop: Spacing.md, gap: Spacing.sm },
   saveBtn: { width: '100%' },
   cancelBtn: { width: '100%' },

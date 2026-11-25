@@ -17,7 +17,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import {
   fetchOrderMessages,
   sendMessage,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: Colors.primary,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
     fontSize: FontSize.body,
   },
   headerInfo: {
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   roleTag: {
     fontSize: FontSize.caption,
     color: Colors.textSecondary,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
   },
   productSub: {
     fontSize: FontSize.caption,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   inquiryBadgeText: {
     color: '#2563EB',
     fontSize: 11,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   pendingBadge: {
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     color: '#D97706',
     fontSize: 11,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   completedBadge: {
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   completedBadgeText: {
     color: '#059669',
     fontSize: 11,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   centerBox: {
     flex: 1,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   suggestionsTitle: {
     fontSize: FontSize.caption,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
@@ -464,11 +464,11 @@ const styles = StyleSheet.create({
   emptyPromptText: {
     fontSize: FontSize.caption,
     color: Colors.text,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
   },
   sendChipArrow: {
     color: Colors.primary,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
     fontSize: FontSize.caption,
   },
   messagesList: {
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 3,
     marginLeft: Spacing.xs,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
   },
   bubble: {
     paddingHorizontal: Spacing.md,
@@ -519,6 +519,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: FontSize.body,
+    fontFamily: FontFamily.body,
     lineHeight: 20,
   },
   myText: {
@@ -529,6 +530,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 10,
+    fontFamily: FontFamily.body,
     marginTop: 4,
     alignSelf: 'flex-end',
   },
@@ -560,7 +562,7 @@ const styles = StyleSheet.create({
   quickChipText: {
     fontSize: FontSize.caption,
     color: Colors.text,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
   },
   inputBar: {
     flexDirection: 'row',
@@ -583,6 +585,7 @@ const styles = StyleSheet.create({
   },
   chatInput: {
     fontSize: FontSize.body,
+    fontFamily: FontFamily.body,
     color: Colors.text,
     maxHeight: 90,
   },
@@ -603,7 +606,7 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     fontSize: FontSize.caption + 1,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   sendButtonTextActive: {
     color: Colors.white,

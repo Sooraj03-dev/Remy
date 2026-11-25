@@ -16,7 +16,7 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton, ClayInput, StatusBadge, OrderStepper } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchOrderById, updateOrderStatus, submitReturnRequest } from '../../services/api';
 import type { Order, ReturnReason } from '../../../shared/types';
 
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   productRow: { flexDirection: 'row', alignItems: 'center' },
   thumbnail: { width: 72, height: 72, borderRadius: Radius.md, marginRight: Spacing.md },
   productInfo: { flex: 1 },
-  price: { fontSize: FontSize.h3, fontWeight: FontWeight.bold, color: Colors.text, marginTop: Spacing.xs },
+  price: { fontSize: FontSize.h3, fontFamily: FontFamily.bodyBold, color: Colors.text, marginTop: Spacing.xs },
   viewProductBtn: { alignSelf: 'flex-start', marginTop: Spacing.xs },
   sectionTitle: { marginBottom: Spacing.xs },
   partyRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.xs },

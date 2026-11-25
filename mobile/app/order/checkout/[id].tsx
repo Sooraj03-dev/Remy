@@ -23,7 +23,7 @@ import {
   StatusBadge,
   CelebrationOverlay,
 } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
   fetchProductById,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   summaryCard: { flexDirection: 'row', padding: Spacing.md, marginBottom: Spacing.md, alignItems: 'center' },
   thumbnail: { width: 84, height: 84, borderRadius: Radius.md, marginRight: Spacing.md },
   summaryInfo: { flex: 1 },
-  price: { fontSize: FontSize.h3, fontWeight: FontWeight.bold, color: Colors.text, marginVertical: Spacing.xs },
+  price: { fontSize: FontSize.h3, fontFamily: FontFamily.bodyBold, color: Colors.text, marginVertical: Spacing.xs },
   formCard: { padding: Spacing.md },
   sectionTitle: { marginBottom: Spacing.xs },
   infoNote: { color: Colors.textSecondary, marginBottom: Spacing.md },

@@ -15,7 +15,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ClayButton } from '@components/index';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchConversations } from '../../services/api';
 import type { Conversation } from '../../../shared/types';
 
@@ -237,18 +237,18 @@ const styles = StyleSheet.create({
   avatarText: {
     color: Colors.text,
     fontSize: 18,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   convInfo: { flex: 1 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { flex: 1, marginRight: Spacing.xs, color: Colors.text },
-  nameUnread: { color: Colors.textPrimary, fontWeight: FontWeight.bold },
-  timeText: { fontSize: 11, color: Colors.textSecondary },
-  timeTextUnread: { color: Colors.primary, fontWeight: FontWeight.bold },
+  nameUnread: { color: Colors.textPrimary, fontFamily: FontFamily.bodyBold },
+  timeText: { fontSize: 11, fontFamily: FontFamily.body, color: Colors.textSecondary },
+  timeTextUnread: { color: Colors.primary, fontFamily: FontFamily.bodyBold },
   productTag: {
     color: Colors.primary,
     marginTop: 2,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.label,
     fontSize: FontSize.caption,
   },
   msgBottomRow: {
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   lastMsgUnread: {
     color: Colors.text,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
   unreadBadge: {
     backgroundColor: Colors.error,
@@ -278,6 +278,6 @@ const styles = StyleSheet.create({
   unreadText: {
     color: Colors.white,
     fontSize: 10,
-    fontWeight: FontWeight.bold,
+    fontFamily: FontFamily.bodyBold,
   },
 });

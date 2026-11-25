@@ -26,7 +26,7 @@ import {
 } from '@components/index';
 import { RemyArt } from '@components/ui/RemyArt';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing, Radius, Typography } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
   fetchProductById,
@@ -430,8 +430,8 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.base, gap: Spacing.base },
   badgeRow: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', flexWrap: 'wrap' },
   verifiedBadge: { paddingVertical: 4, paddingHorizontal: 10 },
-  verifiedText: { fontSize: 12, fontWeight: '600', color: Colors.successText },
-  pendingText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  verifiedText: { fontSize: 12, fontFamily: FontFamily.label, color: Colors.successText },
+  pendingText: { fontSize: 12, fontFamily: FontFamily.label, color: Colors.primary },
   rejectionCard: { padding: Spacing.sm, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   titleText: { flex: 1 },
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sellerAvatarText: { color: Colors.white, fontWeight: '700', fontSize: 18 },
+  sellerAvatarText: { color: Colors.white, fontFamily: FontFamily.bodyBold, fontSize: 18 },
   sellerMeta: { flex: 1, gap: 2 },
   actions: { gap: Spacing.sm, marginTop: Spacing.sm },
   actionButton: { width: '100%' },

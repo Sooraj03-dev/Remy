@@ -2,9 +2,10 @@
 // Pill badge showing product listing status
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import type { ProductStatus, OrderStatus } from '@shared/index';
-import { Colors, Radius, Spacing, FontSize, FontWeight } from '@constants/theme';
+import { ClayText } from '@components/ui/ClayText';
+import { Colors, Radius, Spacing } from '@constants/theme';
 
 type AnyStatus = ProductStatus | OrderStatus;
 
@@ -45,7 +46,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   };
   return (
     <View style={[styles.badge, { backgroundColor: config.backgroundColor }]}>
-      <Text style={[styles.text, { color: config.color }]}>{config.label}</Text>
+      <ClayText variant="label" color={config.color} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+        {config.label}
+      </ClayText>
     </View>
   );
 }
@@ -56,10 +59,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     paddingHorizontal: 10,
     alignSelf: 'flex-start',
-  },
-  text: {
-    fontSize: FontSize.caption,
-    fontWeight: FontWeight.semiBold,
   },
 });
 

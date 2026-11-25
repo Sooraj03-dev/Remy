@@ -15,7 +15,7 @@ import { useSignUp, useAuth } from '@clerk/clerk-expo';
 import { ClayCard, ClayInput, ClayButton } from '@components/index';
 import { RemyLogo } from '@components/ui/RemyLogo';
 import { RemyMascot } from '@components/ui/RemyMascot';
-import { Colors, Spacing, FontSize, FontWeight, Typography } from '@constants/theme';
+import { Colors, Spacing, FontSize, FontFamily, Typography } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import { syncUserWithBackend } from '../../services/api';
 
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   link: {
     fontSize: FontSize.caption,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
     color: Colors.primary,
   },
 });

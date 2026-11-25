@@ -27,7 +27,7 @@ import {
   useToast,
   Icon,
 } from '@components/index';
-import { Colors, Spacing, Radius, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Radius, Typography, FontSize, FontFamily } from '@constants/theme';
 import { Copy } from '@constants/copy';
 import {
   createProduct,
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   field: { marginVertical: Spacing.xs },
   fieldLabel: {
     fontSize: FontSize.caption,
-    fontWeight: FontWeight.semiBold,
+    fontFamily: FontFamily.label,
     color: Colors.text,
     marginBottom: 4,
   },
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deletePhotoText: { color: Colors.white, fontSize: 12, fontWeight: '700' },
+  deletePhotoText: { color: Colors.white, fontSize: 12, fontFamily: FontFamily.bodyBold },
   noticeCard: { padding: Spacing.base },
   submitBtn: { marginTop: Spacing.xs },
 });

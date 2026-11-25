@@ -312,7 +312,7 @@ export default function AdminDashboard() {
         >
           {error && (
             <ClayCard variant="peach" style={{ marginBottom: Spacing.sm }}>
-              <Text style={{ color: Colors.error }}>⚠️ {error}</Text>
+              <Text style={[Typography.captionBold, { color: Colors.error }]}>⚠️ {error}</Text>
             </ClayCard>
           )}
 
@@ -510,7 +510,7 @@ export default function AdminDashboard() {
             <Text style={[Typography.caption, { marginVertical: Spacing.xs }]}>
               Provide a clear reason for the seller:
             </Text>
-            {rejectError && <Text style={{ color: Colors.error, marginBottom: Spacing.xs }}>{rejectError}</Text>}
+            {rejectError && <Text style={[Typography.caption, { color: Colors.error, marginBottom: Spacing.xs }]}>{rejectError}</Text>}
             <ClayInput
               placeholder="e.g. Photo is blurry; please upload clear images showing textbook edition."
               value={rejectionReason}
@@ -534,7 +534,7 @@ export default function AdminDashboard() {
             <Text style={[Typography.caption, { marginVertical: Spacing.xs }]}>
               Instruct the seller what needs adjustment before approval:
             </Text>
-            {changesError && <Text style={{ color: Colors.error, marginBottom: Spacing.xs }}>{changesError}</Text>}
+            {changesError && <Text style={[Typography.caption, { color: Colors.error, marginBottom: Spacing.xs }]}>{changesError}</Text>}
             <ClayInput
               placeholder="e.g. Please clarify book edition and mention if access code is unused."
               value={changesNotes}

@@ -15,7 +15,7 @@ import { RemyMascot } from '@components/ui/RemyMascot';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ClayHeader, ClayCard, ProductCard, ClayButton } from '@components/index';
-import { Colors, Spacing, Typography, FontSize, FontWeight } from '@constants/theme';
+import { Colors, Spacing, Typography, FontSize, FontFamily } from '@constants/theme';
 import { fetchWishlist, removeFromWishlist } from '../../services/api';
 import type { Product } from '../../../shared/types';
 
@@ -146,6 +146,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  removeBtnText: { fontSize: FontSize.caption, color: Colors.error, fontWeight: FontWeight.bold },
+  removeBtnText: { fontSize: FontSize.caption, fontFamily: FontFamily.bodyBold, color: Colors.error },
 });
 

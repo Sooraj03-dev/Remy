@@ -19,7 +19,7 @@ export const Colors = {
   accent: '#C47B48',
   accentSoft: '#F4DECB',
   textPrimary,
-  textSecondary: '#78655A',
+  textSecondary: '#6B594E',
   successBg: '#EBF2EB',
   successText: '#2D5236',
   errorBg: '#FCEEE9',
@@ -89,19 +89,16 @@ export const Radius = {
 
 export const FontSize = {
   wordmark: 34,
+  display: 30,
   h1: 28,
+  title: 22,
   h2: 22,
   h3: 18,
   body: 15,
+  label: 12,
   caption: 12,
   button: 16,
 } as const;
-
-export const FontWeight = {
-  regular: '400' as const,
-  semiBold: '600' as const,
-  bold: '700' as const,
-};
 
 /**
  * One family per weight. Android does not select custom font files from
@@ -112,10 +109,13 @@ export const FontFamily = {
   wordmark: 'PlusJakartaSans_700Bold',
   display: 'PlusJakartaSans_700Bold',
   displayBold: 'PlusJakartaSans_700Bold',
+  title: 'PlusJakartaSans_700Bold',
   heading: 'PlusJakartaSans_700Bold',
   button: 'PlusJakartaSans_600SemiBold',
+  label: 'PlusJakartaSans_600SemiBold',
   body: 'PlusJakartaSans_400Regular',
-  bodyMedium: 'PlusJakartaSans_600SemiBold',
+  bodyMedium: 'PlusJakartaSans_500Medium',
+  bodySemiBold: 'PlusJakartaSans_600SemiBold',
   bodyBold: 'PlusJakartaSans_700Bold',
 } as const;
 
@@ -128,17 +128,21 @@ export const clayElevation = {
   elevation: 6,
 } as const;
 
-/** Typography presets */
+/** Unified Plus Jakarta Sans type scale */
 export const Typography = StyleSheet.create({
-  wordmark: { fontSize: FontSize.wordmark, fontFamily: FontFamily.wordmark, color: Colors.text },
-  h1: { fontSize: FontSize.h1, fontFamily: FontFamily.displayBold, color: Colors.text },
-  h2: { fontSize: FontSize.h2, fontFamily: FontFamily.displayBold, color: Colors.text },
-  h3: { fontSize: FontSize.h3, fontFamily: FontFamily.heading, color: Colors.text },
-  body: { fontSize: FontSize.body, fontFamily: FontFamily.body, color: Colors.text },
-  bodyBold: { fontSize: FontSize.body, fontFamily: FontFamily.bodyBold, color: Colors.text },
-  caption: { fontSize: FontSize.caption, fontFamily: FontFamily.body, color: Colors.textSecondary },
-  captionBold: { fontSize: FontSize.caption, fontFamily: FontFamily.bodyMedium, color: Colors.textSecondary },
-  button: { fontSize: FontSize.button, fontFamily: FontFamily.button, color: Colors.white },
+  wordmark: { fontSize: FontSize.wordmark, lineHeight: 40, fontFamily: FontFamily.wordmark, color: Colors.text },
+  display: { fontSize: FontSize.display, lineHeight: 36, fontFamily: FontFamily.displayBold, color: Colors.text },
+  h1: { fontSize: FontSize.h1, lineHeight: 34, fontFamily: FontFamily.displayBold, color: Colors.text },
+  title: { fontSize: FontSize.title, lineHeight: 28, fontFamily: FontFamily.title, color: Colors.text },
+  h2: { fontSize: FontSize.h2, lineHeight: 28, fontFamily: FontFamily.displayBold, color: Colors.text },
+  h3: { fontSize: FontSize.h3, lineHeight: 24, fontFamily: FontFamily.heading, color: Colors.text },
+  body: { fontSize: FontSize.body, lineHeight: 22, fontFamily: FontFamily.body, color: Colors.text },
+  bodyMedium: { fontSize: FontSize.body, lineHeight: 22, fontFamily: FontFamily.bodyMedium, color: Colors.text },
+  bodyBold: { fontSize: FontSize.body, lineHeight: 22, fontFamily: FontFamily.bodyBold, color: Colors.text },
+  label: { fontSize: FontSize.label, lineHeight: 16, fontFamily: FontFamily.label, color: Colors.textSecondary },
+  caption: { fontSize: FontSize.caption, lineHeight: 16, fontFamily: FontFamily.body, color: Colors.textSecondary },
+  captionBold: { fontSize: FontSize.caption, lineHeight: 16, fontFamily: FontFamily.label, color: Colors.textSecondary },
+  button: { fontSize: FontSize.button, lineHeight: 20, fontFamily: FontFamily.button, color: Colors.white },
 });
 
 export type TypographyVariant = keyof typeof Typography;
