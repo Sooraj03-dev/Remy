@@ -10,44 +10,47 @@ async function seedChats() {
   console.log('🌱 [seedChats] Starting sample chat data generation...');
   const db = getDb();
 
+  type UserRow = typeof users.$inferSelect;
+  type ProductRow = typeof products.$inferSelect;
+
   // 1. Locate primary user (Sreelakshmi Rajesh or first registered user)
-  const allUsers = await db.select().from(users);
+  const allUsers: UserRow[] = await db.select().from(users);
   if (allUsers.length === 0) {
     console.error('❌ No users found in database. Please run initial user sync first.');
     return;
   }
 
   const primaryUser =
-    allUsers.find((u) => u.email === 'slr231006@gmail.com') ||
-    allUsers.find((u) => u.fullName.toLowerCase().includes('sreelakshmi')) ||
+    allUsers.find((u: UserRow) => u.email === 'slr231006@gmail.com') ||
+    allUsers.find((u: UserRow) => u.fullName.toLowerCase().includes('sreelakshmi')) ||
     allUsers[0];
 
   console.log(`👤 Primary user: "${primaryUser.fullName}" (${primaryUser.email}, id: ${primaryUser.id})`);
 
   // Other campus students
-  const rohan = allUsers.find((u) => u.fullName.includes('Rohan')) || allUsers[1 % allUsers.length];
-  const diya = allUsers.find((u) => u.fullName.includes('Diya')) || allUsers[2 % allUsers.length];
-  const aarav = allUsers.find((u) => u.fullName.includes('Aarav')) || allUsers[3 % allUsers.length];
-  const fatima = allUsers.find((u) => u.fullName.includes('Fatima')) || allUsers[4 % allUsers.length];
+  const rohan = allUsers.find((u: UserRow) => u.fullName.includes('Rohan')) || allUsers[1 % allUsers.length];
+  const diya = allUsers.find((u: UserRow) => u.fullName.includes('Diya')) || allUsers[2 % allUsers.length];
+  const aarav = allUsers.find((u: UserRow) => u.fullName.includes('Aarav')) || allUsers[3 % allUsers.length];
+  const fatima = allUsers.find((u: UserRow) => u.fullName.includes('Fatima')) || allUsers[4 % allUsers.length];
 
   // 2. Fetch existing products
-  const allProducts = await db.select().from(products);
+  const allProducts: ProductRow[] = await db.select().from(products);
   console.log(`📦 Found ${allProducts.length} products in database.`);
 
   const calcProduct =
-    allProducts.find((p) => p.title.toLowerCase().includes('calculator') || p.title.toLowerCase().includes('casio')) ||
+    allProducts.find((p: ProductRow) => p.title.toLowerCase().includes('calculator') || p.title.toLowerCase().includes('casio')) ||
     allProducts[0];
 
   const bioProduct =
-    allProducts.find((p) => p.title.toLowerCase().includes('biology') || p.title.toLowerCase().includes('campbell')) ||
+    allProducts.find((p: ProductRow) => p.title.toLowerCase().includes('biology') || p.title.toLowerCase().includes('campbell')) ||
     allProducts[1 % allProducts.length];
 
   const audioProduct =
-    allProducts.find((p) => p.title.toLowerCase().includes('headphones') || p.title.toLowerCase().includes('boat')) ||
+    allProducts.find((p: ProductRow) => p.title.toLowerCase().includes('headphones') || p.title.toLowerCase().includes('boat')) ||
     allProducts[2 % allProducts.length];
 
   // 3. Ensure primary user has at least one active product listing
-  let primaryUserProduct = allProducts.find((p) => p.sellerId === primaryUser.id);
+  let primaryUserProduct = allProducts.find((p: ProductRow) => p.sellerId === primaryUser.id);
   if (!primaryUserProduct) {
     console.log(`✨ Creating sample product listing for ${primaryUser.fullName}...`);
     const [created] = await db
@@ -67,7 +70,9 @@ async function seedChats() {
       })
       .returning();
     primaryUserProduct = created;
-    console.log(`✅ Created listing: "${primaryUserProduct.title}" (id: ${primaryUserProduct.id})`);
+    if (primaryUserProduct) {
+      console.log(`✅ Created listing: "${primaryUserProduct.title}" (id: ${primaryUserProduct.id})`);
+    }
   }
 
   // 4. Clean up any existing sample test orders for this user to ensure idempotency
