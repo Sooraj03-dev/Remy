@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    minHeight: 40,
+    minHeight: 48,
     paddingVertical: Spacing.xs,
     marginTop: 4,
     backgroundColor: Colors.white,

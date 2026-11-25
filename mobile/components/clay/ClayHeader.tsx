@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
   },
   textBlock: { flex: 1, gap: 2 },
   iconButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 48,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

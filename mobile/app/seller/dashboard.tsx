@@ -382,14 +382,16 @@ const styles = StyleSheet.create({
   rejectionNotice: { padding: Spacing.sm, gap: 2 },
   listingActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.xs,
     marginTop: 4,
   },
   smallButton: {
-    flex: 1,
-    minHeight: 34,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    minWidth: '47%',
+    flexGrow: 1,
+    minHeight: 48,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
   },
   newButton: { marginTop: Spacing.sm },
 });

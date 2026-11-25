@@ -18,19 +18,16 @@ Everything listed is permissively licensed (MIT / Apache-2.0 / OFL / Unlicense).
 
 ## Interface icons
 
-Remy uses 30 glyphs from [Kubai Icons](https://icons.kubai.design/), distributed
-in `kubai-icons-static` 0.15.0. The bundled paths adapt the official static
-artwork to two theme-colored regions per glyph. The bicycle, checked shield and
-offline Wi-Fi glyphs use the layered originals. The others use the two-tone set.
-The [upstream MIT license](../mobile/assets/icons/LICENSE-Kubai.txt) accompanies
-the artwork.
+Remy uses 67 glyphs from [Kubai Icons](https://icons.kubai.design/) (`icons-line`),
+bundled locally in `mobile/assets/icons/kubai-line.json` (24x24 grid, rounded
+strokes; `shirt` and `wifi-off` adapted in matching 24x24 Kubai Line geometry).
+The [upstream MIT license](../THIRD_PARTY_LICENSES) accompanies the artwork.
 
 ## Fonts
 
 | Font | Package | Licence | Used for |
 | --- | --- | --- | --- |
-| Fredoka (600, 700) | `@expo-google-fonts/fredoka` 0.4.1 | SIL Open Font License 1.1 | Wordmark, headings, buttons |
-| Nunito (400, 600, 700) | `@expo-google-fonts/nunito` 0.4.2 | SIL Open Font License 1.1 | Body copy, labels, captions |
+| Plus Jakarta Sans (400, 500, 600, 700) | `@expo-google-fonts/plus-jakarta-sans` 0.4.2 | SIL Open Font License 1.1 | Unified display, title, body, and label type scale |
 
 One family per weight is registered in `app/_layout.tsx`; Android does not map
 `fontWeight` onto custom font files, so no synthetic bold is used.

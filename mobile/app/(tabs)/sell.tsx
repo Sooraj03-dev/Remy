@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  addPhotoBtn: { minHeight: 40, paddingVertical: 6, paddingHorizontal: 14 },
+  addPhotoBtn: { minHeight: 48, paddingVertical: 8, paddingHorizontal: 14 },
   uploadPrompt: {
     borderWidth: 2,
     borderColor: Colors.border,

@@ -206,7 +206,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   topActions: { alignItems: 'flex-end', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xs },
-  markAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36 },
+  markAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 48, paddingHorizontal: Spacing.xs },
   markAllText: { color: Colors.primary, fontSize: FontSize.caption, fontFamily: FontFamily.bodyBold },
   scroll: { padding: Spacing.md, paddingBottom: Spacing.xxxl },
   centerBox: { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
