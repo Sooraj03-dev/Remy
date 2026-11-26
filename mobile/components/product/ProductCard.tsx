@@ -1,7 +1,7 @@
 // mobile/components/product/ProductCard.tsx
 // Product listing card with clay squish, typed icons and a heart-burst wishlist.
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -12,6 +12,7 @@ import { ClayText } from '@components/ui/ClayText';
 import { Icon } from '@components/ui/Icon';
 import { Durations } from '@constants/motion';
 import { StatusBadge } from './StatusBadge';
+import { useOptionalRemyScout } from './RemyBotOverlay';
 import type { Product } from '@shared/index';
 import { Colors, Spacing, Radius } from '@constants/theme';
 
@@ -30,17 +31,39 @@ export const ProductCard = React.memo(function ProductCard({
 }: ProductCardProps) {
   const router = useRouter();
   const reduced = useReducedMotion();
+  const scout = useOptionalRemyScout();
+  const cardRef = useRef<View | null>(null);
   const { id } = product;
   const image = product.images[0];
   const openProduct = useCallback(() => router.push(`/product/${id}`), [id, router]);
+  const isScoutTarget = scout?.activeProductId === id;
+
+  useEffect(() => {
+    if (!scout) return;
+    scout.registerCard(id, product, cardRef);
+    return () => {
+      scout.unregisterCard(id);
+    };
+  }, [id, product, scout]);
+
+  const handleHoverIn = useCallback(() => {
+    scout?.onPointerHoverCard(product, cardRef);
+  }, [product, scout]);
+
+  const handleHoverOut = useCallback(() => {
+    scout?.onPointerLeaveCard(id);
+  }, [id, scout]);
 
   return (
-    <ClayPressable
-      onPress={openProduct}
-      accessibilityLabel={`${product.title}, ₹${product.price}`}
-      style={[styles.card, style]}
-      tone="oat"
-    >
+    <View ref={cardRef} collapsable={false}>
+      <ClayPressable
+        onPress={openProduct}
+        onHoverIn={scout ? handleHoverIn : undefined}
+        onHoverOut={scout ? handleHoverOut : undefined}
+        accessibilityLabel={`${product.title}, ₹${product.price}`}
+        style={[styles.card, isScoutTarget && styles.cardScouted, style]}
+        tone="oat"
+      >
       <View style={styles.imageWrapper}>
         {image ? (
           <Image
@@ -83,13 +106,19 @@ export const ProductCard = React.memo(function ProductCard({
           {product.sellerName}
         </ClayText>
       </View>
-    </ClayPressable>
+      </ClayPressable>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.card,
+  },
+  cardScouted: {
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    transform: [{ scale: 1.02 }],
   },
   imageWrapper: { position: 'relative', margin: Spacing.xs, marginBottom: 0 },
   image: {

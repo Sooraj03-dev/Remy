@@ -79,16 +79,10 @@ export const protect = (
     return;
   }
 
-  // If live Clerk secret key is present, let requireAuth() handle standard JWT challenge
-  if (process.env.CLERK_SECRET_KEY) {
-    requireAuth()(req, res, next);
-    return;
-  }
-
   res.status(401).json({
     success: false,
     error: 'UNAUTHORIZED',
-    message: 'Authentication token required.',
+    message: 'Authentication token required or session expired. Please sign in.',
   });
 };
 

@@ -29,8 +29,16 @@ import { requestLogger } from './middleware/requestLogger';
 const app = express();
 const PORT = process.env.PORT ?? 4000;
 
+// Disable ETags and prevent 304 empty responses for mobile clients
+app.set('etag', false);
+
 // ── Security & parsing middleware ──────────────────────────
 app.use(helmet());
+app.use((_req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  next();
+});
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN ?? 'http://localhost:8081',

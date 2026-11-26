@@ -26,7 +26,7 @@ export default function ChatsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,22 +34,30 @@ export default function ChatsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadConversations = useCallback(async (showFullLoader = false) => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (showFullLoader) {
       setLoading(true);
     }
-    setError(null);
     try {
       const token = await getToken();
-      if (!token) throw new Error('Please sign in to view conversations.');
+      if (!token) return;
       const data = await fetchConversations(token);
       setConversations(data);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load conversations.');
+      if (conversations.length === 0) {
+        setError(err instanceof Error ? err.message : 'Could not load conversations.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [getToken]);
+  }, [getToken, isLoaded, isSignedIn, conversations.length]);
 
   // Auto-refresh conversations when screen is in focus
   useFocusEffect(
@@ -97,10 +105,23 @@ export default function ChatsScreen() {
           />
         }
       >
-        {loading && !refreshing ? (
+        {!isLoaded || (loading && !refreshing) ? (
           <View style={styles.centerBox}>
             <RemyMascot state="loading" status="Loading conversations..." />
           </View>
+        ) : !isSignedIn ? (
+          <ClayCard variant="lavender" style={styles.emptyCard}>
+            <SleepyRemy size={96} />
+            <Text style={[Typography.bodyBold, { marginTop: Spacing.xs }]}>Sign in to view messages</Text>
+            <Text style={[Typography.caption, styles.emptyText]}>
+              Sign in with your campus account to coordinate pickups and message buyers or sellers.
+            </Text>
+            <ClayButton
+              label="Sign In"
+              onPress={() => router.push('/(auth)/login')}
+              style={{ marginTop: Spacing.md }}
+            />
+          </ClayCard>
         ) : error && conversations.length === 0 ? (
           <ClayCard variant="peach" style={styles.emptyCard}>
             <View style={styles.emptyIconWrap}>

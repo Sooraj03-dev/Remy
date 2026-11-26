@@ -83,9 +83,13 @@ export function ShimmerSweep({ width = 160, paused = false }: { width?: number; 
     return () => cancelAnimation(progress);
   }, [paused, progress, reduced]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: (progress.value * 2 - 1) * width }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const val = typeof progress.value === 'number' && !isNaN(progress.value) ? progress.value : 0;
+    const w = typeof width === 'number' && !isNaN(width) ? width : 160;
+    return {
+      transform: [{ translateX: (val * 2 - 1) * w }],
+    };
+  });
 
   if (reduced) return null;
 

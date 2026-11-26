@@ -22,6 +22,7 @@ import {
   StaggeredItem,
 } from '@components/index';
 import { MarketplaceError } from '@components/product/MarketplaceError';
+import { RemyScoutHost } from '@components/product/RemyBotOverlay';
 import { RemyMascot } from '@components/ui/RemyMascot';
 import { MagnifierRemy, RefreshingRemy } from '@components/ui/RemyReactions';
 import { useFeedMascot } from '@hooks/useFeedMascot';
@@ -95,76 +96,73 @@ export default function ExploreScreen() {
 
   return (
     <View style={styles.container}>
-      <StaggeredItem index={0}>
-        <ClayHeader title="Explore" subtitle="Find second-hand gems on campus" />
-      </StaggeredItem>
+      <RemyScoutHost focused={focused} hidden={loading} browsingTime={browsingTime}>
+        <StaggeredItem index={0}>
+          <ClayHeader title="Explore" subtitle="Find second-hand gems on campus" />
+        </StaggeredItem>
 
-      <View style={styles.searchBar}>
-        <SearchBar
-          value={search}
-          onChangeText={setSearch}
-          onClear={() => setSearch('')}
-          loading={focused && pendingQuery}
-          placeholder="Search by title, brand, or course..."
-          accessibilityLabel="Search products"
-        />
-      </View>
-
-      <View style={styles.results}>
-        <GestureDetector gesture={gesture}>
-          <Animated.FlatList
-            data={visibleProducts}
-            keyExtractor={productKey}
-            removeClippedSubviews={true}
-            initialNumToRender={6}
-            maxToRenderPerBatch={6}
-            windowSize={5}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            contentContainerStyle={visibleProducts.length > 0 ? styles.list : styles.emptyList}
-            onScroll={onFeedScroll}
-            scrollEventThrottle={16}
-            alwaysBounceVertical
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            renderItem={renderProduct}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
-            }
-            ListEmptyComponent={showLoading ? (
-              <View style={styles.skeletonGrid}>
-                {[0, 1, 2, 3].map((index) => (
-                  <SkeletonCard key={index} width={160} height={196} paused={!focused} />
-                ))}
-                <View style={styles.loadingOverlay} pointerEvents="none">
-                  <RemyMascot state="loading" nibble status={Copy.loading.search[0]} paused={!focused} />
-                </View>
-              </View>
-            ) : error ? (
-              <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
-            ) : (
-              <ClayCard outlined style={styles.emptyCard}>
-                <MagnifierRemy size={86} paused={!focused} />
-                <ClayText variant="bodyBold" align="center">
-                  {Copy.empty.searchTitle}
-                </ClayText>
-                <ClayText variant="caption" align="center" style={styles.emptyText}>
-                  {search.trim()
-                    ? `Nothing matches "${search}". ${Copy.empty.search}`
-                    : 'There are currently no approved products listed on campus.'}
-                </ClayText>
-              </ClayCard>
-            )}
+        <View style={styles.searchBar}>
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            onClear={() => setSearch('')}
+            loading={focused && pendingQuery}
+            placeholder="Search by title, brand, or course..."
+            accessibilityLabel="Search products"
           />
-        </GestureDetector>
-        <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
-      </View>
-      {!loading ? (
-        <View style={styles.mascotDock} pointerEvents="box-none">
-          <RemyMascot state="roaming" paused={!focused} browsingTime={browsingTime} />
         </View>
-      ) : null}
+
+        <View style={styles.results}>
+          <GestureDetector gesture={gesture}>
+            <Animated.FlatList
+              data={visibleProducts}
+              keyExtractor={productKey}
+              removeClippedSubviews={true}
+              initialNumToRender={6}
+              maxToRenderPerBatch={6}
+              windowSize={5}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
+              contentContainerStyle={visibleProducts.length > 0 ? styles.list : styles.emptyList}
+              onScroll={onFeedScroll}
+              scrollEventThrottle={16}
+              alwaysBounceVertical
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              renderItem={renderProduct}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+              }
+              ListEmptyComponent={showLoading ? (
+                <View style={styles.skeletonGrid}>
+                  {[0, 1, 2, 3].map((index) => (
+                    <SkeletonCard key={index} width={160} height={196} paused={!focused} />
+                  ))}
+                  <View style={styles.loadingOverlay} pointerEvents="none">
+                    <RemyMascot state="loading" nibble status={Copy.loading.search[0]} paused={!focused} />
+                  </View>
+                </View>
+              ) : error ? (
+                <MarketplaceError error={error} onRetry={() => performSearch(search)} style={styles.resultMargin} />
+              ) : (
+                <ClayCard outlined style={styles.emptyCard}>
+                  <MagnifierRemy size={86} paused={!focused} />
+                  <ClayText variant="bodyBold" align="center">
+                    {Copy.empty.searchTitle}
+                  </ClayText>
+                  <ClayText variant="caption" align="center" style={styles.emptyText}>
+                    {search.trim()
+                      ? `Nothing matches "${search}". ${Copy.empty.search}`
+                      : 'There are currently no approved products listed on campus.'}
+                  </ClayText>
+                </ClayCard>
+              )}
+            />
+          </GestureDetector>
+          <RefreshingRemy pull={pull} refreshing={refreshing} paused={!focused} />
+        </View>
+      </RemyScoutHost>
     </View>
   );
 }
@@ -175,7 +173,6 @@ const styles = StyleSheet.create({
   results: { flex: 1 },
   list: { padding: Spacing.base, paddingBottom: 76, gap: Spacing.sm },
   emptyList: { flexGrow: 1, paddingBottom: 76 },
-  mascotDock: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   row: { gap: Spacing.sm },
   card: { flex: 1 },
   skeletonGrid: {
